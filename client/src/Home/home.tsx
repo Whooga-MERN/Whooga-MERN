@@ -15,21 +15,6 @@ export default function home() {
     <>
       {/* TOP */}
       <div className="relative">
-        {/* Bg */}
-        {/* <div className="flex flex-col items-center justify-between">
-          <div className="relative w-full ">
-            <div className="absolute -z-10 w-full">
-              <img
-                src="/bg.jpg"
-                alt="background"
-                className="w-full h-full opacity-60"
-                width={1000}
-                height={1000}
-              ></img>
-            </div>
-          </div>
-        </div> */}
-
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="pt-28 pb-16 md:pt-40 md:pb-20">
             {/* Hero content */}
