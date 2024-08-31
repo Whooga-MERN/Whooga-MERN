@@ -17,8 +17,9 @@ export default function Navbar() {
       {" "}
       {/* navbar */}
       <nav className="bg-yellow-400 opacity-80">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center h-16">
+        {/* <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8"> */}
+        <div className="px-8">
+          <div className="flex items-center h-16 justify-between">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <Link to="/" className="text-black font-bold text-2xl">
