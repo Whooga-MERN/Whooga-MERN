@@ -1,35 +1,18 @@
 import { Link } from "react-router-dom";
 import { GiPostStamp } from "react-icons/gi";
+import { PiScanSmiley } from "react-icons/pi";
 import { BsCoin } from "react-icons/bs";
 import { TbHorseToy, TbLego } from "react-icons/tb";
 import { TbPhotoScan, TbJewishStar } from "react-icons/tb";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 import { GiCardExchange } from "react-icons/gi";
-import {
-  MdOutlinePhonelink,
-  MdOutlineNotificationsActive,
-} from "react-icons/md";
+import { MdSecurity } from "react-icons/md";
 
 export default function home() {
   return (
     <>
       {/* TOP */}
       <div className="relative">
-        {/* Bg */}
-        {/* <div className="flex flex-col items-center justify-between">
-          <div className="relative w-full ">
-            <div className="absolute -z-10 w-full">
-              <img
-                src="/bg.jpg"
-                alt="background"
-                className="w-full h-full opacity-60"
-                width={1000}
-                height={1000}
-              ></img>
-            </div>
-          </div>
-        </div> */}
-
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="pt-28 pb-16 md:pt-40 md:pb-20">
             {/* Hero content */}
@@ -61,76 +44,6 @@ export default function home() {
       </div>
       {/* TOP END */}
 
-      {/* FEATURES */}
-      <div className="sm:py-20 md:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="py-12 md:py-20">
-            {/* Section header */}
-            <div className="max-w-3xl mx-auto text-center pb-12 md:pb-16">
-              <h1 className="h1 text-5xl font-cabinet-grotesk text-black font-semibold underline decoration-yellow-400">
-                Collect Without Limit
-              </h1>
-            </div>
-
-            <div className="max-w-sm mx-auto grid gap-12 sm:grid-cols-2 sm:max-w-3xl lg:grid-cols-4 lg:max-w-none items-start">
-              {/* #1 */}
-              <div className="text-center">
-                <div className="w-9 h-9 bg-gray-900 border-2 border-white text-white text-[25px] font-bold rounded-full inline-flex items-center justify-center mb-3">
-                  <GiPostStamp />
-                </div>
-                <h3 className="font-cabinet-grotesk font-bold text-lg">
-                  All-in-one Application
-                </h3>
-                <div className="text-gray-500 lg:text-black">
-                  Application for all kinds of collectors. Free Your brain and
-                  left the work to us.
-                </div>
-              </div>
-
-              {/* #2 */}
-              <div className="text-center">
-                <div className="w-9 h-9 bg-gray-900 border-2 border-white text-white text-[25px] font-bold rounded-full inline-flex items-center justify-center mb-3">
-                  <BsCoin />
-                </div>
-                <h3 className="font-cabinet-grotesk font-bold text-lg">
-                  Upload Your Collections
-                </h3>
-                <div className="text-gray-500 lg:text-black">
-                  Simply use your phone to scan your new Collectibles.
-                </div>
-              </div>
-
-              {/* #3 */}
-              <div className="text-center">
-                <div className="w-9 h-9 bg-gray-900 border-2 border-white text-white text-[25px] font-bold rounded-full inline-flex items-center justify-center mb-3">
-                  <TbHorseToy />
-                </div>
-                <h3 className="font-cabinet-grotesk font-bold text-lg">
-                  Details in Hand
-                </h3>
-                <div className="text-gray-500 lg:text-black">
-                  We will keep all the details of every collecibles for you.
-                </div>
-              </div>
-
-              {/* #4 */}
-              <div className="text-center">
-                <div className="w-9 h-9 bg-gray-900 border-2 border-white text-white text-[25px] font-bold rounded-full inline-flex items-center justify-center mb-3">
-                  <TbLego />
-                </div>
-                <h3 className="font-cabinet-grotesk font-bold text-lg">
-                  Save in Wish List
-                </h3>
-                <div className="text-gray-500 lg:text-black">
-                  Find your missing collectible and save it in the wish-list.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* FEATURES END */}
-
       {/* DETAIL */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="py-10 md:py-18">
@@ -138,144 +51,81 @@ export default function home() {
           <div className="max-w-xl mx-auto md:max-w-none flex flex-col md:flex-row md:space-x-8 lg:space-x-16 xl:space-x-20 space-y-8 space-y-reverse md:space-y-0">
             {/* keep collection in hand */}
             <div className="md:w-7/12 lg:w-1/2 order-1 md:order-none">
-              <div className="">
+              <div className="pt-10">
                 <h1 className="pb-10 font-cabinet-grotesk text-6xl font-extrabold mb-3">
-                  Keep your collection in hand
+                  Organize, Track, and Treasure Your Collections
                 </h1>
-                <ul className="inline-flex flex-col space-y-6">
-                  <li className="flex items-start">
-                    <div className="w-3 h-3 fill-current text-blue-500 mt-1.5 mr-3 shrink-0 text-6xl pr-3">
-                      <TbPhotoScan />
-                    </div>
-                    <div className="ml-9 pl-9">
-                      <div className="font-cabinet-grotesk font-bold text-lg mb-1">
-                        Scan Collectibles With Phone
-                      </div>
-                      <div className="text-gray-500">
-                        Make your life easier by adding collectibles with just a
-                        simple sacn on phone.
-                      </div>
-                    </div>
-                  </li>
-
-                  <li className="flex items-start">
-                    <div className="w-3 h-3 fill-current text-blue-500 mt-1.5 mr-3 shrink-0 text-6xl pr-3">
-                      <MdOutlinePhonelink />
-                    </div>
-                    <div className="ml-9 pl-9">
-                      <div className="font-cabinet-grotesk font-bold text-lg mb-1">
-                        View Your Collections Everywhere
-                      </div>
-                      <div className="text-gray-500">
-                        Check your collections and details for each collectibles
-                        anytime, anywhere on phone or website
-                      </div>
-                    </div>
-                  </li>
-
-                  <li className="flex items-start">
-                    <div className="w-3 h-3 fill-current text-blue-500 mt-1.5 mr-3 shrink-0 text-6xl pr-3">
-                      <MdOutlineNotificationsActive />
-                    </div>
-                    <div className="ml-9 pl-9">
-                      <div className="font-cabinet-grotesk font-bold text-lg mb-1">
-                        Get Notification
-                      </div>
-                      <div className="text-gray-500">
-                        Receive notification when your wishing collectibles on
-                        Wishlist is available online.
-                      </div>
-                    </div>
-                  </li>
-                </ul>
+                <p>
+                  Welcome to WHOOGA, the ultimate platform for collectors!
+                  Whether you're passionate about sports cards, coins, stamps,
+                  or any other type of collectible, WHOOGA is designed to
+                  enhance and streamline your collecting experience like never
+                  before.
+                </p>
               </div>
             </div>
 
             {/* Image */}
             <div className="">
-              <img
+              {/* <img
                 className="w-full h-full mx-auto md:max-w-none"
                 src="/scan.jpg"
                 width={540}
                 height={300}
                 alt="Features"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="py-10 md:py-18">
-          {/* Section content */}
-          <div className="max-w-xl mx-auto md:max-w-none flex flex-col md:flex-row md:space-x-8 lg:space-x-16 xl:space-x-20 space-y-8 space-y-reverse md:space-y-0">
-            {/* Image */}
-            <div className="">
-              <img
-                className="w-full h-full mx-auto md:max-w-none"
-                src="/deliver.jpg"
-                width={540}
-                height={300}
-                alt="Features"
-              />
-            </div>
-
-            {/* get excited */}
-            <div className="md:w-7/12 lg:w-1/2 order-1 md:order-none">
-              <div className="">
-                <h1 className="pt-10 font-cabinet-grotesk text-6xl font-extrabold mb-3 mr-auto">
-                  Get Excited for Your New Collectibles
-                </h1>
-                <ul className="inline-flex flex-col space-y-6">
-                  <li className="flex items-start pt-8">
-                    <div className="w-3 h-3 fill-current text-blue-500 mt-1.5 mr-3 shrink-0 text-6xl pr-3">
-                      <TbJewishStar />
-                    </div>
-                    <div className="ml-9 pl-9">
-                      <div className="font-cabinet-grotesk font-bold text-lg mb-1">
-                        Save in Wishlist
-                      </div>
-                      <div className="text-gray-500">
-                        Search and save your missing collectibles with one click
-                        on your device.
-                      </div>
-                    </div>
-                  </li>
-
-                  <li className="flex items-start">
-                    <div className="w-3 h-3 fill-current text-blue-500 mt-1.5 mr-3 shrink-0 text-6xl pr-3">
-                      <HiOutlineShoppingCart />
-                    </div>
-                    <div className="ml-9 pl-9">
-                      <div className="font-cabinet-grotesk font-bold text-lg mb-1">
-                        Buy What Your Are Waiting For
-                      </div>
-                      <div className="text-gray-500">
-                        Once your wishing item becomes available, we will direct
-                        you to get the item.
-                      </div>
-                    </div>
-                  </li>
-
-                  <li className="flex items-start">
-                    <div className="w-3 h-3 fill-current text-blue-500 mt-1.5 mr-3 shrink-0 text-6xl pr-3">
-                      <GiCardExchange />
-                    </div>
-                    <div className="ml-9 pl-9">
-                      <div className="font-cabinet-grotesk font-bold text-lg mb-1">
-                        Trade With Others
-                      </div>
-                      <div className="text-gray-500">
-                        You can also trade with other collectors instead of
-                        buying them online.
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
+              /> */}
             </div>
           </div>
         </div>
       </div>
       {/* DETAIL END */}
+
+      {/* FEATURES */}
+      <div className="sm:py-20 md:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="py-12 md:py-20">
+            {/* Section header */}
+            <div className="max-w-3xl mx-auto text-center pb-16 md:pb-16">
+              <h1 className="h1 text-5xl font-cabinet-grotesk text-black font-bold underline decoration-yellow-400 pb-10">
+                Tools Provided
+              </h1>
+            </div>
+
+            <div className="max-w-sm mx-auto grid gap-8 sm:grid-cols-3 sm:max-w-3xl lg:grid-cols-3 lg:max-w-none items-start">
+              {/* #1 */}
+              <div className="text-center">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                  <GiPostStamp />
+                </div>
+                <h3 className="font-cabinet-grotesk font-bold text-2xl">
+                  Collect
+                </h3>
+              </div>
+
+              {/* #2 */}
+              <div className="text-center">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                  <PiScanSmiley />
+                </div>
+                <h3 className="font-cabinet-grotesk font-bold text-2xl">
+                  Capture
+                </h3>
+              </div>
+
+              {/* #3 */}
+              <div className="text-center">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                  <MdSecurity />
+                </div>
+                <h3 className="font-cabinet-grotesk font-bold text-2xl">
+                  Safty
+                </h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* FEATURES END */}
     </>
   );
 }
