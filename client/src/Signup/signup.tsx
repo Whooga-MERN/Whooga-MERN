@@ -1,89 +1,105 @@
 import { Link } from "react-router-dom";
-import "./signup.css";
+import { FaRegUserCircle, FaRegEye } from "react-icons/fa";
+import { MdOutlineMailOutline } from "react-icons/md";
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="flex flex-col items-center justify-center gap-4 p-10 px-8 pt-10 rounded-3xl bg-yellow-50 shell">
-        <h1 className="text-4xl font-bold text-center mb-10 ">
-          Welcome aboard!
-        </h1>
-        <label className="input input-bordered flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="w-4 h-4 opacity-70"
-          >
-            <path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z" />
-            <path d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z" />
-          </svg>
-          <input type="text" className="grow" placeholder="Email" />
-        </label>
-        <label className="input input-bordered flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="w-4 h-4 opacity-70"
-          >
-            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-          </svg>
-          <input type="text" className="grow" placeholder="Username" />
-        </label>
+    <>
+      <div className=" gap-4 max-lg bg-[#fcc050] px-8 pt-4 pb-8">
+        <Link to="/" className="text-black font-bold text-xl">
+          WHOOGA!
+        </Link>
+      </div>
 
-        <label className="input input-bordered flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="w-4 h-4 opacity-70"
-          >
-            <path
-              fillRule="evenodd"
-              d="M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <input type="password" className="grow" placeholder="Password" />
-        </label>
-
-        <label className="input input-bordered flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="w-4 h-4 opacity-70"
-          >
-            <path
-              fillRule="evenodd"
-              d="M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <input
-            type="password"
-            className="grow"
-            placeholder="Confirm Password"
-          />
-        </label>
-        <button className="btn btn-primary">Sign up</button>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: "10px",
-          }}
-        >
-          <p className="text-decoration-line: underline;">
-            Already have an account?{" "}
+      <div className="grid lg:grid-cols-2 bg-[#fcc050] px-56 h-[250px]">
+        <div className="max-w-sm mt-16 max-lg:hidden">
+          <h3 className="text-3xl font-bold text-black">Sign up</h3>
+          <h3 className="text-xl font-semibold text-black pt-2">
+            Start making your life easier
+          </h3>
+          <p className="text-md mt-4 text-black">
+            I love making this website！
           </p>
-          <Link to="/login" className="btn-link pl-2">
-            Login
-          </Link>
+        </div>
+
+        {/* <div className="bg-white rounded-3xl sm:px-6 px-8 py-10 max-w-md w-full h-max shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] max-lg:mx-auto"></div> */}
+        <div className="bg-white rounded-3xl sm:px-6 px-8 py-10 max-w-md w-full h-max shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] max-lg:mx-auto">
+          <form>
+            <div className="mb-8">
+              <h2 className="text-md font-semibold text-black">
+                Welcome to <span className="font-extrabold">WHOOGA!</span>
+              </h2>
+              <h3 className="text-4xl font-semibold text-gray-800">Sign up</h3>
+            </div>
+
+            <div className="pt-10">
+              <label className="text-gray-800 text-sm mb-2 block">
+                Enter your email address
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  name="email address"
+                  type="text"
+                  required
+                  className="w-full text-sm text-gray-800 border border-gray-300 px-4 py-3 rounded-md outline-yellow-400"
+                  placeholder="Email address"
+                />
+                <MdOutlineMailOutline className="w-5 h-5 absolute right-4 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="text-gray-800 text-sm mb-2 block">
+                Username
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  name="Username"
+                  type="text"
+                  required
+                  className="w-full text-sm text-gray-800 border border-gray-300 px-4 py-3 rounded-md outline-yellow-400"
+                  placeholder="Username"
+                />
+                <FaRegUserCircle className="w-5 h-5 absolute right-4 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="text-gray-800 text-sm mb-2 block">
+                Password
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  className="w-full text-sm text-gray-800 border border-gray-300 px-4 py-3 rounded-md outline-yellow-400"
+                  placeholder="Password"
+                />
+                <FaRegEye className="w-5 h-5 absolute right-4 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <button
+                type="button"
+                className="w-full shadow-xl py-3 px-6 text-sm font-semibold rounded-md text-white bg-yellow-400 hover:bg-yellow-500 focus:outline-none"
+              >
+                Sign up
+              </button>
+            </div>
+            <p className="text-sm mt-8 text-center text-gray-800">
+              Have an account?{" "}
+              <Link
+                to="/login"
+                className="text-yellow-700 font-semibold hover:underline ml-1 whitespace-nowrap"
+              >
+                Sign in!
+              </Link>
+            </p>
+          </form>
         </div>
       </div>
-    </div>
+    </>
   );
 }
