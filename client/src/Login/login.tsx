@@ -14,10 +14,10 @@ export default function LoginPage() {
         <div className="max-w-sm mt-16 max-lg:hidden">
           <h3 className="text-3xl font-bold text-black">Sign in</h3>
           <h3 className="text-xl font-semibold text-black pt-2">
-            Start making your life easier
+            Welcome back!
           </h3>
           <p className="text-md mt-4 text-black">
-            I love making this website！
+            I still love making this website！
           </p>
         </div>
 
@@ -26,7 +26,7 @@ export default function LoginPage() {
           <form>
             <div className="mb-8">
               <h2 className="text-md font-semibold text-black">
-                Welcome to <span className="font-extrabold">WHOOGA</span>
+                Welcome to <span className="font-extrabold">WHOOGA!</span>
               </h2>
               <h3 className="text-4xl font-semibold text-gray-800">Sign in</h3>
             </div>
