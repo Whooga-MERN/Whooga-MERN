@@ -4,7 +4,7 @@ function Header() {
   return (
     <div className="navbar bg-primary">
       <div className="flex-1">
-        <Link to="/" className="text-white font-bold text-2xl">
+        <Link to="/" className="pl-3 text-black font-bold text-2xl">
           Whooga!
         </Link>
       </div>
@@ -20,7 +20,7 @@ function Header() {
           <li>
             <Link
               to="/home"
-              className="text-white hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
+              className="text-black hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
             >
               My Items
             </Link>
@@ -28,7 +28,7 @@ function Header() {
           <li>
             <Link
               to="/wishlist"
-              className="text-white hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
+              className="text-black hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
             >
               Wishlist
             </Link>
