@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Header from "../Components/Header";
 import { Link } from "react-router-dom";
 import { FaListUl } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { FaRegHeart } from "react-icons/fa";
+import Modal from "../Components/Modal";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
@@ -123,6 +124,8 @@ const tags = [
 ];
 
 export default function HomePage() {
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <>
       {/* <Navbar></Navbar> */}
@@ -206,7 +209,7 @@ export default function HomePage() {
           <div className="w-full md:w-[85%] p-2">
             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
               {tags.map((tag) => (
-                <div key={tag.id}>
+                <div key={tag.id} onClick={() => setShowModal(true)}>
                   <div className="relative hover:shadow-xl ">
                     <div className="h-22 w-30">
                       <img
@@ -244,6 +247,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        <Modal isVisible={showModal} onClose={() => setShowModal(false)} />
       </div>
     </>
   );
