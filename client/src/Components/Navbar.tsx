@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-
+// On the Logged out page
 export default function Navbar() {
   const [isClick, setisClick] = useState(false);
 

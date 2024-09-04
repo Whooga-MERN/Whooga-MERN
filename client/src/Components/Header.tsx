@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-
+// On the Logged in page
 function Header() {
   return (
     <div className="navbar bg-primary">
