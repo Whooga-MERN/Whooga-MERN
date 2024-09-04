@@ -1,11 +1,6 @@
 import { Link } from "react-router-dom";
 import { GiPostStamp } from "react-icons/gi";
 import { PiScanSmiley } from "react-icons/pi";
-// import { BsCoin } from "react-icons/bs";
-// import { TbHorseToy, TbLego } from "react-icons/tb";
-// import { TbPhotoScan, TbJewishStar } from "react-icons/tb";
-// import { HiOutlineShoppingCart } from "react-icons/hi";
-// import { GiCardExchange } from "react-icons/gi";
 import { MdSecurity } from "react-icons/md";
 
 export default function home() {

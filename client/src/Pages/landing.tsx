@@ -8,6 +8,7 @@ import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { FaRegHeart } from "react-icons/fa";
 import Modal from "../Components/Modal";
+import { RiArrowDropDownLine } from "react-icons/ri";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
@@ -128,16 +129,31 @@ export default function HomePage() {
 
   return (
     <>
-      {/* <Navbar></Navbar> */}
       <div>
         <Header />
-        {/* <Navbar /> */}
         <div className="w-full bg-white mx-auto pt-16">
-          <div className=" max-w-4xl mx-auto">
-            <h2 className="font-manrope font-bold text-3xl leading-10 text-black text-center">
-              Path tags
-            </h2>
-
+          <div className="mx-auto pl-10">
+            <div className="dropdown dropdown-bottom">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn font-bold text-2xl text-black bg-yellow-300 hover:bg-yelloe-200 rounded-full px-5 pt-2 pb-3 w-52"
+              >
+                Collection
+                <RiArrowDropDownLine className="font-extrabold text-2xl" />
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow text-lg"
+              >
+                <li>
+                  <a>PathTags</a>
+                </li>
+                <li>
+                  <a>Baseball card</a>
+                </li>
+              </ul>
+            </div>
             <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
               <div className="">
@@ -167,9 +183,9 @@ export default function HomePage() {
 
         {/* side bar */}
         <div className="w-full flex flex-col md:flex-row">
-          <div className="w-full md:w-[15%] p-2">
+          {/* <div className="w-full md:w-[15%] p-2">
             <div className="col-span-2 space-y6 top-12 h-fit">
-              {/* clear fliter */}
+              clear fliter
               <div className="py-2 mb-8 p-5">
                 <Link to="/home">
                   <button className="whitespace-nowrap text-white bg-yellow-400 border-yellow-400 hover:bg-yellow-500 hover:shadow-md duration-100 h-11 rounded-lg sm:px-3 lg:px-7 w-auto py-3 font-semibold text-sm shadow-lg shadow-transparent cursor-pointer">
@@ -203,11 +219,11 @@ export default function HomePage() {
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
           {/* collectibles */}
-          <div className="w-full md:w-[85%] p-2">
-            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+          <div className="w-full p-2">
+            <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
               {tags.map((tag) => (
                 <div key={tag.id} onClick={() => setShowModal(true)}>
                   <div className="relative hover:shadow-xl ">
