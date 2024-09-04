@@ -8,9 +8,9 @@ export default function Navbar() {
     setisClick(!isClick);
   };
 
-  function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-  }
+  // function classNames(...classes: string[]) {
+  //   return classes.filter(Boolean).join(" ");
+  // }
 
   return (
     <div>
