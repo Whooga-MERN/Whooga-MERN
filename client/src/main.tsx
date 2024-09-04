@@ -2,10 +2,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
-import Home from "./Landing/landing";
-import Profile from "./Profile/profile";
-import Signup from "./Signup/signup";
-import Login from "./Login/login";
+import Home from "./Pages/landing.tsx";
+import Profile from "./Pages/profile.tsx";
+import Signup from "./Pages/signup.tsx";
+import Login from "./Pages/login.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
