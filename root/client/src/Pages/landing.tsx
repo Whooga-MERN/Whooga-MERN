@@ -7,8 +7,7 @@ import { FaListUl } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { FaRegHeart } from "react-icons/fa";
-import Modal from "../Components/Modal";
-import { RiArrowDropDownLine } from "react-icons/ri";
+import Footer from "../Components/Footer";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
@@ -265,6 +264,7 @@ export default function HomePage() {
         </div>
         <Modal isVisible={showModal} onClose={() => setShowModal(false)} />
       </div>
+      <Footer />
     </>
   );
 }
