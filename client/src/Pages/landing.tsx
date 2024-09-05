@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import Header from "../Components/Header";
 import { Link } from "react-router-dom";
@@ -7,11 +5,12 @@ import { FaListUl } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { FaRegHeart } from "react-icons/fa";
+import Modal from "../Components/Modal";
+import { RiArrowDropDownLine } from "react-icons/ri";
 import Footer from "../Components/Footer";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
-
 const option = [
   {
     id: "sort",
@@ -26,19 +25,15 @@ const option = [
     inputType: "checkbox",
   },
 ];
-
 interface filterButtons {
   children: React.ReactNode;
 }
-
 interface checkItems extends React.ComponentPropsWithoutRef<"input"> {
   label: string;
 }
-
 function CheckButtons({ children }: filterButtons) {
   return <div className="flex flex-items hover:opacity-75">{children}</div>;
 }
-
 function CheckItem({ id, label, ...props }: checkItems) {
   return (
     <div>
@@ -49,7 +44,6 @@ function CheckItem({ id, label, ...props }: checkItems) {
     </div>
   );
 }
-
 const tags = [
   {
     id: 1,
@@ -122,10 +116,8 @@ const tags = [
     tagNum: "#55917",
   },
 ];
-
 export default function HomePage() {
   const [showModal, setShowModal] = useState(false);
-
   return (
     <>
       <div>
@@ -179,7 +171,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
         {/* side bar */}
         <div className="w-full flex flex-col md:flex-row">
           {/* <div className="w-full md:w-[15%] p-2">
@@ -192,7 +183,6 @@ export default function HomePage() {
                   </button>
                 </Link>
               </div>
-
               {option.map(({ id, title, options, inputType }) => {
                 return (
                   <div className="border-b pb-4" key={id}>
@@ -219,7 +209,6 @@ export default function HomePage() {
               })}
             </div>
           </div> */}
-
           {/* collectibles */}
           <div className="w-full p-2">
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
@@ -235,7 +224,6 @@ export default function HomePage() {
                         className="rounded-md shadow-sm object-cover object-top"
                       />
                     </div>
-
                     <div className="space-y-1">
                       <p className="mt-4 font-semibold pl-4 uppercase truncate">
                         {tag.tagNum}
@@ -246,7 +234,6 @@ export default function HomePage() {
                       <p className="block text-slate-500 text-sm pl-4">
                         {tag.createAt}
                       </p>
-
                       <div className="pt-3 pl-5 pb-2">
                         <button className="px-2 py-1 bg-orange-200 text-white hover:text-white rounded-full">
                           <FaRegHeart />
