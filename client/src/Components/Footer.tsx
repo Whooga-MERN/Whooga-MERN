@@ -18,8 +18,9 @@ export default function Footer(): JSX.Element {
             </div>
 
             {/* <!--Copyright section--> */}
+            <hr />
             <div
-                className="p-3 text-center bg-black bg-opacity-20">
+                className="p-3 text-center">
                 © 2024 Copyright:
                 Whooga! All rights reserved.
             </div>
