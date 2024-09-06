@@ -51,9 +51,9 @@ export default function Collections() {
     return (
         <>
         <Header />
-        <div className="w-full bg-white">
+        <div className="w-full">
           <div className="flex items-center justify-between">
-            <h2 className="px-20 font-manrope font-bold text-4xl text-black text-center">
+            <h2 className="px-20 font-manrope font-bold text-4xl text-center">
               My Collections
             </h2>
               <div className="flex flex-col md:flex-row md:items-center justify-right py-9">
@@ -88,7 +88,7 @@ export default function Collections() {
             <div className="mt-8 grid lg:grid-cols-4 gap-10 md:grid-cols-4 sm:grid-cols-2">
               {collections.map((collection) => (
                 <div key={collection.id}>
-                  <div className="card card-compact card-bordered bg-base-100 h-100 w-200 hover:shadow-xl cursor-pointer" onClick={handleClick}>
+                  <div className="card card-compact card-bordered bg-base-200 h-100 w-200 hover:shadow-2xl cursor-pointer dark:bg-base-300" onClick={handleClick}>
                     <div style={{
                       right: '3%',
                       bottom: '97%',

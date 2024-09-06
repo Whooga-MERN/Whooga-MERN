@@ -18,9 +18,9 @@ function NewCollectionStart(){
     return (
         <>
         <Header />
-        <div className="w-full bg-white">
+        <div className="w-full">
           <div className="flex items-center justify-center">
-            <h2 className="px-16 pt-14 font-manrope font-bold text-4xl text-black text-center">
+            <h2 className="px-16 pt-14 font-manrope font-bold text-4xl text-center">
               What are you collecting?
             </h2>
           </div>
