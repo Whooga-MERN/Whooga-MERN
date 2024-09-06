@@ -7,7 +7,8 @@ import Profile from "./Pages/profile.tsx";
 import Signup from "./Pages/signup.tsx";
 import Login from "./Pages/login.tsx";
 import Collections from "./Pages/collections.tsx";
-import UploadCollection from "./Pages/upload_collection.tsx";
+import NewCollectionForm from "./Pages/new_collection_form.tsx";
+import NewCollectionStart from "./Pages/new_collection_start.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -18,7 +19,8 @@ createRoot(document.getElementById("root")!).render(
       <Route path="/signup" element={<Signup />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/collections" element={<Collections />} />
-      <Route path="/upload_collection" element={<UploadCollection />} />
+      <Route path="/new_collection_form" element={<NewCollectionForm />} />
+      <Route path="/new_collection_start" element={<NewCollectionStart />} />
     </Routes>
   </BrowserRouter>
 );

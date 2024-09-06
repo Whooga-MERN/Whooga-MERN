@@ -2,6 +2,7 @@ import { IoMdAddCircleOutline } from "react-icons/io";
 import { IconContext } from "react-icons";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
+import { Link } from "react-router-dom";
 
 const collections = [
   {
@@ -73,9 +74,9 @@ export default function Collections() {
                 <div className="pl-20 relative sm: w-[400px] border-none ml-auto">
                   <IconContext.Provider
                     value={{ color: '#554141', size: '35px' }}>
-                    <button className="btn btn-primary text-2xl w-250 ">New Collection
+                    <Link to="/new_collection_start" className="btn btn-primary text-2xl w-250 ">New Collection
                       <IoMdAddCircleOutline />
-                    </button>
+                    </Link>
                     </IconContext.Provider>
                 </div>
             </div>
