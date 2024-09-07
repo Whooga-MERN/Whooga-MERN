@@ -122,7 +122,7 @@ export default function HomePage() {
     <>
       <div>
         <Header />
-        <div className="w-full bg-white mx-auto pt-16">
+        <div className="w-full mx-auto pt-16">
           <div className="mx-auto pl-10">
             <div className="dropdown dropdown-bottom">
               <div
@@ -214,7 +214,7 @@ export default function HomePage() {
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
               {tags.map((tag) => (
                 <div key={tag.id} onClick={() => setShowModal(true)}>
-                  <div className="relative hover:shadow-xl ">
+                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
                       <img
                         src={tag.image}

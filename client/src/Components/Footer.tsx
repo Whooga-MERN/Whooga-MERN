@@ -1,7 +1,7 @@
 
 export default function Footer(): JSX.Element {
     return (
-        <footer className="text-center text-black my-5">
+        <footer className="text-center my-5 mt-24">
             <div className="container p-5 mx-auto">
                 <div className="">
                     <span className="flex items-center justify-between w-full">
@@ -18,8 +18,9 @@ export default function Footer(): JSX.Element {
             </div>
 
             {/* <!--Copyright section--> */}
+            <hr />
             <div
-                className="p-3 text-center bg-black bg-opacity-20">
+                className="p-3 text-center">
                 © 2024 Copyright:
                 Whooga! All rights reserved.
             </div>

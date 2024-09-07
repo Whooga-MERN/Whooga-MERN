@@ -1,6 +1,16 @@
 import { Link } from "react-router-dom";
+import { useEffect } from 'react'
+import { themeChange } from 'theme-change'
+
+
 // On the Logged in page
 function Header() {
+
+  useEffect(() => {
+  themeChange(false)
+  // 👆 false parameter is required for react project
+}, []);
+
   return (
     <div className="navbar bg-primary">
       <div className="flex-1">
@@ -25,6 +35,9 @@ function Header() {
                   </label>
         </div> 
         <ul className="menu menu-horizontal px-1">
+          <li>
+            <button data-toggle-theme="light,dark" data-act-class="ACTIVECLASS"></button>
+          </li>
           <li>
             <Link
               to="/collections"
