@@ -126,7 +126,7 @@ function App() {
   return (
     <div className="App">
       <Authenticator>
-        {({ signOut }: { signOut: () => void }) => (
+        {({ signOut }: { signOut?: () => void }) => (
           <main>
             <header className='App-header'>
               <button 
