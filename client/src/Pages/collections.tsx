@@ -8,39 +8,45 @@ import { Collection } from "../Types/Collection";
 
 const collections: Collection[] = [
   {
-    title: "Pathtags",
+    name: "Pathtags",
     id: 1,
     image: "/bear.jpg",
+    description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
     newListing: true,
   },
   {
-    title: "Shoes",
+    name: "Shoes",
     id: 2,
     image: "/jordans.jpg",
+    description: "Shoes are a type of footwear that are typically worn on the feet.",
     newListing: false,
   },
   {
-    title: "Snowglobes",
+    name: "Snowglobes",
     id: 3,
     image: "/snowglobe.jpg",
+    description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
     newListing: true,
   },
   {
-    title: "ur mom",
+    name: "ur mom",
     id: 4,
     image: "/psycho.jpg",
+    description: "ur mom",
     newListing: false,
   },
   {
-    title: "ur mom",
+    name: "ur mom",
     id: 5,
     image: "/scan.jpg",
+    description: "ur mom",
     newListing: true,
   },
   {
-    title: "ur mom",
+    name: "ur mom",
     id: 6,
     image: "/psycho.jpg",
+    description: "ur mom",
     newListing: false,
   },
 ];
@@ -103,11 +109,11 @@ export default function Collections() {
                         className="object-cover w-full h-full rounded-t-lg border-b-2"
                         style={{ height: '100%', width: '100%', aspectRatio: '1 / 1'}}
                         src={collection.image}
-                        alt={collection.title} />
+                        alt={collection.name} />
                     </figure>
                     <div className="card-body">
                       <h2 className="card-title">
-                        {collection.title}
+                        {collection.name}
                       </h2>
                     </div>
                   </div>
