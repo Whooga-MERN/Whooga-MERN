@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Header from '../Components/Header';
 import Footer from '../Components/Footer';
 
@@ -53,7 +53,7 @@ function NewCollectionSearchMatches () {
                             <div className="card-body">
                                 <h2 className="card-title">Not what you're looking for?</h2>
                                 <div className="card-actions justify-center">
-                                <button className="btn btn-primary mt-2">Create new Collection</button>
+                                <Link to="/new_collection_form" className="btn btn-primary mt-2">Create new Collection</Link>
                                 </div>
                             </div>
                         </div>
