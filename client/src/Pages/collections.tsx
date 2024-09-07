@@ -4,7 +4,9 @@ import Header from "../Components/Header";
 import Footer from "../Components/Footer";
 import { Link } from "react-router-dom";
 
-const collections = [
+import { Collection } from "../Types/Collection";
+
+const collections: Collection[] = [
   {
     title: "Pathtags",
     id: 1,
@@ -86,9 +88,9 @@ export default function Collections() {
         {/* collectibles */}
           <div className="w-full px-32">
             <div className="mt-8 grid lg:grid-cols-4 gap-10 md:grid-cols-4 sm:grid-cols-2">
-              {collections.map((collection) => (
+              {collections.map((collection: Collection) => (
                 <div key={collection.id}>
-                  <div className="card card-compact card-bordered bg-base-200 h-100 w-200 hover:shadow-2xl cursor-pointer dark:bg-base-300" onClick={handleClick}>
+                  <div className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300" onClick={handleClick}>
                     <div style={{
                       right: '3%',
                       bottom: '97%',

@@ -100,12 +100,12 @@ function NewCollectionForm(){
                             {/* if there is a button in form, it will close the modal */}
                             <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                         </form>
-                        <h3 className="font-bold text-lg">Item features</h3>
-                        <p className="py-4">These feature tags refer to what you would like to view, sort, and search the items in this collection by.</p>
+                        <h3 className="font-bold text-lg">Item attribute</h3>
+                        <p className="py-4">These attribute tags refer to what you would like to view, sort, and search the items in this collection by.</p>
                     </div>
                 </dialog>
 
-                <input type="text" onKeyDown={handleEnterPress} placeholder="Add any amount of features (Name, Color, Year etc.)" id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
+                <input type="text" onKeyDown={handleEnterPress} placeholder="Add at least one attribute (Name, Color, Year etc.)" id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
             </div>
             <div className="flex flex-wrap mt-2">
                 {featureTags.map((tag, index) => (

@@ -1,7 +1,7 @@
 
 export default function Footer(): JSX.Element {
     return (
-        <footer className="text-center my-5">
+        <footer className="text-center my-5 mt-24">
             <div className="container p-5 mx-auto">
                 <div className="">
                     <span className="flex items-center justify-between w-full">
