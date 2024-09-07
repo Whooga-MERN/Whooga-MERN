@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-whooga-dev-1c5b0-authRole",
+      "UnauthRoleArn": "arn:aws:iam::211125311498:role/amplify-whooga-dev-1c5b0-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::211125311498:role/amplify-whooga-dev-1c5b0-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-whooga-dev-1c5b0-deployment",
+      "UnauthRoleName": "amplify-whooga-dev-1c5b0-unauthRole",
+      "StackName": "amplify-whooga-dev-1c5b0",
+      "StackId": "arn:aws:cloudformation:us-east-1:211125311498:stack/amplify-whooga-dev-1c5b0/4ae4e1f0-6c8c-11ef-b859-0affc4fa9991",
+      "AmplifyAppId": "d201kh2abos6az"
+    }
+  }
+}
