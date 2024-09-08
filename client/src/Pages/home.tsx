@@ -50,7 +50,7 @@ export default function home() {
                 <h1 className="pb-10 font-cabinet-grotesk text-6xl font-extrabold mb-3">
                   Organize, Track, and Treasure Your Collections
                 </h1>
-                <p>
+                <p className="text-lg">
                   Welcome to WHOOGA, the ultimate platform for collectors!
                   Whether you're passionate about sports cards, coins, stamps,
                   or any other type of collectible, WHOOGA is designed to
@@ -62,13 +62,13 @@ export default function home() {
 
             {/* Image */}
             <div className="">
-              {/* <img
+              <img
                 className="w-full h-full mx-auto md:max-w-none"
-                src="/scan.jpg"
+                src="/coin.png"
                 width={540}
                 height={300}
-                alt="Features"
-              /> */}
+                alt="Coin"
+              />
             </div>
           </div>
         </div>
