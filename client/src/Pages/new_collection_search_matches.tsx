@@ -31,7 +31,7 @@ function NewCollectionSearchMatches () {
                             <img
                                 className="object-cover w-full h-full rounded-t-lg border-b-2"
                                 style={{ height: '100%', width: '100%', aspectRatio: '1 / 1'}}
-                                src={collection.image}
+                                src={collection.image_url}
                                 alt={collection.name} />
                             </figure>
                             <div className="card-body">

@@ -60,10 +60,10 @@ function Header() {
           <div
             tabIndex={0}
             role="button"
-            className="btn btn-ghost btn-circle avatar"
+            className="btn btn-ghost btn-circle avatar border-black" 
           >
             <div className="w-10 rounded-full">
-              <img alt="profile pic" src="/profile.png" />
+              <img alt="profile pic" src="/profilepic.jpeg" />
             </div>
           </div>
           <ul

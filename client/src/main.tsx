@@ -10,6 +10,7 @@ import Collections from "./Pages/collections.tsx";
 import NewCollectionForm from "./Pages/new_collection_form.tsx";
 import NewCollectionStart from "./Pages/new_collection_start.tsx";
 import NewCollectionSearchMatches from "./Pages/new_collection_search_matches.tsx";
+import UploadCollection from "./Pages/upload_collection_csv.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -23,6 +24,7 @@ createRoot(document.getElementById("root")!).render(
       <Route path="/new_collection_form" element={<NewCollectionForm />} />
       <Route path="/new_collection_start" element={<NewCollectionStart />} />
       <Route path="/new_collection_search_matches" element={<NewCollectionSearchMatches />} />
+      <Route path="/upload_collection_csv" element={<UploadCollection />} />
     </Routes>
   </BrowserRouter>
 );
