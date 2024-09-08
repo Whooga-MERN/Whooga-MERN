@@ -12,13 +12,13 @@ export default function home() {
           <div className="pt-28 pb-16 md:pt-40 md:pb-20">
             {/* Hero content */}
             <div className="max-w-3xl mx-auto text-center">
-              <p className="text-6xl md:text-7xl lg:text-8xl text-black mb-8 font-semibold text-opacity-85">
+              <p className="text-6xl md:text-7xl lg:text-8xl  mb-8 font-semibold text-opacity-85">
                 Take Control of Your Collection
               </p>
               <div>
                 <Link
                   className="btn inline-flex items-center text-white bg-yellow-400 hover:bg-yellow-500 group"
-                  to="/signup"
+                  to="/auth"
                 >
                   Get Started
                   <span className="tracking-normal text-yellow-800 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-2">
