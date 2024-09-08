@@ -10,6 +10,27 @@
       "StackName": "amplify-whooga-dev-1c5b0",
       "StackId": "arn:aws:cloudformation:us-east-1:211125311498:stack/amplify-whooga-dev-1c5b0/4ae4e1f0-6c8c-11ef-b859-0affc4fa9991",
       "AmplifyAppId": "d201kh2abos6az"
+    },
+    "categories": {
+      "auth": {
+        "whooga48dd3d42": {},
+        "whoogaaaf5bccd": {}
+      },
+      "function": {
+        "whooga48dd3d42DefineAuthChallenge": {
+          "deploymentBucketName": "amplify-whooga-dev-1c5b0-deployment",
+          "s3Key": "amplify-builds/whooga48dd3d42DefineAuthChallenge-4e4638413137614f2b49-build.zip"
+        },
+        "whooga48dd3d42CreateAuthChallenge": {
+          "deploymentBucketName": "amplify-whooga-dev-1c5b0-deployment",
+          "s3Key": "amplify-builds/whooga48dd3d42CreateAuthChallenge-514a4331677772535044-build.zip"
+        },
+        "whooga48dd3d42VerifyAuthChallengeResponse": {
+          "RECAPTCHASECRET": "jgh12k",
+          "deploymentBucketName": "amplify-whooga-dev-1c5b0-deployment",
+          "s3Key": "amplify-builds/whooga48dd3d42VerifyAuthChallengeResponse-4e553632776259633553-build.zip"
+        }
+      }
     }
   }
 }

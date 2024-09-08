@@ -1,1 +1,108 @@
-{}
+{
+  "auth": {
+    "whoogaaaf5bccd": {
+      "customAuth": false,
+      "dependsOn": [],
+      "frontendAuthConfig": {
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyCharacters": [],
+          "passwordPolicyMinLength": 8
+        },
+        "signupAttributes": [
+          "BIRTHDATE",
+          "EMAIL",
+          "NAME",
+          "PHONE_NUMBER"
+        ],
+        "socialProviders": [],
+        "usernameAttributes": [
+          "EMAIL"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito"
+    }
+  },
+  "function": {
+    "whooga48dd3d42CreateAuthChallenge": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "whooga48dd3d42DefineAuthChallenge": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "whooga48dd3d42VerifyAuthChallengeResponse": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_whooga48dd3d42CreateAuthChallenge_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "whooga48dd3d42CreateAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_whooga48dd3d42CreateAuthChallenge_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "whooga48dd3d42CreateAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_whooga48dd3d42DefineAuthChallenge_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "whooga48dd3d42DefineAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_whooga48dd3d42DefineAuthChallenge_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "whooga48dd3d42DefineAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_whooga48dd3d42VerifyAuthChallengeResponse_RECAPTCHASECRET": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "whooga48dd3d42VerifyAuthChallengeResponse"
+        }
+      ]
+    },
+    "AMPLIFY_function_whooga48dd3d42VerifyAuthChallengeResponse_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "whooga48dd3d42VerifyAuthChallengeResponse"
+        }
+      ]
+    },
+    "AMPLIFY_function_whooga48dd3d42VerifyAuthChallengeResponse_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "whooga48dd3d42VerifyAuthChallengeResponse"
+        }
+      ]
+    }
+  }
+}
