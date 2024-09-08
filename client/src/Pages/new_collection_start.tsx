@@ -23,7 +23,8 @@ function NewCollectionStart(){
         }
         
         try {
-          // Insert API call here to search for collectionName
+          // Insert API call here to search for a Collection by name
+
           //const response = await fetch(`https://api.example.com/search?query=${collectionName}`);
           //const data = await response.json();
           //setCollectionSearchResults(data.results);
@@ -31,57 +32,66 @@ function NewCollectionStart(){
 
           const data: Collection[] = [
           {
-            title: "Pathtags",
+            name: "Pathtags",
             id: 1,
-            image: "/bear.jpg",
+            image_url: "/bear.jpg",
+            description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
             newListing: true,
           },
           {
-            title: "Shoes",
+            name: "Shoe Pathtags",
             id: 2,
-            image: "/jordans.jpg",
+            image_url: "/jordans.jpg",
+            description: "Shoes are a type of footwear that are typically worn on the feet.",
             newListing: false,
           },
           {
-            title: "Snowglobes",
+            name: "Snowglobe Pathtags",
             id: 3,
-            image: "/snowglobe.jpg",
+            image_url: "/snowglobe.jpg",
+            description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
             newListing: true,
           },
           {
-            title: "ur mom",
+            name: "ur mom Pathtags",
             id: 4,
-            image: "/psycho.jpg",
+            image_url: "/psycho.jpg",
+            description: "ur mom",
             newListing: false,
           },
           {
-            title: "ur mom",
+            name: "ur mom Pathtags",
             id: 5,
-            image: "/scan.jpg",
+            image_url: "/scan.jpg",
+            description: "ur mom",
             newListing: true,
           },
           {
-            title: "ur mom",
+            name: "ur mom Pathtags",
             id: 6,
-            image: "/psycho.jpg",
+            image_url: "/psycho.jpg",
+            description: "ur mom",
             newListing: false,
           },
           {
-            title: "ur mom",
+            name: "ur mom Pathtags",
             id: 7,
-            image: "/psycho.jpg",
+            image_url: "/psycho.jpg",
+            description: "ur mom",
             newListing: false,
           },
           {
-            title: "ur mom",
+            name: "ur mom Pathtags",
             id: 8,
-            image: "/scan.jpg",
+            image_url: "/scan.jpg",
+            description: "ur mom",
             newListing: true,
           },
           {
-            title: "ur mom",
+            name: "ur mom Pathtags",
             id: 9,
-            image: "/psycho.jpg",
+            image_url: "/psycho.jpg",
+            description: "ur mom",
             newListing: false,
           },
           ];

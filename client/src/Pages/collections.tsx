@@ -8,39 +8,45 @@ import { Collection } from "../Types/Collection";
 
 const collections: Collection[] = [
   {
-    title: "Pathtags",
+    name: "Pathtags",
     id: 1,
-    image: "/bear.jpg",
+    image_url: "/bear.jpg",
+    description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
     newListing: true,
   },
   {
-    title: "Shoes",
+    name: "Shoes",
     id: 2,
-    image: "/jordans.jpg",
+    image_url: "/shoes.jpg",
+    description: "Shoes are a type of footwear that are typically worn on the feet.",
     newListing: false,
   },
   {
-    title: "Snowglobes",
-    id: 3,
-    image: "/snowglobe.jpg",
-    newListing: true,
-  },
-  {
-    title: "ur mom",
-    id: 4,
-    image: "/psycho.jpg",
-    newListing: false,
-  },
-  {
-    title: "ur mom",
+    name: "Cat Mugs",
     id: 5,
-    image: "/scan.jpg",
+    image_url: "/catmug.jpg",
+    description: "ur mom",
+    newListing: false,
+  },
+  {
+    name: "Pokemon Cards",
+    id: 4,
+    image_url: "/pokemon.jpg",
+    description: "ur mom",
     newListing: true,
   },
   {
-    title: "ur mom",
+    name: "Snowglobes",
+    id: 3,
+    image_url: "/snowglobe.jpg",
+    description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
+    newListing: true,
+  },
+  {
+    name: "ur mom",
     id: 6,
-    image: "/psycho.jpg",
+    image_url: "/psycho.jpg",
+    description: "ur mom",
     newListing: false,
   },
 ];
@@ -96,18 +102,18 @@ export default function Collections() {
                       bottom: '97%',
                       position: 'absolute',
                       }}>
-                      {collection.newListing ? <div className="badge badge-lg badge-primary">WHOOGA!</div> : ''}
+                      {collection.newListing ? <div className="badge h-8 text-lg font-bold badge-primary">WHOOGA!</div> : ''}
                     </div>
                     <figure style={{aspectRatio: '1 / 1'}}>
                       <img
                         className="object-cover w-full h-full rounded-t-lg border-b-2"
-                        style={{ height: '100%', width: '100%', aspectRatio: '1 / 1'}}
-                        src={collection.image}
-                        alt={collection.title} />
+                        style={{ height: '95%', width: '95%', aspectRatio: '1 / 1'}}
+                        src={collection.image_url}
+                        alt={collection.name} />
                     </figure>
                     <div className="card-body">
                       <h2 className="card-title">
-                        {collection.title}
+                        {collection.name}
                       </h2>
                     </div>
                   </div>
