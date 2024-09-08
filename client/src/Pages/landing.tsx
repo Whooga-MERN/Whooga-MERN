@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import Header from "../Components/Header";
 import { Link } from "react-router-dom";
@@ -7,6 +5,7 @@ import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import Modal from "../Components/Modal";
+import Footer from "../Components/Footer";
 import { IoIosAdd } from "react-icons/io";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
@@ -27,19 +26,15 @@ const option = [
     inputType: "checkbox",
   },
 ];
-
 interface filterButtons {
   children: React.ReactNode;
 }
-
 interface checkItems extends React.ComponentPropsWithoutRef<"input"> {
   label: string;
 }
-
 function CheckButtons({ children }: filterButtons) {
   return <div className="flex flex-items hover:opacity-75">{children}</div>;
 }
-
 function CheckItem({ id, label, ...props }: checkItems) {
   return (
     <div>
@@ -50,7 +45,6 @@ function CheckItem({ id, label, ...props }: checkItems) {
     </div>
   );
 }
-
 const tags = [
   {
     id: 1,
@@ -123,15 +117,13 @@ const tags = [
     tagNum: "#55917",
   },
 ];
-
 export default function HomePage() {
   const [showModal, setShowModal] = useState(false);
-
   return (
     <>
       <div>
         <Header />
-        <div className="w-full bg-white mx-auto pt-16">
+        <div className="w-full mx-auto pt-16">
           <div className="mx-auto pl-10">
             {/* collection option */}
             <select className="select select-bordered font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
@@ -178,7 +170,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
         {/* side bar */}
         <div className="w-full flex flex-col md:flex-row">
           {/* <div className="w-full md:w-[15%] p-2">
@@ -191,7 +182,6 @@ export default function HomePage() {
                   </button>
                 </Link>
               </div>
-
               {option.map(({ id, title, options, inputType }) => {
                 return (
                   <div className="border-b pb-4" key={id}>
@@ -218,13 +208,12 @@ export default function HomePage() {
               })}
             </div>
           </div> */}
-
           {/* collectibles */}
           <div className="w-full p-2">
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
               {tags.map((tag) => (
                 <div key={tag.id} onClick={() => setShowModal(true)}>
-                  <div className="relative hover:shadow-xl ">
+                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
                       <img
                         src={tag.image}
@@ -234,7 +223,6 @@ export default function HomePage() {
                         className="rounded-md shadow-sm object-cover object-top"
                       />
                     </div>
-
                     <div className="space-y-1">
                       <p className="mt-4 font-semibold pl-4 uppercase truncate">
                         {tag.tagNum}
@@ -263,6 +251,7 @@ export default function HomePage() {
         </div>
         <Modal isVisible={showModal} onClose={() => setShowModal(false)} />
       </div>
+      <Footer />
     </>
   );
 }
