@@ -31,12 +31,12 @@ function NewCollectionSearchMatches () {
                             <img
                                 className="object-cover w-full h-full rounded-t-lg border-b-2"
                                 style={{ height: '100%', width: '100%', aspectRatio: '1 / 1'}}
-                                src={collection.image}
-                                alt={collection.title} />
+                                src={collection.image_url}
+                                alt={collection.name} />
                             </figure>
                             <div className="card-body">
                             <h2 className="card-title">
-                                {collection.title}
+                                {collection.name}
                             </h2>
                             <div className="card-actions justify-end">
                                 <button className="btn btn-primary">View Collection</button>

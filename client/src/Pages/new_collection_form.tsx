@@ -6,16 +6,19 @@ import { FaInfo } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
+import { Collection } from '../Types/Collection';
 
 function NewCollectionForm(){
 
     const [collectionName, setCollectionName] = useState('');
+    const [collectionObject, setCollectionObject] = useState<Collection>();
     const [featureTags, setFeatureTags] = useState<string[]>(["test", "test2"]);
 
     useEffect(() => {
         const storedCollectionName = localStorage.getItem('collectionName');
         if (storedCollectionName) {
             setCollectionName(storedCollectionName);
+            setCollectionObject(new Collection(0, storedCollectionName, '', '', false));
         }
     }, []);
 
@@ -35,7 +38,49 @@ function NewCollectionForm(){
     };
 
     const deleteFeatureTag = (tagToDelete: string) => {
-        setFeatureTags(featureTags.filter(tag => tag !== tagToDelete));
+    const index = featureTags.findIndex(tag => tag === tagToDelete);
+    if (index !== -1) {
+        setFeatureTags([
+            ...featureTags.slice(0, index),
+            ...featureTags.slice(index + 1)
+        ]);
+    }
+};
+
+    const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCollectionObject(prevCollection => {
+            if (prevCollection) {
+                return {
+                    ...prevCollection,
+                    name: event.target.value
+                };
+            }
+            return prevCollection;
+        });
+    };
+
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCollectionObject(prevCollection => {
+            if (prevCollection) {
+                return {
+                    ...prevCollection,
+                    image_url: event.target.value
+                };
+            }
+            return prevCollection;
+        });
+    };
+
+    const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setCollectionObject(prevCollection => {
+            if (prevCollection) {
+                return {
+                    ...prevCollection,
+                    description: event.target.value
+                };
+            }
+            return prevCollection;
+        });
     };
     
     return (
@@ -52,10 +97,12 @@ function NewCollectionForm(){
         {/* Upload Collection Form */}
         <div className="flex flex-col mb-20 lg:ml-40 md:ml-20 sm:ml-10 ml-5 justify-center w-3/4 2xl:w-1/2 bg-slate-100 dark:bg-neutral p-10"
             style={{borderRadius: 30}}>
+
+            {/* Collection Name */}
             <div className="flex flex-col justify-center">
                 <label htmlFor="collectionName" className=" font-semibold text-lg">Collection Name</label>
                 <div className="relative w-full">
-                    <input type="text" defaultValue={collectionName} id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
+                    <input type="text" defaultValue={collectionName} onChange={handleNameChange} id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
                     <FaPencil className="absolute right-5 top-1/2 transform -translate-y-1/4"/>
                 </div>
             </div>
@@ -79,9 +126,10 @@ function NewCollectionForm(){
                 </label>
             </div>
             
+            {/* Description */}
             <div className="flex flex-col justify-center mt-6">
                 <label htmlFor="collectionDescription" className=" font-semibold text-lg">Collection Description</label>
-                <textarea placeholder="Tell us about your collection..." id="collectionDescription" className="w-full h-32 mt-2 border-2 border-gray-300 rounded-md px-4 py-2" />
+                <textarea onChange={handleDescriptionChange} placeholder="Tell us about your collection..." id="collectionDescription" className="w-full h-32 mt-2 border-2 border-gray-300 rounded-md px-4 py-2" />
             </div>
 
             {/* Features */}

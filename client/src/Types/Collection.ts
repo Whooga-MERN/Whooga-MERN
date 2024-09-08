@@ -1,13 +1,20 @@
 export class Collection {
     id: number;
-    title: string;
-    image: string;
+    name: string;
+    image_url: string;
+    description: string;
     newListing: boolean;
 
-    constructor(id: number, title: string, image: string, newListing: boolean) {
+    constructor(id: number = 0,
+        title: string = '',
+        image: string = '',
+        description: string = '',
+        newListing: boolean = false
+    ) {
         this.id = id;
-        this.title = title;
-        this.image = image;
+        this.name = title;
+        this.image_url = image;
+        this.description = description;
         this.newListing = newListing;
     }
 }
