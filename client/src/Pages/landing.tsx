@@ -3,15 +3,15 @@
 import React, { useState } from "react";
 import Header from "../Components/Header";
 import { Link } from "react-router-dom";
-import { FaListUl } from "react-icons/fa";
+import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
-import { FaRegHeart } from "react-icons/fa";
 import Modal from "../Components/Modal";
-import { RiArrowDropDownLine } from "react-icons/ri";
+import { IoIosAdd } from "react-icons/io";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
+const collectionList = ["PathTags", "Baseball cards", "Nutcracker"];
 
 const option = [
   {
@@ -133,27 +133,19 @@ export default function HomePage() {
         <Header />
         <div className="w-full bg-white mx-auto pt-16">
           <div className="mx-auto pl-10">
-            <div className="dropdown dropdown-bottom">
-              <div
-                tabIndex={0}
-                role="button"
-                className="btn font-bold text-2xl text-black bg-yellow-300 hover:bg-yelloe-200 rounded-full px-5 pt-2 pb-3 w-52"
-              >
-                Collection
-                <RiArrowDropDownLine className="font-extrabold text-2xl" />
-              </div>
-              <ul
-                tabIndex={0}
-                className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow text-lg"
-              >
-                <li>
-                  <a>PathTags</a>
-                </li>
-                <li>
-                  <a>Baseball card</a>
-                </li>
-              </ul>
-            </div>
+            {/* collection option */}
+            <select className="select select-bordered font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
+              <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
+                PathTags
+              </option>
+              <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
+                Baseball card
+              </option>
+              <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
+                Nutcraker
+              </option>
+            </select>
+
             <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
               <div className="">
@@ -171,12 +163,18 @@ export default function HomePage() {
                 </div>
               </div>
               {/* icon button for view*/}
-              <button className="inline-block">
-                <FaListUl />
-              </button>
-              <button className="inline-block">
-                <BsFillGridFill />
-              </button>
+              <div className="hidden lg:block md:block">
+                <button className="inline-block pr-5">
+                  <FaListUl />
+                </button>
+                <button className="inline-block pr-16">
+                  <BsFillGridFill />
+                </button>
+                <button className="btn font-bold text-lg text-black bg-yellow-300 hover:bg-yelloe-200 rounded-full w-fit">
+                  new collectible
+                  <IoIosAdd />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -248,11 +246,11 @@ export default function HomePage() {
                         {tag.createAt}
                       </p>
 
-                      <div className="pt-3 pl-5 pb-2">
-                        <button className="px-2 py-1 bg-orange-200 text-white hover:text-white rounded-full">
-                          <FaRegHeart />
+                      <div className="pt-3 pl-2 pb-2 text-center">
+                        <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                          <FaRegEdit />
                         </button>
-                        <button className="ml-4 px-2 py-1 bg-orange-200 text-white hover:text-white rounded-full">
+                        <button className="ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
                           <FaRegTrashCan />
                         </button>
                       </div>
