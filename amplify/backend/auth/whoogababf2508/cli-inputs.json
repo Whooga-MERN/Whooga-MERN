@@ -1,10 +1,10 @@
 {
   "version": "1",
   "cognitoConfig": {
-    "identityPoolName": "whoogaaaf5bccd_identitypool_aaf5bccd",
+    "identityPoolName": "whoogababf2508_identitypool_babf2508",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "whoogaaaf5bccd",
-    "userPoolName": "whoogaaaf5bccd_userpool_aaf5bccd",
+    "resourceNameTruncated": "whoogababf2508",
+    "userPoolName": "whoogababf2508_userpool_babf2508",
     "autoVerifiedAttributes": [
       "email"
     ],
@@ -20,10 +20,7 @@
     "passwordPolicyMinLength": 8,
     "passwordPolicyCharacters": [],
     "requiredAttributes": [
-      "birthdate",
-      "email",
-      "name",
-      "phone_number"
+      "email"
     ],
     "aliasAttributes": [],
     "userpoolClientGenerateSecret": false,
@@ -34,16 +31,15 @@
     "userpoolClientReadAttributes": [
       "email"
     ],
-    "userpoolClientLambdaRole": "whoogaaaf5bccd_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "whoogababf2508_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "aaf5bccd",
-    "resourceName": "whoogaaaf5bccd",
+    "sharedId": "babf2508",
+    "resourceName": "whoogababf2508",
     "authSelections": "identityPoolAndUserPool",
     "useDefault": "default",
     "usernameAttributes": [
       "email"
     ],
-    "triggers": {},
     "userPoolGroupList": [],
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,

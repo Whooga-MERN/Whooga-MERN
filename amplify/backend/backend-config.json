@@ -1,6 +1,6 @@
 {
   "auth": {
-    "whoogaaaf5bccd": {
+    "whoogababf2508": {
       "customAuth": false,
       "dependsOn": [],
       "frontendAuthConfig": {
@@ -13,10 +13,7 @@
           "passwordPolicyMinLength": 8
         },
         "signupAttributes": [
-          "BIRTHDATE",
-          "EMAIL",
-          "NAME",
-          "PHONE_NUMBER"
+          "EMAIL"
         ],
         "socialProviders": [],
         "usernameAttributes": [
