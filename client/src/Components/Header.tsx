@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useEffect } from 'react'
 import { themeChange } from 'theme-change'
-
+import { Authenticator } from '@aws-amplify/ui-react'; 
 
 // On the Logged in page
 function Header() {
@@ -12,6 +12,8 @@ function Header() {
 }, []);
 
   return (
+    <Authenticator>
+    {({ signOut }) => (
     <div className="navbar bg-primary">
       <div className="flex-1">
         <Link to="/" className="pl-3 text-black font-bold text-2xl">
@@ -79,12 +81,14 @@ function Header() {
               <Link to="/settings">Settings</Link>
             </li>
             <li>
-              <Link to="/">Logout</Link>
+              <button onClick={signOut}>Logout</button>
             </li>
           </ul>
         </div>
       </div>
     </div>
+    )}
+    </Authenticator>
   );
 }
 
