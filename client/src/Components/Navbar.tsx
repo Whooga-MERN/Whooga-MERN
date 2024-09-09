@@ -32,13 +32,13 @@ export default function Navbar() {
             <div className="hidden md:block">
               <div className="ml-4 flex items-center space-x-4">
                 <Link
-                  to="/login"
+                  to="/auth"
                   className="text-black hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
                 >
                   Log in
                 </Link>
                 <Link
-                  to="/signup"
+                  to="/auth"
                   className="text-black bg-white hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
                 >
                   Register

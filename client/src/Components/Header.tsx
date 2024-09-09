@@ -1,10 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from 'react'
 import { themeChange } from 'theme-change'
 import { Authenticator } from '@aws-amplify/ui-react'; 
 
 // On the Logged in page
 function Header() {
+
+const navigate = useNavigate();
 
   useEffect(() => {
   themeChange(false)
@@ -81,7 +83,12 @@ function Header() {
               <Link to="/settings">Settings</Link>
             </li>
             <li>
-              <button onClick={signOut}>Logout</button>
+              <button onClick={async () => {
+                if (signOut) {
+                  signOut();
+                  navigate('/'); // Redirect to the home page
+                }
+              }}>Logout</button>
             </li>
           </ul>
         </div>
