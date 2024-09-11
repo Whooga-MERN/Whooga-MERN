@@ -17,6 +17,8 @@ import NewCollectionStart from "./Pages/new_collection_start.tsx";
 import NewCollectionSearchMatches from "./Pages/new_collection_search_matches.tsx";
 import UploadCollection from "./Pages/upload_collection_csv.tsx";
 
+import './custom-amplify-styles.css';
+
 Amplify.configure(awsExports);
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
