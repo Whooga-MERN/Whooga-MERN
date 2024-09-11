@@ -7,7 +7,7 @@ import awsExports from './aws-exports';
 
 import "./index.css";
 import App from "./App.tsx";
-import Home from "./Pages/landing.tsx";
+import Items from "./Pages/items.tsx";
 import Profile from "./Pages/profile.tsx";
 import Authentication from "./Pages/authentication.tsx";
 import Login from "./Pages/login.tsx";
@@ -40,6 +40,7 @@ createRoot(document.getElementById("root")!).render(
 
       {/* authenticated routes */}
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/items" element={<ProtectedRoute><Items /></ProtectedRoute>} />
         <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
         <Route path="/new_collection_form" element={<ProtectedRoute><NewCollectionForm /></ProtectedRoute>} />
         <Route path="/new_collection_start" element={<ProtectedRoute><NewCollectionStart /></ProtectedRoute>} />
