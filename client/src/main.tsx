@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import {Amplify} from 'aws-amplify';
 import { Authenticator, withAuthenticator } from '@aws-amplify/ui-react';
-import awsExports from './aws-exports';
+import awsExports from './aws-exports.ts';
 
 import "./index.css";
 import App from "./App.tsx";
