@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
-import { LuChevronDownSquare } from "react-icons/lu";
 
 function UploadCollection() {
 
@@ -10,6 +9,7 @@ function UploadCollection() {
     const [collectionName, setCollectionName] = useState<string>('');
     const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
     const [jsonData, setJsonData] = useState<any[]>([]);
+    const [fileName, setFileName] = useState<string>('');
 
     useEffect(() => {
         const storedFeatureTags = localStorage.getItem('featureTags');
@@ -34,18 +34,21 @@ function UploadCollection() {
         const file = event.target.files?.[0];
         if (!file) {
             console.log('no file selected');
+            setIsInputEmpty(true);
             return;
         }
         console.log('file selected:', file);
+        setFileName(file.name);
+        setIsInputEmpty(false);
+        
         const reader = new FileReader();
         reader.onload = (e) => {
             const contents = e.target?.result as string;
             const jsonItems = CSVToJSON(contents);
             setJsonData(jsonItems);
-            console.log(jsonItems);
+            console.log(jsonData);
         };
         reader.readAsText(file);
-
     };
 
     const CSVToJSON = (csv: string) => { 
@@ -58,7 +61,27 @@ function UploadCollection() {
                 return { ...acc, ...toAdd }; 
             }, {}); 
         }); 
-    }; 
+    };
+
+    const handleUpload = () => {
+        // Insert API call here to upload the CSV file
+
+        // const response = await fetch('https://api.example.com/upload', {
+        //     method: 'POST',
+        //     body: JSON.stringify(jsonData),
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        // });
+        // const data = await response.json();
+
+        // if (data.success) {
+        //     navigate('/new_collection_form');
+        // } else {
+        //     console.error('Upload failed');
+        // }
+
+    };
 
     return (
         <>
@@ -86,6 +109,7 @@ function UploadCollection() {
                 {/* Upload CSV */}
                 <div className="flex flex-col justify-center mt-10">
                     <p className="font-semibold text-lg">Next, upload your filled in file:</p>
+                    <p className="text-red-500 text-md">{isInputEmpty ? '* Please upload your filled in .csv file *' : ''}</p>
                     <label htmlFor="uploadFile1"
                         className="bg-white dark:bg-slate-300 mt-2 text-gray-500 font-semibold text-lg rounded h-52 w-96 flex flex-col items-center justify-center cursor-pointer border-2 border-gray-300 border-dashed font-[sans-serif]">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-11 mb-2 fill-gray-500" viewBox="0 0 32 32">
@@ -100,15 +124,22 @@ function UploadCollection() {
                         <input type="file" accept=".csv" id='uploadFile1' onChange={onFileUpload} className="hidden" />
                         <p className="text-xs font-medium text-gray-400 mt-2"></p>
                     </label>
+                    {fileName && (
+                        <div className="mt-4">
+                            <p className="text-md">
+                                <span className="font-bold">Selected file:</span> {fileName}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Dropdown Button */}
-
+                {/* Upload Button */}
                     <button className="btn btn-primary mt-10 text-lg hover:btn-primary"
+                            onClick={handleUpload}
                             style={{
                                         borderBottomRightRadius: 0,
                                         borderTopRightRadius: 0,
-                                        }}>Create New Universe!
+                                        }}>Upload to Collection!
                                         </button>
             </div>
             <Footer />
