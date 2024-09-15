@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { LuChevronDownSquare } from "react-icons/lu";
+//import { LuChevronDownSquare } from "react-icons/lu"; // for dropdown button if needed later
 import { FaPencil } from "react-icons/fa6";
 import { FaInfo } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
@@ -11,8 +12,12 @@ import { Collection } from '../Types/Collection';
 function NewCollectionForm(){
 
     const [collectionName, setCollectionName] = useState('');
+    const [imageUpload, setImageUpload] = useState<File | null>(null);
     const [collectionObject, setCollectionObject] = useState<Collection>();
-    const [featureTags, setFeatureTags] = useState<string[]>(["test", "test2"]);
+    const [featureTags, setFeatureTags] = useState<string[]>([]);
+    const [isFeaturesEmpty, setIsFeaturesEmpty] = useState(false);
+    const [isNameEmpty, setIsNameEmpty] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const storedCollectionName = localStorage.getItem('collectionName');
@@ -21,6 +26,28 @@ function NewCollectionForm(){
             setCollectionObject(new Collection(0, storedCollectionName, '', '', false));
         }
     }, []);
+
+    const handleContinue = async () => {
+        if (collectionObject?.name === '') {
+            setIsNameEmpty(true);
+            return;
+        }
+        if (featureTags.length === 0) {
+            setIsFeaturesEmpty(true);
+            return;
+        }
+        localStorage.setItem('collectionName', collectionObject?.name ?? '');
+        localStorage.setItem('collectionImageURL', collectionObject?.image_url ?? '');
+        localStorage.setItem('collectionDescription', collectionObject?.description ?? '');
+        localStorage.setItem('featureTags', featureTags.join(','));
+        console.log(collectionObject);
+
+        // CALL API TO UPLOAD IMAGE HERE
+
+        // CALL API TO CREATE NEW COLLECTION HERE
+
+        navigate('/upload_collection_csv');
+    };
 
     const openModal = () => {
         const modal = document.getElementById('my_modal_3') as HTMLDialogElement | null;
@@ -31,8 +58,12 @@ function NewCollectionForm(){
 
     const handleEnterPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
-            const newFeature = (event.target as HTMLInputElement).value;
+            const newFeature = (event.target as HTMLInputElement).value.trim();
+            if (newFeature === '') {
+                return;
+            }
             setFeatureTags([...featureTags, newFeature]);
+            setIsFeaturesEmpty(false);
             (event.target as HTMLInputElement).value = '';
         }
     };
@@ -57,18 +88,14 @@ function NewCollectionForm(){
             }
             return prevCollection;
         });
+        setIsNameEmpty(false);
     };
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCollectionObject(prevCollection => {
-            if (prevCollection) {
-                return {
-                    ...prevCollection,
-                    image_url: event.target.value
-                };
-            }
-            return prevCollection;
-        });
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageUpload(file);
+        }
     };
 
     const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -101,6 +128,7 @@ function NewCollectionForm(){
             {/* Collection Name */}
             <div className="flex flex-col justify-center">
                 <label htmlFor="collectionName" className=" font-semibold text-lg">Collection Name</label>
+                <p className="text-red-500 text-md">{isNameEmpty ? '* Please enter a name for your collection *' : ''}</p>
                 <div className="relative w-full">
                     <input type="text" defaultValue={collectionName} onChange={handleNameChange} id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
                     <FaPencil className="absolute right-5 top-1/2 transform -translate-y-1/4"/>
@@ -121,9 +149,20 @@ function NewCollectionForm(){
                         data-original="#000000" />
                     </svg>
                         Upload image
-                    <input type="file" accept="image/*" id='uploadFile1' className="hidden" />
+                    <input type="file" accept="image/*" id='uploadFile1' className="hidden" onChange={handleImageChange} />
                     <p className="text-xs font-medium text-gray-400 mt-2">PNG, JPG SVG, WEBP, and GIF are Allowed.</p>
                 </label>
+                {/* Preview the selected image */}
+            {imageUpload && (
+                <div className="mt-4">
+                    <p className="text-sm">Selected file: {imageUpload.name}</p>
+                    <img
+                        src={URL.createObjectURL(imageUpload)} // Create a URL for the image preview
+                        alt="Preview"
+                        className="mt-2 h-40 w-40 object-cover"
+                    />
+                </div>
+            )}
             </div>
             
             {/* Description */}
@@ -149,9 +188,13 @@ function NewCollectionForm(){
                             <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                         </form>
                         <h3 className="font-bold text-lg">Item attribute</h3>
-                        <p className="py-4">These attribute tags refer to what you would like to view, sort, and search the items in this collection by.</p>
+                        <p className="py-4">These attribute tags refer to what you would like to view, sort, and search the items in this collection by.
+                            These will become the columns in your CSV file when you upload items to your collection. We wil automatically add an "owned" column for
+                            if you own the item or not.
+                        </p>
                     </div>
                 </dialog>
+                <p className="text-red-500 text-md">{isFeaturesEmpty ? '* Please enter at least one item attribute *' : ''}</p>
 
                 <input type="text" onKeyDown={handleEnterPress} placeholder="Add at least one attribute (Name, Color, Year etc.)" id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
             </div>
@@ -166,12 +209,9 @@ function NewCollectionForm(){
 
             {/* Dropdown Button */}
             <div className="flex justify-end mt-6">
-                <button className="btn btn-primary my-1 text-lg hover:btn-primary"
-                        style={{
-                                    borderBottomRightRadius: 0,
-                                    borderTopRightRadius: 0,
-                                    }}>Continue</button>
-                <div className="dropdown">
+                <button className="btn btn-primary my-1 text-lg hover:btn-primary" onClick={handleContinue}
+                    >Create New Universe!</button>
+                {/* <div className="dropdown">         SAVE AS DRAFT BUTTON (in case we want to add this feature later)
                 <div tabIndex={0} role="button" className="btn btn-primary my-1 text-lg rounded-l-lg hover:btn-primary"
                     style={{
                             borderBottomLeftRadius: 0,
@@ -180,7 +220,7 @@ function NewCollectionForm(){
                 <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-1 shadow hover:bg-base-300">
                     <li><a className="text-base">Save as draft</a></li>
                 </ul>
-                </div>
+                </div> */}
             </div>     
               
         </div>

@@ -1,9 +1,65 @@
+import React, { useEffect, useState } from 'react';
 
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
 import { LuChevronDownSquare } from "react-icons/lu";
 
 function UploadCollection() {
+
+    const [featureTags, setFeatureTags] = useState<string>('');
+    const [collectionName, setCollectionName] = useState<string>('');
+    const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
+    const [jsonData, setJsonData] = useState<any[]>([]);
+
+    useEffect(() => {
+        const storedFeatureTags = localStorage.getItem('featureTags');
+        const storedCollectionName = localStorage.getItem('collectionName') ?? '';
+        setCollectionName(storedCollectionName);
+        if (storedFeatureTags) {
+            setFeatureTags("owned," + storedFeatureTags);
+        }
+    }, []);
+
+    const onClickDownload = () => {
+        const blob = new Blob([featureTags], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        console.log("helo" + collectionName);
+        a.download = collectionName + '_collection_template.csv';
+        a.click();
+    };
+
+    const onFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            console.log('no file selected');
+            return;
+        }
+        console.log('file selected:', file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const contents = e.target?.result as string;
+            const jsonItems = CSVToJSON(contents);
+            setJsonData(jsonItems);
+            console.log(jsonItems);
+        };
+        reader.readAsText(file);
+
+    };
+
+    const CSVToJSON = (csv: string) => { 
+        const lines = csv.split('\n'); 
+        const keys = lines[0].split(','); 
+        return lines.slice(1).map(line => { 
+            return line.split(',').reduce((acc, cur, i) => { 
+                const toAdd: { [key: string]: string } = {}; 
+                toAdd[keys[i]] = cur; 
+                return { ...acc, ...toAdd }; 
+            }, {}); 
+        }); 
+    }; 
+
     return (
         <>
             <Header />
@@ -19,17 +75,17 @@ function UploadCollection() {
             <div className="flex flex-col mb-20 lg:ml-40 md:ml-20 sm:ml-10 ml-5 justify-center w-3/4 2xl:w-1/2 bg-slate-100 dark:bg-neutral p-10"
                 style={{borderRadius: 30}}>
 
-                {/* Collection Name */}
+                {/* Download CSV */}
                 <div className="flex flex-col justify-center">
-                    <label htmlFor="collectionName" className=" font-semibold text-lg">Collection Name</label>
-                    <div className="relative w-full">
-                        <input type="text" id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
+                    <label htmlFor="collectionName" className=" font-semibold text-lg">First, download your csv template:</label>
+                    <div className="relative w-full pt-2 flex">
+                        <button className="btn btn-primary text-lg" onClick={onClickDownload}>Download template</button>
                     </div>
                 </div>
                 
-                {/* Upload Image */}
-                <div className="flex flex-col justify-center mt-6">
-                    <p className="font-semibold text-lg">Collection Cover Image</p>
+                {/* Upload CSV */}
+                <div className="flex flex-col justify-center mt-10">
+                    <p className="font-semibold text-lg">Next, upload your filled in file:</p>
                     <label htmlFor="uploadFile1"
                         className="bg-white dark:bg-slate-300 mt-2 text-gray-500 font-semibold text-lg rounded h-52 w-96 flex flex-col items-center justify-center cursor-pointer border-2 border-gray-300 border-dashed font-[sans-serif]">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-11 mb-2 fill-gray-500" viewBox="0 0 32 32">
@@ -40,37 +96,20 @@ function UploadCollection() {
                             d="M20.293 19.707a1 1 0 0 0 1.414-1.414l-5-5a1 1 0 0 0-1.414 0l-5 5a1 1 0 0 0 1.414 1.414L15 16.414V29a1 1 0 0 0 2 0V16.414z"
                             data-original="#000000" />
                         </svg>
-                            Upload image
-                        <input type="file" accept="image/*" id='uploadFile1' className="hidden" />
-                        <p className="text-xs font-medium text-gray-400 mt-2">PNG, JPG SVG, WEBP, and GIF are Allowed.</p>
+                            Upload .csv file
+                        <input type="file" accept=".csv" id='uploadFile1' onChange={onFileUpload} className="hidden" />
+                        <p className="text-xs font-medium text-gray-400 mt-2"></p>
                     </label>
-                </div>
-                
-                {/* Description */}
-                <div className="flex flex-col justify-center mt-6">
-                    <label htmlFor="collectionDescription" className=" font-semibold text-lg">Collection Description</label>
-                    <textarea  placeholder="Tell us about your collection..." id="collectionDescription" className="w-full h-32 mt-2 border-2 border-gray-300 rounded-md px-4 py-2" />
                 </div>
 
                 {/* Dropdown Button */}
-                <div className="flex justify-end mt-6">
-                    <button className="btn btn-primary my-1 text-lg hover:btn-primary"
+
+                    <button className="btn btn-primary mt-10 text-lg hover:btn-primary"
                             style={{
                                         borderBottomRightRadius: 0,
                                         borderTopRightRadius: 0,
-                                        }}>Continue</button>
-                    <div className="dropdown">
-                    <div tabIndex={0} role="button" className="btn btn-primary my-1 text-lg rounded-l-lg hover:btn-primary"
-                        style={{
-                                borderBottomLeftRadius: 0,
-                                borderTopLeftRadius: 0,
-                                }}><LuChevronDownSquare /></div>
-                    <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-1 shadow hover:bg-base-300">
-                        <li><a className="text-base">Save as draft</a></li>
-                    </ul>
-                    </div>
-                </div>     
-                
+                                        }}>Create New Universe!
+                                        </button>
             </div>
             <Footer />
         </>
