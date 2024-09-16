@@ -5,8 +5,10 @@ import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import Modal from "../Components/Modal";
+// import CollectibleForm from "../Components/collectibleForm";
 import Footer from "../Components/Footer";
 import { IoIosAdd } from "react-icons/io";
+import { MdFilterAlt } from "react-icons/md";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
@@ -35,6 +37,7 @@ interface checkItems extends React.ComponentPropsWithoutRef<"input"> {
 function CheckButtons({ children }: filterButtons) {
   return <div className="flex flex-items hover:opacity-75">{children}</div>;
 }
+
 function CheckItem({ id, label, ...props }: checkItems) {
   return (
     <div>
@@ -45,6 +48,7 @@ function CheckItem({ id, label, ...props }: checkItems) {
     </div>
   );
 }
+
 const tags = [
   {
     id: 1,
@@ -117,8 +121,11 @@ const tags = [
     tagNum: "#55917",
   },
 ];
+
 export default function HomePage() {
   const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
   return (
     <>
       <div>
@@ -162,10 +169,140 @@ export default function HomePage() {
                 <button className="inline-block pr-16">
                   <BsFillGridFill />
                 </button>
-                <button className="btn font-bold text-lg text-black bg-yellow-300 hover:bg-yelloe-200 rounded-full w-fit">
+                <button
+                  className="btn text-lg text-black bg-yellow-300 hover:bg-yelloe-200 rounded-full w-fit"
+                  onClick={() => setShowForm(true)}
+                >
                   new collectible
                   <IoIosAdd />
                 </button>
+                {/* <CollectibleForm
+                  isVisible={showForm}
+                  onClose={() => setShowForm(false)}
+                /> */}
+
+                <div className="dropdown">
+                  <div
+                    tabIndex={0}
+                    role="button"
+                    className="ml-4 text-black bg-yellow-300 hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-full text-lg px-4 py-2.5 text-center inline-flex items-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  >
+                    filter
+                    <MdFilterAlt />
+                  </div>
+
+                  <ul
+                    tabIndex={0}
+                    className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-60 pt-2 shadow"
+                  >
+                    <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Sort By:
+                    </h6>
+                    <ul
+                      className="space-y-2 text-sm"
+                      aria-labelledby="dropdownDefault"
+                    >
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="radio"
+                            value=""
+                            name="row-height"
+                            checked
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded-full text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          Year:Low to High
+                        </label>
+                      </li>
+
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="radio"
+                            value=""
+                            name="row-height"
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded-full text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          Year:High to Low
+                        </label>
+                      </li>
+                    </ul>
+
+                    <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Colors:
+                    </h6>
+                    <ul
+                      className="space-y-2 text-sm"
+                      aria-labelledby="dropdownDefault"
+                    >
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="checkbox"
+                            value=""
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          Red
+                        </label>
+                      </li>
+
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="checkbox"
+                            value=""
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          Yellow
+                        </label>
+                      </li>
+
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="checkbox"
+                            value=""
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          Blue
+                        </label>
+                      </li>
+
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="checkbox"
+                            value=""
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          Green
+                        </label>
+                      </li>
+
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="checkbox"
+                            value=""
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          Black
+                        </label>
+                      </li>
+
+                      <li>
+                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
+                          <input
+                            type="checkbox"
+                            value=""
+                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                          />
+                          White
+                        </label>
+                      </li>
+                    </ul>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -174,7 +311,6 @@ export default function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* <div className="w-full md:w-[15%] p-2">
             <div className="col-span-2 space-y6 top-12 h-fit">
-              clear fliter
               <div className="py-2 mb-8 p-5">
                 <Link to="/home">
                   <button className="whitespace-nowrap text-white bg-yellow-400 border-yellow-400 hover:bg-yellow-500 hover:shadow-md duration-100 h-11 rounded-lg sm:px-3 lg:px-7 w-auto py-3 font-semibold text-sm shadow-lg shadow-transparent cursor-pointer">
@@ -234,11 +370,11 @@ export default function HomePage() {
                         {tag.createAt}
                       </p>
 
-                      <div className="pt-3 pl-2 pb-2 text-center">
-                        <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                      <div className="pt-3 pb-2 text-center">
+                        <button className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
                           <FaRegEdit />
                         </button>
-                        <button className="ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                        <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
                           <FaRegTrashCan />
                         </button>
                       </div>
