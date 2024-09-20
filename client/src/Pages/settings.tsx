@@ -13,12 +13,12 @@ export default function Settings() {
               <h2 className="text-2xl font-extrabold leading-7 text-gray-900">
                 Profile
               </h2>
-              <p className="pb-5 mt-1 text-md leading-6 text-gray-500">
+              <p className="pb-3 mt-1 text-md leading-6 text-gray-500">
                 This information will be displayed publicly so be careful what
                 you share.
               </p>
-              {/* className="md:col-span-2" */}
-              <form className="pt-5 mt-6 space-y-6 divide-y divide-gray-100 border-t border-gray-200 text-sm leading-6">
+
+              <form className="pt-5 mt-3 space-y-6 divide-y divide-gray-100 border-t border-gray-200 text-sm leading-6">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:max-w-xl sm:grid-cols-6">
                   <div className="col-span-full flex items-center gap-x-8">
                     <img
@@ -40,23 +40,8 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div className="sm:col-span-2 pt-5">
-                  <label className="block text-sm font-medium leading-6 text-black">
-                    Username
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      id="username"
-                      name="username"
-                      type="text"
-                      placeholder="   Username"
-                      className="block w-full rounded-md border-0 py-1.5 text-black shadow-sm ring-1 ring-inset ring-yellow-600 sm:text-sm sm:leading-6"
-                    />
-                  </div>
-                </div>
-
                 <div className="sm:col-span-2 pt-2">
-                  <label className="block text-sm font-medium leading-6 text-black">
+                  <label className="pt-5 block text-sm font-medium leading-6 text-black">
                     Email address
                   </label>
                   <div className="mt-2">
@@ -74,61 +59,63 @@ export default function Settings() {
                   type="submit"
                   className=" mt-5 rounded-md bg-yellow-300 px-5 py-2 text-lg font-semibold text-black shadow-sm hover:bg-yellow-400"
                 >
-                  Save
+                  Update
                 </button>
               </form>
             </div>
 
             <div>
               <h2 className="text-2xl font-extrabold leading-7 text-gray-900">
-                Change password
+                Notification preferences
               </h2>
-              <p className="pb-5 mt-1 text-md leading-6 text-gray-500">
-                Update your password associated with your account.
+              <p className="pb-3 mt-1 text-md leading-6 text-gray-500">
+                Pick your notification preferences when collectibles on wishlist
+                become available.
               </p>
-              {/* className="md:col-span-2" */}
-              <form className="pt-5 mt-6 space-y-6 divide-y divide-gray-100 border-t border-gray-200 text-sm leading-6">
-                <div className="sm:col-span-2 pt-5">
-                  <label className="block text-sm font-medium leading-6 text-black">
-                    Current Password
-                  </label>
-                  <div className="mt-2">
+
+              <form className="pt-5 mt-3 space-y-6 divide-y divide-gray-100 border-t border-gray-200 text-sm leading-6">
+                <div className="relative flex items-start pt-2">
+                  <div className="min-w-0 flex-1 text-sm leading-6">
+                    <label
+                      htmlFor="comments"
+                      className="text-lg font-bold text-gray-900"
+                    >
+                      Text
+                    </label>
+                    <p id="comments-description" className="text-gray-500">
+                      Notification sent through text massage.
+                    </p>
+                  </div>
+                  <div className="ml-3 flex h-6 items-center">
                     <input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      placeholder="   Current password"
-                      className="block w-full rounded-md border-0 py-1.5 text-black shadow-sm ring-1 ring-inset ring-yellow-600 sm:text-sm sm:leading-6"
+                      id="textCheck"
+                      name="textCheck"
+                      type="checkbox"
+                      aria-describedby="textCheck"
+                      className="h-5 w-5 rounded border-gray-300"
                     />
                   </div>
                 </div>
 
-                <div className="sm:col-span-2 pt-5">
-                  <label className="block text-sm font-medium leading-6 text-black">
-                    New Password
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      id="newPassword"
-                      name="newPassword"
-                      type="password"
-                      placeholder="   New password"
-                      className="block w-full rounded-md border-0 py-1.5 text-black shadow-sm ring-1 ring-inset ring-yellow-600 sm:text-sm sm:leading-6"
-                    />
+                <div className="relative flex items-start pt-2">
+                  <div className="min-w-0 flex-1 text-sm leading-6">
+                    <label
+                      htmlFor="comments"
+                      className="text-lg font-bold text-gray-900"
+                    >
+                      Email
+                    </label>
+                    <p id="comments-description" className="text-gray-500">
+                      Notification sent through Email.
+                    </p>
                   </div>
-                </div>
-
-                <div className="sm:col-span-2 pt-2">
-                  <label className="block text-sm font-medium leading-6 text-black">
-                    Confirm Password
-                  </label>
-                  <div className="mt-2">
+                  <div className="ml-3 flex h-6 items-center">
                     <input
-                      id="confirmPassord"
-                      name="confirmPassord"
-                      type="password"
-                      placeholder="   Confirm password"
-                      className="block w-full rounded-md border-0 py-1.5 text-black shadow-sm ring-1 ring-inset ring-yellow-600 sm:text-sm sm:leading-6"
+                      id="emailCheck"
+                      name="emailCheck"
+                      type="checkbox"
+                      aria-describedby="emailCheck"
+                      className="h-5 w-5 rounded border-gray-300"
                     />
                   </div>
                 </div>
@@ -137,7 +124,7 @@ export default function Settings() {
                   type="submit"
                   className=" mt-5 rounded-md bg-yellow-300 px-5 py-2 text-lg font-semibold text-black shadow-sm hover:bg-yellow-400"
                 >
-                  Save
+                  Update
                 </button>
               </form>
             </div>
