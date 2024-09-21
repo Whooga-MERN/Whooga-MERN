@@ -11,7 +11,6 @@ import { MdFilterAlt } from "react-icons/md";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
-const collectionList = ["PathTags", "Baseball cards", "Nutcracker"];
 
 const option = [
   {
@@ -125,9 +124,8 @@ const tags = [
 ];
 
 export default function HomePage() {
-
   // assign specific tag with all attribute
-  const [selectedTag, setSelectedTag] = useState<{
+  const [specificTag, setSelectedTag] = useState<{
     id: number;
     title: string;
     createAt: string;
@@ -151,11 +149,6 @@ export default function HomePage() {
     setShowModal(false);
   };
 
-  function setShowForm(arg0: boolean): void {
-    throw new Error("Function not implemented.");
-  }
-
-  const [showForm, setShowForm] = useState(false);
   const [isOwned, setIsOwned] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
@@ -165,23 +158,24 @@ export default function HomePage() {
         <Header />
         <div className="w-full mx-auto pt-16">
           <div className="mx-auto pl-10">
-
             {/* collection option */}
-            { isOwned ? (<select className="select select-bordered font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
-              <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
-                PathTags
-              </option>
-              <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
-                Baseball card
-              </option>
-              <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
-                Nutcraker
-              </option>
-            </select>) :
-
-            (<h2 className="px-14 font-manrope font-bold text-4xl text-center w-fit">
-              Pathtags
-            </h2>)}
+            {isOwned ? (
+              <select className="select select-bordered font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
+                <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
+                  PathTags
+                </option>
+                <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
+                  Baseball card
+                </option>
+                <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
+                  Nutcraker
+                </option>
+              </select>
+            ) : (
+              <h2 className="px-14 font-manrope font-bold text-4xl text-center w-fit">
+                Pathtags
+              </h2>
+            )}
 
             <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
@@ -207,11 +201,8 @@ export default function HomePage() {
                 <button className="inline-block pr-16">
                   <BsFillGridFill />
                 </button>
-                { isOwned ? (
-                  <button
-                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    onClick={() => setShowForm(true)}
-                  >
+                {isOwned ? (
+                  <button className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit">
                     New Collectible
                     <IoIosAdd />
                   </button>
@@ -227,10 +218,6 @@ export default function HomePage() {
                     <IoIosAdd />
                   </button>
                 )}
-                {/* <CollectibleForm
-                  isVisible={showForm}
-                  onClose={() => setShowForm(false)}
-                /> */}
 
                 <div className="dropdown">
                   <div
@@ -434,12 +421,12 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            {showModal && selectedTag && (
+            {showModal && specificTag && (
               <Modal
-                tagNum={selectedTag.tagNum}
-                tagTitle={selectedTag.title}
-                tagDate={selectedTag.createAt}
-                tagImage={selectedTag.image}
+                tagNum={specificTag.tagNum}
+                tagTitle={specificTag.title}
+                tagDate={specificTag.createAt}
+                tagImage={specificTag.image}
                 onClose={handleCloseModal}
                 isVisible={showModal}
               />
