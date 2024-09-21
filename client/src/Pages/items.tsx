@@ -5,7 +5,6 @@ import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import Modal from "../Components/Modal";
-// import CollectibleForm from "../Components/collectibleForm";
 import Footer from "../Components/Footer";
 import { IoIosAdd } from "react-icons/io";
 import { MdFilterAlt } from "react-icons/md";
@@ -28,12 +27,15 @@ const option = [
     inputType: "checkbox",
   },
 ];
+
 interface filterButtons {
   children: React.ReactNode;
 }
+
 interface checkItems extends React.ComponentPropsWithoutRef<"input"> {
   label: string;
 }
+
 function CheckButtons({ children }: filterButtons) {
   return <div className="flex flex-items hover:opacity-75">{children}</div>;
 }
@@ -123,9 +125,39 @@ const tags = [
 ];
 
 export default function HomePage() {
-  const [showModal, setShowModal] = useState(false);
+
+  // assign specific tag with all attribute
+  const [selectedTag, setSelectedTag] = useState<{
+    id: number;
+    title: string;
+    createAt: string;
+    image: string;
+    tagNum: string;
+  } | null>(null);
+
+  // set whole tag and open modal
+  const handleOpenModal = (tag: {
+    id: number;
+    title: string;
+    createAt: string;
+    image: string;
+    tagNum: string;
+  }) => {
+    setSelectedTag(tag);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  function setShowForm(arg0: boolean): void {
+    throw new Error("Function not implemented.");
+  }
+
   const [showForm, setShowForm] = useState(false);
   const [isOwned, setIsOwned] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <>
@@ -367,7 +399,7 @@ export default function HomePage() {
           <div className="w-full p-2">
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
               {tags.map((tag) => (
-                <div key={tag.id} onClick={() => setShowModal(true)}>
+                <div key={tag.id} onClick={() => handleOpenModal(tag)}>
                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
                       <img
@@ -402,9 +434,18 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            {showModal && selectedTag && (
+              <Modal
+                tagNum={selectedTag.tagNum}
+                tagTitle={selectedTag.title}
+                tagDate={selectedTag.createAt}
+                tagImage={selectedTag.image}
+                onClose={handleCloseModal}
+                isVisible={showModal}
+              />
+            )}
           </div>
         </div>
-        <Modal isVisible={showModal} onClose={() => setShowModal(false)} />
       </div>
       <Footer />
     </>
