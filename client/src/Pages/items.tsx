@@ -125,6 +125,7 @@ const tags = [
 export default function HomePage() {
   const [showModal, setShowModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [isOwned, setIsOwned] = useState(true);
 
   return (
     <>
@@ -132,8 +133,9 @@ export default function HomePage() {
         <Header />
         <div className="w-full mx-auto pt-16">
           <div className="mx-auto pl-10">
+
             {/* collection option */}
-            <select className="select select-bordered font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
+            { isOwned ? (<select className="select select-bordered font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
               <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
                 PathTags
               </option>
@@ -143,7 +145,11 @@ export default function HomePage() {
               <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
                 Nutcraker
               </option>
-            </select>
+            </select>) :
+
+            (<h2 className="px-14 font-manrope font-bold text-4xl text-center w-fit">
+              Pathtags
+            </h2>)}
 
             <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
@@ -169,13 +175,26 @@ export default function HomePage() {
                 <button className="inline-block pr-16">
                   <BsFillGridFill />
                 </button>
-                <button
-                  className="btn text-lg text-black bg-yellow-300 hover:bg-yelloe-200 rounded-full w-fit"
-                  onClick={() => setShowForm(true)}
-                >
-                  new collectible
-                  <IoIosAdd />
-                </button>
+                { isOwned ? (
+                  <button
+                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                    onClick={() => setShowForm(true)}
+                  >
+                    New Collectible
+                    <IoIosAdd />
+                  </button>
+                ) : (
+                  <button
+                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                    onClick={() => {
+                      // create onClick to call API to add to the user's collections
+                      console.log("Add to My Collections clicked");
+                    }}
+                  >
+                    Add to My Collections
+                    <IoIosAdd />
+                  </button>
+                )}
                 {/* <CollectibleForm
                   isVisible={showForm}
                   onClose={() => setShowForm(false)}
