@@ -14,7 +14,8 @@ import Collections from "./Pages/collections.tsx";
 import NewCollectionForm from "./Pages/new_collection_form.tsx";
 import NewCollectionStart from "./Pages/new_collection_start.tsx";
 import NewCollectionSearchMatches from "./Pages/new_collection_search_matches.tsx";
-import UploadCollection from "./Pages/upload_collection_csv.tsx";
+import UploadCollection1 from "./Pages/upload_collection_csv_page1.tsx";
+import UploadCollection2 from "./Pages/upload_collection_csv_page2.tsx";
 
 import "./custom-amplify-styles.css";
 import Settings from "./Pages/settings.tsx";
@@ -90,10 +91,18 @@ createRoot(document.getElementById("root")!).render(
         }
       />
       <Route
-        path="/upload_collection_csv"
+        path="/upload_collection_csv_page1"
         element={
           <ProtectedRoute>
-            <UploadCollection />
+            <UploadCollection1 />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/upload_collection_csv_page2"
+        element={
+          <ProtectedRoute>
+            <UploadCollection2 />
           </ProtectedRoute>
         }
       />
