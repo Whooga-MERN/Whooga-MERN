@@ -20,16 +20,6 @@ function UploadCollection() {
         }
     }, []);
 
-    const onClickDownload = () => {
-        const blob = new Blob([featureTags], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        console.log("helo" + collectionName);
-        a.download = collectionName + '_collection_template.csv';
-        a.click();
-    };
-
     const onFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) {
@@ -100,15 +90,12 @@ function UploadCollection() {
 
                 {/* Download CSV */}
                 <div className="flex flex-col justify-center">
-                    <label htmlFor="collectionName" className=" font-semibold text-lg">First, download your csv template:</label>
-                    <div className="relative w-full pt-2 flex">
-                        <button className="btn btn-primary text-lg" onClick={onClickDownload}>Download template</button>
-                    </div>
+                    <label htmlFor="collectionName" className=" font-semibold text-4xl">Step 2</label>
                 </div>
                 
                 {/* Upload CSV */}
                 <div className="flex flex-col justify-center mt-10">
-                    <p className="font-semibold text-lg">Next, upload your filled in file:</p>
+                    <p className="font-semibold text-lg">Fill in and upload your .csv file:</p>
                     <p className="text-red-500 text-md">{isInputEmpty ? '* Please upload your filled in .csv file *' : ''}</p>
                     <label htmlFor="uploadFile1"
                         className="bg-white dark:bg-slate-300 mt-2 text-gray-500 font-semibold text-lg rounded h-52 w-96 flex flex-col items-center justify-center cursor-pointer border-2 border-gray-300 border-dashed font-[sans-serif]">

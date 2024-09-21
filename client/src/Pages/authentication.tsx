@@ -17,30 +17,6 @@ import { useEffect } from 'react';
 // Configures the Amplify library with the settings from aws-exports.js, which includes all the AWS service configurations for this project.
 Amplify.configure(awsExports);
 
-// function App() {
-//   return (
-//       <Authenticator>
-//         {({ signOut }: { signOut?: () => void }) => (
-//           <main>
-//             <header className='App-header'>
-//               <button 
-//                 onClick={signOut} 
-//                 style={{ 
-//                   margin: '20px', 
-//                   fontSize: '0.8rem', 
-//                   padding: '5px 10px', 
-//                   marginTop: '20px'
-//                 }}
-//               >
-//                 Sign Out
-//               </button>
-//             </header>
-//           </main>
-//         )}
-//       </Authenticator>
-//   );
-// }
-
 function Auth() {
    const  navigate = useNavigate();
   return (
