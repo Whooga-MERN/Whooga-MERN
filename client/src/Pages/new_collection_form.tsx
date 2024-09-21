@@ -14,7 +14,7 @@ function NewCollectionForm(){
     const [collectionName, setCollectionName] = useState('');
     const [imageUpload, setImageUpload] = useState<File | null>(null);
     const [collectionObject, setCollectionObject] = useState<Collection>();
-    const [featureTags, setFeatureTags] = useState<string[]>([]);
+    const [featureTags, setFeatureTags] = useState<string[]>(["Name"]);
     const [isFeaturesEmpty, setIsFeaturesEmpty] = useState(false);
     const [isNameEmpty, setIsNameEmpty] = useState(false);
     const navigate = useNavigate();
