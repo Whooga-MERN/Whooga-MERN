@@ -1,7 +1,11 @@
 import Header from "../Components/Header";
+import { useState } from "react";
+import { Description, Field, Label, Switch } from "@headlessui/react";
 ("use client");
 
 export default function Settings() {
+  const [enabled, setEnabled] = useState(false);
+
   return (
     <>
       <Header />
@@ -127,6 +131,36 @@ export default function Settings() {
                   Update
                 </button>
               </form>
+            </div>
+
+            <div>
+              <Field className="flex items-center justify-between">
+                <span className="flex flex-grow flex-col">
+                  <Label
+                    as="span"
+                    passive
+                    className="text-2xl font-extrabold leading-7 text-gray-900"
+                  >
+                    Theme preferences
+                  </Label>
+                  <Description
+                    as="span"
+                    className="pb-3 mt-1 text-md leading-6 text-gray-500"
+                  >
+                    Change the theme to dark/light of your choice.
+                  </Description>
+                </span>
+                <Switch
+                  checked={enabled}
+                  onChange={setEnabled}
+                  className="group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 data-[checked]:bg-indigo-600"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out group-data-[checked]:translate-x-5"
+                  />
+                </Switch>
+              </Field>
             </div>
 
             <div>
