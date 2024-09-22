@@ -17,9 +17,9 @@ import NewCollectionStart from "./Pages/new_collection_start.tsx";
 import NewCollectionSearchMatches from "./Pages/new_collection_search_matches.tsx";
 import UploadCollection1 from "./Pages/upload_collection_csv_page1.tsx";
 import UploadCollection2 from "./Pages/upload_collection_csv_page2.tsx";
+import Profile from "./Pages/profile.tsx";
 
 import "./custom-amplify-styles.css";
-import Settings from "./Pages/settings.tsx";
 
 Amplify.configure(awsExports);
 
@@ -44,10 +44,10 @@ createRoot(document.getElementById("root")!).render(
 
       {/* authenticated routes */}
       <Route
-        path="/settings"
+        path="/profile"
         element={
           <ProtectedRoute>
-            <Settings />
+            <Profile />
           </ProtectedRoute>
         }
       />
