@@ -9,6 +9,7 @@ type propTypes = {
   tagTitle: string;
   tagDate: string;
   tagImage: string;
+  tagDesigner: string;
   isVisible: boolean;
   onClose: () => void;
 };
@@ -20,6 +21,7 @@ const Modal: React.FC<propTypes> = ({
   tagTitle,
   tagDate,
   tagImage,
+  tagDesigner,
 }) => {
   if (!isVisible) return null;
 
@@ -50,7 +52,7 @@ const Modal: React.FC<propTypes> = ({
         </div>
         <div className="mx-auto max-w-xl sm:px-2 sm:py-2 lg:grid lg:grid-cols-2 lg:gap-x-2 lg:px-5">
           <div className="lg:max-w-lg">
-            <div className="mt-20">
+            <div className="sm:mt-14 lg:mt-28">
               <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 {tagTitle}
               </h1>
@@ -60,8 +62,7 @@ const Modal: React.FC<propTypes> = ({
             <section aria-labelledby="information-heading" className="mt-4">
               <div className="mt-8 space-y-2 text-xl font-bold text-gray-500">
                 <p>Create At: {tagDate}</p>
-                <p>tag Number: #12345</p>
-                <p>tag Number: #12345</p>
+                <p>Owner: {tagDesigner}</p>
               </div>
             </section>
           </div>

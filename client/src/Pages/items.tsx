@@ -57,6 +57,7 @@ const tags = [
     image: "/eagle.jpg",
     createAt: "03/12/24",
     tagNum: "#55988",
+    createdBy: "This person",
   },
   {
     id: 2,
@@ -64,6 +65,7 @@ const tags = [
     image: "/psycho.jpg",
     createAt: "3/06/24",
     tagNum: "#55927",
+    createdBy: "That person",
   },
   {
     id: 3,
@@ -71,6 +73,7 @@ const tags = [
     image: "/shawshank.jpg",
     createAt: "02/28/24",
     tagNum: "#55881",
+    createdBy: "Those person",
   },
   {
     id: 4,
@@ -78,6 +81,7 @@ const tags = [
     image: "/golddog.jpg",
     createAt: "03/04/24",
     tagNum: "#55915",
+    createdBy: "This group",
   },
   {
     id: 5,
@@ -85,6 +89,7 @@ const tags = [
     image: "/bear.jpg",
     createAt: "03/12/24",
     tagNum: "#55996",
+    createdBy: "That group",
   },
   {
     id: 6,
@@ -92,6 +97,7 @@ const tags = [
     image: "/ghostbusters.jpg",
     createAt: "02/03/24",
     tagNum: "#55697",
+    createdBy: "Those groups",
   },
   {
     id: 7,
@@ -99,6 +105,7 @@ const tags = [
     image: "/braveheart.jpg",
     createAt: "03/12/24",
     tagNum: "#55994",
+    createdBy: "me",
   },
   {
     id: 8,
@@ -106,6 +113,7 @@ const tags = [
     image: "/tinytoon.jpg",
     createAt: "03/07/24",
     tagNum: "#55958",
+    createdBy: "He",
   },
   {
     id: 9,
@@ -113,6 +121,7 @@ const tags = [
     image: "/alienclub.jpg",
     createAt: "03/06/24",
     tagNum: "#55949",
+    createdBy: "She",
   },
   {
     id: 10,
@@ -120,6 +129,7 @@ const tags = [
     image: "/lisboaportugal28.jpg",
     createAt: "03/05/24",
     tagNum: "#55917",
+    createdBy: "Them",
   },
 ];
 
@@ -131,6 +141,7 @@ export default function HomePage() {
     createAt: string;
     image: string;
     tagNum: string;
+    createdBy: string;
   } | null>(null);
 
   // set whole tag and open modal
@@ -140,6 +151,7 @@ export default function HomePage() {
     createAt: string;
     image: string;
     tagNum: string;
+    createdBy: string;
   }) => {
     setSelectedTag(tag);
     setShowModal(true);
@@ -404,9 +416,9 @@ export default function HomePage() {
                       <p className="font-bold pl-4 uppercase truncate">
                         {tag.title}
                       </p>
-                      <p className="block text-slate-500 text-sm pl-4">
-                        {tag.createAt}
-                      </p>
+                      {/* <p className="block text-slate-500 text-sm pl-4">
+                        Owner: {tag.createdBy}
+                      </p> */}
 
                       <div className="pt-3 pb-2 text-center">
                         <button className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
@@ -427,6 +439,7 @@ export default function HomePage() {
                 tagTitle={specificTag.title}
                 tagDate={specificTag.createAt}
                 tagImage={specificTag.image}
+                tagDesigner={specificTag.createdBy}
                 onClose={handleCloseModal}
                 isVisible={showModal}
               />
