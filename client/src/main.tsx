@@ -11,6 +11,7 @@ import Items from "./Pages/items.tsx";
 import Authentication from "./Pages/authentication.tsx";
 import Login from "./Pages/login.tsx";
 import Collections from "./Pages/collections.tsx";
+import Details from "./Pages/details.tsx";
 import NewCollectionForm from "./Pages/new_collection_form.tsx";
 import NewCollectionStart from "./Pages/new_collection_start.tsx";
 import NewCollectionSearchMatches from "./Pages/new_collection_search_matches.tsx";
@@ -103,6 +104,14 @@ createRoot(document.getElementById("root")!).render(
         element={
           <ProtectedRoute>
             <UploadCollection2 />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/details"
+        element={
+          <ProtectedRoute>
+            <Details />
           </ProtectedRoute>
         }
       />
