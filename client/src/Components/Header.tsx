@@ -17,7 +17,10 @@ function Header() {
       {({ signOut }) => (
         <div className="navbar bg-primary">
           <div className="flex-1">
-            <Link to="/items" className="pl-3 text-black font-bold text-2xl">
+            <Link
+              to="/collections"
+              className="pl-3 text-black font-bold text-2xl"
+            >
               Whooga!
             </Link>
           </div>
