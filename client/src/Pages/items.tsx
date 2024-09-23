@@ -1,16 +1,29 @@
 import React, { useState } from "react";
-import Header from "../Components/Header";
 import { Link } from "react-router-dom";
 import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
-import Modal from "../Components/Modal";
-import Footer from "../Components/Footer";
 import { IoIosAdd } from "react-icons/io";
 import { MdFilterAlt } from "react-icons/md";
+import { PhotoIcon } from "@heroicons/react/24/solid";
+
+import Header from "../Components/Header";
+import Modal from "../Components/Modal";
+import Footer from "../Components/Footer";
 
 const sortBy = ["Year: Low to High", "Year: High to Low"];
 const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
+const formFields = [
+  { label: "Title", placeholder: "Collectible Name", type: "text" },
+  { label: "Tag ID", placeholder: "Tag ID", type: "text" },
+  { label: "Tag Owner", placeholder: "Tag Owner", type: "text" },
+  { label: "Created Date", placeholder: "Created Date", type: "text" },
+  {
+    label: "Description",
+    placeholder: "Collectible Description",
+    type: "textarea",
+  },
+];
 
 const option = [
   {
@@ -57,6 +70,7 @@ const tags = [
     image: "/eagle.jpg",
     createAt: "03/12/24",
     tagNum: "#55988",
+    createdBy: "This person",
   },
   {
     id: 2,
@@ -64,6 +78,7 @@ const tags = [
     image: "/psycho.jpg",
     createAt: "3/06/24",
     tagNum: "#55927",
+    createdBy: "That person",
   },
   {
     id: 3,
@@ -71,6 +86,7 @@ const tags = [
     image: "/shawshank.jpg",
     createAt: "02/28/24",
     tagNum: "#55881",
+    createdBy: "Those person",
   },
   {
     id: 4,
@@ -78,6 +94,7 @@ const tags = [
     image: "/golddog.jpg",
     createAt: "03/04/24",
     tagNum: "#55915",
+    createdBy: "This group",
   },
   {
     id: 5,
@@ -85,6 +102,7 @@ const tags = [
     image: "/bear.jpg",
     createAt: "03/12/24",
     tagNum: "#55996",
+    createdBy: "That group",
   },
   {
     id: 6,
@@ -92,6 +110,7 @@ const tags = [
     image: "/ghostbusters.jpg",
     createAt: "02/03/24",
     tagNum: "#55697",
+    createdBy: "Those groups",
   },
   {
     id: 7,
@@ -99,6 +118,7 @@ const tags = [
     image: "/braveheart.jpg",
     createAt: "03/12/24",
     tagNum: "#55994",
+    createdBy: "me",
   },
   {
     id: 8,
@@ -106,6 +126,7 @@ const tags = [
     image: "/tinytoon.jpg",
     createAt: "03/07/24",
     tagNum: "#55958",
+    createdBy: "He",
   },
   {
     id: 9,
@@ -113,6 +134,7 @@ const tags = [
     image: "/alienclub.jpg",
     createAt: "03/06/24",
     tagNum: "#55949",
+    createdBy: "She",
   },
   {
     id: 10,
@@ -120,6 +142,7 @@ const tags = [
     image: "/lisboaportugal28.jpg",
     createAt: "03/05/24",
     tagNum: "#55917",
+    createdBy: "Them",
   },
 ];
 
@@ -131,6 +154,7 @@ export default function HomePage() {
     createAt: string;
     image: string;
     tagNum: string;
+    createdBy: string;
   } | null>(null);
 
   // set whole tag and open modal
@@ -140,6 +164,7 @@ export default function HomePage() {
     createAt: string;
     image: string;
     tagNum: string;
+    createdBy: string;
   }) => {
     setSelectedTag(tag);
     setShowModal(true);
@@ -149,8 +174,18 @@ export default function HomePage() {
     setShowModal(false);
   };
 
+  // add collectible form modal open handler
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
   const [isOwned, setIsOwned] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>
@@ -202,7 +237,10 @@ export default function HomePage() {
                   <BsFillGridFill />
                 </button>
                 {isOwned ? (
-                  <button className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit">
+                  <button
+                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                    onClick={openModal}
+                  >
                     New Collectible
                     <IoIosAdd />
                   </button>
@@ -217,6 +255,85 @@ export default function HomePage() {
                     Add to My Collections
                     <IoIosAdd />
                   </button>
+                )}
+
+                {isModalOpen && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-1/3">
+                      <h2 className="text-xl mb-4">Create New Collectible</h2>
+
+                      <form>
+                        {formFields.map((field, index) => (
+                          <div key={index} className="mb-4 lg:max-w-lg">
+                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                              {field.label}
+                            </label>
+                            {field.type === "textarea" ? (
+                              <textarea
+                                placeholder={field.placeholder}
+                                className="border rounded w-full py-2 px-3 text-gray-700"
+                              />
+                            ) : (
+                              <input
+                                type={field.type}
+                                placeholder={field.placeholder}
+                                className="border rounded w-full py-2 px-3 text-gray-700"
+                              />
+                            )}
+                          </div>
+                        ))}
+
+                        <label
+                          htmlFor="cover-photo"
+                          className="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Insert Photo
+                        </label>
+                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+                          <div className="text-center">
+                            <PhotoIcon
+                              aria-hidden="true"
+                              className="mx-auto h-12 w-12 text-gray-300"
+                            />
+                            <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                              <label
+                                htmlFor="file-upload"
+                                className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                              >
+                                <span>Upload a file</span>
+                                <input
+                                  id="file-upload"
+                                  name="file-upload"
+                                  type="file"
+                                  className="sr-only"
+                                />
+                              </label>
+                              <p className="pl-1">or drag and drop</p>
+                            </div>
+                            <p className="text-xs leading-5 text-gray-600">
+                              PNG, JPG
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-4 mt-8">
+                          <button
+                            type="button"
+                            onClick={closeModal}
+                            className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                          >
+                            Create
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
                 )}
 
                 <div className="dropdown">
@@ -386,7 +503,7 @@ export default function HomePage() {
           <div className="w-full p-2">
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
               {tags.map((tag) => (
-                <div key={tag.id} onClick={() => handleOpenModal(tag)}>
+                <div key={tag.id}>
                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
                       <img
@@ -395,6 +512,7 @@ export default function HomePage() {
                         width={400}
                         height={400}
                         className="rounded-md shadow-sm object-cover object-top"
+                        onClick={() => handleOpenModal(tag)}
                       />
                     </div>
                     <div className="space-y-1">
@@ -404,12 +522,12 @@ export default function HomePage() {
                       <p className="font-bold pl-4 uppercase truncate">
                         {tag.title}
                       </p>
-                      <p className="block text-slate-500 text-sm pl-4">
-                        {tag.createAt}
-                      </p>
 
                       <div className="pt-3 pb-2 text-center">
-                        <button className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                        <button
+                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                          onClick={openModal}
+                        >
                           <FaRegEdit />
                         </button>
                         <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
@@ -427,6 +545,7 @@ export default function HomePage() {
                 tagTitle={specificTag.title}
                 tagDate={specificTag.createAt}
                 tagImage={specificTag.image}
+                tagDesigner={specificTag.createdBy}
                 onClose={handleCloseModal}
                 isVisible={showModal}
               />
