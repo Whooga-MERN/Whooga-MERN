@@ -259,13 +259,13 @@ export default function HomePage() {
 
                 {isModalOpen && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-1/3">
-                      <h2 className="text-xl mb-4">Create New Collectible</h2>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-1/3">
+                      <h2 className="text-xl mb-4 dark:text-gray-300">Create New Collectible</h2>
 
                       <form>
                         {formFields.map((field, index) => (
                           <div key={index} className="mb-4 lg:max-w-lg">
-                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
                               {field.label}
                             </label>
                             {field.type === "textarea" ? (
@@ -285,20 +285,20 @@ export default function HomePage() {
 
                         <label
                           htmlFor="cover-photo"
-                          className="block text-sm font-medium leading-6 text-gray-900"
+                          className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300"
                         >
                           Insert Photo
                         </label>
-                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
                           <div className="text-center">
                             <PhotoIcon
                               aria-hidden="true"
-                              className="mx-auto h-12 w-12 text-gray-300"
+                              className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
                             />
                             <div className="mt-4 flex text-sm leading-6 text-gray-600">
                               <label
                                 htmlFor="file-upload"
-                                className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
                               >
                                 <span>Upload a file</span>
                                 <input
@@ -348,7 +348,7 @@ export default function HomePage() {
 
                   <ul
                     tabIndex={0}
-                    className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-60 pt-2 shadow"
+                    className="dropdown-content menu bg-yellow-100 dark:bg-gray-600 rounded-box z-[1] w-60 pt-2 shadow"
                   >
                     <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
                       Sort By:

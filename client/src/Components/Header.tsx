@@ -51,7 +51,7 @@ function Header() {
                 <button
                   data-toggle-theme="light,dark"
                   data-act-class="ACTIVECLASS"
-                ></button>
+                >dark mode</button>
               </li>
               <li>
                 <Link
