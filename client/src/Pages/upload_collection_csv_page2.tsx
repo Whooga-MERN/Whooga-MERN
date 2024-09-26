@@ -36,7 +36,6 @@ function UploadCollection() {
             const contents = e.target?.result as string;
             const jsonItems = CSVToJSON(contents);
             setJsonData(jsonItems);
-            console.log(jsonData);
         };
         reader.readAsText(file);
     };
@@ -52,6 +51,10 @@ function UploadCollection() {
             }, {}); 
         }); 
     };
+
+    useEffect(() => {
+        console.log('CSV TO JSON: \n', jsonData);
+    }, [jsonData]);
 
     const handleUpload = () => {
         // Insert API call here to upload the CSV file
