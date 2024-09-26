@@ -6,6 +6,7 @@ import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
 import { MdFilterAlt } from "react-icons/md";
 import { PhotoIcon } from "@heroicons/react/24/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 import Header from "../Components/Header";
 import Modal from "../Components/Modal";
@@ -183,9 +184,19 @@ export default function HomePage() {
     setIsModalOpen(false);
   };
 
+  // edit collectible
+  const openEdit = () => {
+    setShowEdit(true);
+  };
+
+  const closeEdit = () => {
+    setShowEdit(false);
+  };
+
   const [isOwned, setIsOwned] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false); // card component
+  const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
+  const [showEdit, setShowEdit] = useState(false); // edit collectible
 
   return (
     <>
@@ -287,7 +298,7 @@ export default function HomePage() {
                           htmlFor="cover-photo"
                           className="block text-sm font-medium leading-6 text-gray-900"
                         >
-                          Insert Photo
+                          Upload Photo
                         </label>
                         <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
                           <div className="text-center">
@@ -300,7 +311,7 @@ export default function HomePage() {
                                 htmlFor="file-upload"
                                 className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
                               >
-                                <span>Upload a file</span>
+                                <span>Upload a photo</span>
                                 <input
                                   id="file-upload"
                                   name="file-upload"
@@ -526,7 +537,7 @@ export default function HomePage() {
                       <div className="pt-3 pb-2 text-center">
                         <button
                           className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                          onClick={openModal}
+                          onClick={openEdit}
                         >
                           <FaRegEdit />
                         </button>
@@ -550,10 +561,89 @@ export default function HomePage() {
                 isVisible={showModal}
               />
             )}
+
+            {showEdit && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-1/3">
+                  <h2 className="text-xl mb-4">Edit your Collectible</h2>
+
+                  <form>
+                    {formFields.map((field, index) => (
+                      <div key={index} className="mb-4 lg:max-w-lg">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                          {field.label}
+                        </label>
+                        {field.type === "textarea" ? (
+                          <textarea
+                            placeholder={field.placeholder}
+                            className="border rounded w-full py-2 px-3 text-gray-700"
+                          />
+                        ) : (
+                          <input
+                            type={field.type}
+                            placeholder={field.placeholder}
+                            className="border rounded w-full py-2 px-3 text-gray-700"
+                          />
+                        )}
+                      </div>
+                    ))}
+
+                    <label
+                      htmlFor="cover-photo"
+                      className="block text-sm font-medium leading-6 text-gray-900"
+                    >
+                      Upload Photo
+                    </label>
+                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+                      <div className="text-center">
+                        <PhotoIcon
+                          aria-hidden="true"
+                          className="mx-auto h-12 w-12 text-gray-300"
+                        />
+                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                          <label
+                            htmlFor="file-upload"
+                            className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                          >
+                            <span>Upload a photo</span>
+                            <input
+                              id="file-upload"
+                              name="file-upload"
+                              type="file"
+                              className="sr-only"
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs leading-5 text-gray-600">
+                          PNG, JPG
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-4 mt-8">
+                      <button
+                        type="button"
+                        onClick={closeEdit}
+                        className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                      >
+                        Create
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+        <Footer />
       </div>
-      <Footer />
     </>
   );
 }
