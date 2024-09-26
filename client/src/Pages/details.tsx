@@ -9,19 +9,19 @@ export default function details() {
     <>
       <Header />
 
-      <div className="bg-white">
+      <div className="">
         <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-x-8 lg:px-8">
           {/* Product details */}
           <div className="lg:max-w-lg lg:self-end">
             <div className="mt-4 ml-8">
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50 sm:text-4xl">
                 Eagle
               </h1>
               <p className="pt-2 text-2xl font-bold">tag Number: #12345</p>
             </div>
 
             <section aria-labelledby="information-heading" className="mt-4">
-              <div className="mt-8 space-y-2 text-xl font-bold text-gray-500 ml-8">
+              <div className="mt-8 space-y-2 text-xl font-bold text-gray-500 dark:text-gray-400 ml-8">
                 <p>created at: 12/12/2000</p>
                 <p>tag Number: #12345</p>
                 <p>tag Number: #12345</p>

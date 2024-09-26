@@ -34,14 +34,14 @@ const Modal: React.FC<propTypes> = ({
         <div className="relative">
           <div className="absolute top-0 right-0">
             <Link
-              className="mr-3 btn bg-yellow-400 w-fit text-2xl"
+              className="mr-3 btn bg-yellow-400 w-fit text-2xl text-black"
               to="/details"
             >
               <GoLinkExternal />
             </Link>
 
             <button
-              className="btn bg-yellow-400 w-fit text-2xl"
+              className="btn bg-yellow-400 w-fit text-2xl text-black"
               onClick={() => {
                 onClose();
               }}
@@ -53,14 +53,14 @@ const Modal: React.FC<propTypes> = ({
         <div className="mx-auto max-w-xl sm:px-2 sm:py-2 lg:grid lg:grid-cols-2 lg:gap-x-2 lg:px-5">
           <div className="lg:max-w-lg">
             <div className="sm:mt-14 lg:mt-28">
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
                 {tagTitle}
               </h1>
               <p className="pt-2 text-2xl font-bold">{tagNum}</p>
             </div>
 
             <section aria-labelledby="information-heading" className="mt-4">
-              <div className="mt-8 space-y-2 text-xl font-bold text-gray-500">
+              <div className="mt-8 space-y-2 text-xl font-bold text-gray-500 dark:text-gray-400">
                 <p>Create At: {tagDate}</p>
                 <p>Owner: {tagDesigner}</p>
               </div>

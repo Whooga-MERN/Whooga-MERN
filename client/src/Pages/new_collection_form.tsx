@@ -46,7 +46,7 @@ function NewCollectionForm(){
 
         // CALL API TO CREATE NEW COLLECTION HERE
 
-        navigate('/upload_collection_csv');
+        navigate('/upload_collection_csv_page1');
     };
 
     const openModal = () => {
