@@ -189,14 +189,14 @@ function NewCollectionForm(){
                         </form>
                         <h3 className="font-bold text-lg">Item attribute</h3>
                         <p className="py-4">These attribute tags refer to what you would like to view, sort, and search the items in this collection by.
-                            These will become the columns in your CSV file when you upload items to your collection. We wil automatically add an "owned" column for
+                            These will become the columns in your CSV file when you upload items to your collection. List them in order of relevence. We will automatically add an "owned" column for
                             if you own the item or not.
                         </p>
                     </div>
                 </dialog>
                 <p className="text-red-500 text-md">{isFeaturesEmpty ? '* Please enter at least one item attribute *' : ''}</p>
 
-                <input type="text" onKeyDown={handleEnterPress} placeholder="Add at least one attribute (Name, Color, Year etc.)" id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
+                <input type="text" onKeyDown={handleEnterPress} placeholder="In order of priority, add at least one attribute (Name, Color, Year etc.)" id="collectionName" className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4" />
             </div>
             <div className="flex flex-wrap mt-2">
                 {featureTags.map((tag, index) => (
