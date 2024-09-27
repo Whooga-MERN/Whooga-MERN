@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaListUl, FaRegEdit } from "react-icons/fa";
+import {
+  FaListUl,
+  FaRegEdit,
+  FaSortAmountDown,
+  FaFilter,
+} from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
-import { MdFilterAlt } from "react-icons/md";
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
@@ -12,8 +16,13 @@ import Header from "../Components/Header";
 import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 
-const sortBy = ["Year: Low to High", "Year: High to Low"];
-const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
+const sortBy = [
+  { id: "yearLowToHigh", label: "Year: Low to High" },
+  { id: "yearHighToLow", label: "Year: High to Low" },
+  { id: "tagLowToHigh", label: "Tag ID: Low to High" },
+  { id: "tagHighToLow", label: "Tag ID: High to Low" },
+];
+const color = ["Purple", "Red", "yellow", "pink", "brown", "blue", "orange"];
 const formFields = [
   { label: "Title", placeholder: "Collectible Name", type: "text" },
   { label: "Tag ID", placeholder: "Tag ID", type: "text" },
@@ -72,6 +81,7 @@ const tags = [
     createAt: "03/12/24",
     tagNum: "#55988",
     createdBy: "This person",
+    color: "purple",
   },
   {
     id: 2,
@@ -197,6 +207,31 @@ export default function HomePage() {
   const [showModal, setShowModal] = useState(false); // card component
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
+  const [selectedSort, setSelectedSort] = useState<string>("");
+
+  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedSort(e.target.value);
+  };
+
+  const sortedTags = [...tags].sort((a, b) => {
+    const dateA = new Date(a.createAt);
+    const dateB = new Date(b.createAt);
+    const tagNumA = parseInt(a.tagNum.replace("#", ""));
+    const tagNumB = parseInt(b.tagNum.replace("#", ""));
+
+    switch (selectedSort) {
+      case "yearLowToHigh":
+        return dateA.getTime() - dateB.getTime();
+      case "yearHighToLow":
+        return dateB.getTime() - dateA.getTime();
+      case "tagLowToHigh":
+        return tagNumA - tagNumB;
+      case "tagHighToLow":
+        return tagNumB - tagNumA;
+      default:
+        return 0;
+    }
+  });
 
   return (
     <>
@@ -271,7 +306,9 @@ export default function HomePage() {
                 {isModalOpen && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-1/3">
-                      <h2 className="text-xl mb-4 dark:text-gray-300">Create New Collectible</h2>
+                      <h2 className="text-xl mb-4 dark:text-gray-300">
+                        Create New Collectible
+                      </h2>
 
                       <form>
                         {formFields.map((field, index) => (
@@ -353,167 +390,202 @@ export default function HomePage() {
                     role="button"
                     className="ml-4 text-black bg-yellow-300 hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-full text-lg px-4 py-2.5 text-center inline-flex items-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                   >
-                    filter
-                    <MdFilterAlt />
+                    <FaSortAmountDown />
                   </div>
 
                   <ul
                     tabIndex={0}
-                    className="dropdown-content menu bg-yellow-100 dark:bg-gray-600 rounded-box z-[1] w-60 pt-2 shadow"
+                    className="dropdown-content menu bg-white dark:bg-gray-600 z-[1] w-60 pt-2 shadow"
                   >
-                    <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Sort By:
-                    </h6>
-                    <ul
-                      className="space-y-2 text-sm"
-                      aria-labelledby="dropdownDefault"
-                    >
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="radio"
-                            value=""
-                            name="row-height"
-                            checked
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded-full text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Year:Low to High
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="radio"
-                            value=""
-                            name="row-height"
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded-full text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Year:High to Low
-                        </label>
-                      </li>
-                    </ul>
-
-                    <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Colors:
-                    </h6>
-                    <ul
-                      className="space-y-2 text-sm"
-                      aria-labelledby="dropdownDefault"
-                    >
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Red
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Yellow
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Blue
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Green
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Black
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          White
-                        </label>
-                      </li>
-                    </ul>
+                    <div className="space-y-4">
+                      {sortBy.map((option) => (
+                        <div key={option.id}>
+                          <label>
+                            <input
+                              type="radio"
+                              value={option.id}
+                              checked={selectedSort === option.id}
+                              onChange={handleRadioChange}
+                              className="mr-2"
+                            />
+                            {option.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    {/* {option.map(({ id, title, options, inputType }) => {
+                      return (
+                        <div className="border-b pb-4" key={id}>
+                          <p className="font-medium mb-4 pt-5 pl-5 capitalize">
+                            {title}
+                          </p>
+                          <div className="space-y-2 pl-5">
+                            {options.map((value) => {
+                              return (
+                                <CheckButtons key={value}>
+                                  <CheckItem
+                                    type={inputType}
+                                    name={id}
+                                    label={value}
+                                    id={value.toLowerCase().trim()}
+                                    value={value.toLowerCase().trim()}
+                                  />
+                                </CheckButtons>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })} */}
                   </ul>
+                </div>
+
+                <div className="dropdown">
+                  <div
+                    tabIndex={0}
+                    role="button"
+                    className="ml-4 text-black bg-yellow-300 hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-full text-lg px-4 py-2.5 text-center inline-flex items-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  >
+                    <FaFilter />
+                  </div>
+
+                  <ul
+                    tabIndex={0}
+                    className="dropdown-content menu bg-white dark:bg-gray-600 z-[1] w-60 pt-2 shadow"
+                  >
+                    <div className="space-y-4">
+                      {/* {option.map(({ id, title, options, inputType }) => {
+                        return (
+                          <div className="border-b pb-4" key={id}>
+                            <p className="font-medium mb-4 pt-5 pl-5 capitalize">
+                              {title}
+                            </p>
+                            <div className="space-y-2 pl-5">
+                              {options.map((value) => {
+                                return (
+                                  <CheckButtons key={value}>
+                                    <CheckItem
+                                      type={inputType}
+                                      name={id}
+                                      label={value}
+                                      id={value.toLowerCase().trim()}
+                                      value={value.toLowerCase().trim()}
+                                    />
+                                  </CheckButtons>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })} */}
+                    </div>
+                    {/* {option.map(({ id, title, options, inputType }) => {
+                      return (
+                        <div className="border-b pb-4" key={id}>
+                          <p className="font-medium mb-4 pt-5 pl-5 capitalize">
+                            {title}
+                          </p>
+                          <div className="space-y-2 pl-5">
+                            {options.map((value) => {
+                              return (
+                                <CheckButtons key={value}>
+                                  <CheckItem
+                                    type={inputType}
+                                    name={id}
+                                    label={value}
+                                    id={value.toLowerCase().trim()}
+                                    value={value.toLowerCase().trim()}
+                                  />
+                                </CheckButtons>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })} */}
+                  </ul>
+                  {/* <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                    {sortedTags.map((tag) => (
+                      <div key={tag.id}>
+                        <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                          <div className="h-22 w-30">
+                            <img
+                              src={tag.image}
+                              alt={tag.title}
+                              width={400}
+                              height={400}
+                              className="rounded-md shadow-sm object-cover object-top"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="mt-4 font-semibold pl-4 uppercase truncate">
+                              {tag.tagNum}
+                            </p>
+                            <p className="font-bold pl-4 uppercase truncate">
+                              {tag.title}
+                            </p>
+
+                            <div className="pt-3 pb-2 text-center">
+                              <button className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                                <FaRegEdit />
+                              </button>
+                              <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                                <FaRegTrashCan />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div> */}
                 </div>
               </div>
             </div>
           </div>
         </div>
-        {/* side bar */}
         <div className="w-full flex flex-col md:flex-row">
-          {/* <div className="w-full md:w-[15%] p-2">
-            <div className="col-span-2 space-y6 top-12 h-fit">
-              <div className="py-2 mb-8 p-5">
-                <Link to="/home">
-                  <button className="whitespace-nowrap text-white bg-yellow-400 border-yellow-400 hover:bg-yellow-500 hover:shadow-md duration-100 h-11 rounded-lg sm:px-3 lg:px-7 w-auto py-3 font-semibold text-sm shadow-lg shadow-transparent cursor-pointer">
-                    Clear filters
-                  </button>
-                </Link>
-              </div>
-              {option.map(({ id, title, options, inputType }) => {
-                return (
-                  <div className="border-b pb-4" key={id}>
-                    <p className="font-medium mb-4 pt-5 pl-5 capitalize">
-                      {title}
-                    </p>
-                    <div className="space-y-2 pl-5">
-                      {options.map((value) => {
-                        return (
-                          <CheckButtons key={value}>
-                            <CheckItem
-                              type={inputType}
-                              name={id}
-                              label={value}
-                              id={value.toLowerCase().trim()}
-                              value={value.toLowerCase().trim()}
-                            />
-                          </CheckButtons>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div> */}
           {/* collectibles */}
           <div className="w-full p-2">
-            <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
+            {/* <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
               {tags.map((tag) => (
+                <div key={tag.id}>
+                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                    <div className="h-22 w-30">
+                      <img
+                        src={tag.image}
+                        alt={tag.title}
+                        width={400}
+                        height={400}
+                        className="rounded-md shadow-sm object-cover object-top"
+                        onClick={() => handleOpenModal(tag)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="mt-4 font-semibold pl-4 uppercase truncate">
+                        {tag.tagNum}
+                      </p>
+                      <p className="font-bold pl-4 uppercase truncate">
+                        {tag.title}
+                      </p>
+
+                      <div className="pt-3 pb-2 text-center">
+                        <button
+                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                          onClick={openEdit}
+                        >
+                          <FaRegEdit />
+                        </button>
+                        <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                          <FaRegTrashCan />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div> */}
+            <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
+              {sortedTags.map((tag) => (
                 <div key={tag.id}>
                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
