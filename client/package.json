@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-amplify/ui-react": "^6.2.2",
     "@headlessui/react": "^2.1.8",
+    "@tailwindcss/forms": "^0.5.9",
     "@heroicons/react": "^2.1.5",
     "aws-amplify": "^6.6.0",
     "react": "^18.3.1",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@heroicons/react": "^2.1.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
