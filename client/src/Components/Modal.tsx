@@ -1,6 +1,5 @@
 import React from "react";
 import { IoMdClose } from "react-icons/io";
-import { FaExternalLinkAlt } from "react-icons/fa";
 import { GoLinkExternal } from "react-icons/go";
 import { Link } from "react-router-dom";
 
@@ -35,7 +34,16 @@ const Modal: React.FC<propTypes> = ({
           <div className="absolute top-0 right-0">
             <Link
               className="mr-3 btn bg-yellow-400 w-fit text-2xl text-black"
-              to="/details"
+              to={{
+                pathname: "/details",
+              }}
+              state={{
+                tagTitle,
+                tagNum,
+                tagDate,
+                tagImage,
+                tagDesigner,
+              }}
             >
               <GoLinkExternal />
             </Link>
