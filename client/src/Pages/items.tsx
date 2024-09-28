@@ -10,7 +10,6 @@ import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
 import { PhotoIcon } from "@heroicons/react/24/solid";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 import Header from "../Components/Header";
 import Modal from "../Components/Modal";
@@ -22,7 +21,20 @@ const sortBy = [
   { id: "tagLowToHigh", label: "Tag ID: Low to High" },
   { id: "tagHighToLow", label: "Tag ID: High to Low" },
 ];
-const color = ["Purple", "Red", "yellow", "pink", "brown", "blue", "orange"];
+const color = [
+  "purple",
+  "red",
+  "yellow",
+  "pink",
+  "brown",
+  "blue",
+  "orange",
+  "white",
+  "grey",
+  "black",
+  "green",
+];
+
 const formFields = [
   { label: "Title", placeholder: "Collectible Name", type: "text" },
   { label: "Tag ID", placeholder: "Tag ID", type: "text" },
@@ -35,44 +47,6 @@ const formFields = [
   },
 ];
 
-const option = [
-  {
-    id: "sort",
-    title: "sort By",
-    options: sortBy,
-    inputType: "radio",
-  },
-  {
-    id: "colors",
-    title: "Colors",
-    options: color,
-    inputType: "checkbox",
-  },
-];
-
-interface filterButtons {
-  children: React.ReactNode;
-}
-
-interface checkItems extends React.ComponentPropsWithoutRef<"input"> {
-  label: string;
-}
-
-function CheckButtons({ children }: filterButtons) {
-  return <div className="flex flex-items hover:opacity-75">{children}</div>;
-}
-
-function CheckItem({ id, label, ...props }: checkItems) {
-  return (
-    <div>
-      <input id={id} className="w-3 h-3 shrink-0 mr-3" {...props} />
-      <label htmlFor={id} className="text-md">
-        {label}
-      </label>
-    </div>
-  );
-}
-
 const tags = [
   {
     id: 1,
@@ -81,7 +55,7 @@ const tags = [
     createAt: "03/12/24",
     tagNum: "#55988",
     createdBy: "This person",
-    color: "purple",
+    color: ["purple", "blue", "grey"],
   },
   {
     id: 2,
@@ -90,6 +64,7 @@ const tags = [
     createAt: "3/06/24",
     tagNum: "#55927",
     createdBy: "That person",
+    color: ["red", "black", "white"],
   },
   {
     id: 3,
@@ -98,6 +73,7 @@ const tags = [
     createAt: "02/28/24",
     tagNum: "#55881",
     createdBy: "Those person",
+    color: ["brown", "black", "orange"],
   },
   {
     id: 4,
@@ -106,6 +82,7 @@ const tags = [
     createAt: "03/04/24",
     tagNum: "#55915",
     createdBy: "This group",
+    color: ["yellow", "purple", "pink"],
   },
   {
     id: 5,
@@ -114,6 +91,7 @@ const tags = [
     createAt: "03/12/24",
     tagNum: "#55996",
     createdBy: "That group",
+    color: ["red", "brown", "black"],
   },
   {
     id: 6,
@@ -122,6 +100,7 @@ const tags = [
     createAt: "02/03/24",
     tagNum: "#55697",
     createdBy: "Those groups",
+    color: ["red", "green", "white"],
   },
   {
     id: 7,
@@ -130,6 +109,7 @@ const tags = [
     createAt: "03/12/24",
     tagNum: "#55994",
     createdBy: "me",
+    color: ["blue", "black", "white"],
   },
   {
     id: 8,
@@ -138,6 +118,7 @@ const tags = [
     createAt: "03/07/24",
     tagNum: "#55958",
     createdBy: "He",
+    color: ["red", "yellow", "purple", "blue"],
   },
   {
     id: 9,
@@ -146,6 +127,7 @@ const tags = [
     createAt: "03/06/24",
     tagNum: "#55949",
     createdBy: "She",
+    color: ["green", "yellow", "red"],
   },
   {
     id: 10,
@@ -154,6 +136,7 @@ const tags = [
     createAt: "03/05/24",
     tagNum: "#55917",
     createdBy: "Them",
+    color: ["brown", "blue", "yellow"],
   },
 ];
 
@@ -208,30 +191,53 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
   const [selectedSort, setSelectedSort] = useState<string>("");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
   };
 
-  const sortedTags = [...tags].sort((a, b) => {
-    const dateA = new Date(a.createAt);
-    const dateB = new Date(b.createAt);
-    const tagNumA = parseInt(a.tagNum.replace("#", ""));
-    const tagNumB = parseInt(b.tagNum.replace("#", ""));
+  // handle color checkbox changes
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const color = e.target.value;
+    setSelectedColors(
+      (prevSelectedColors) =>
+        prevSelectedColors.includes(color)
+          ? prevSelectedColors.filter((c) => c !== color) // Remove if already selected
+          : [...prevSelectedColors, color] // Add if not selected
+    );
+  };
 
-    switch (selectedSort) {
-      case "yearLowToHigh":
-        return dateA.getTime() - dateB.getTime();
-      case "yearHighToLow":
-        return dateB.getTime() - dateA.getTime();
-      case "tagLowToHigh":
-        return tagNumA - tagNumB;
-      case "tagHighToLow":
-        return tagNumB - tagNumA;
-      default:
-        return 0;
-    }
-  });
+  // handle filter and sort
+  const processedTags = [...tags]
+    .filter((tag) => {
+      if (selectedColors.length > 0) {
+        // check array
+        return tag.color.some((color) =>
+          selectedColors.includes(color.toLowerCase())
+        );
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.createAt);
+      const dateB = new Date(b.createAt);
+      const tagNumA = parseInt(a.tagNum.replace("#", ""));
+      const tagNumB = parseInt(b.tagNum.replace("#", ""));
+
+      switch (selectedSort) {
+        case "yearLowToHigh":
+          return dateA.getTime() - dateB.getTime();
+        case "yearHighToLow":
+          return dateB.getTime() - dateA.getTime();
+        case "tagLowToHigh":
+          return tagNumA - tagNumB;
+        case "tagHighToLow":
+          return tagNumB - tagNumA;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <>
@@ -413,30 +419,6 @@ export default function HomePage() {
                         </div>
                       ))}
                     </div>
-                    {/* {option.map(({ id, title, options, inputType }) => {
-                      return (
-                        <div className="border-b pb-4" key={id}>
-                          <p className="font-medium mb-4 pt-5 pl-5 capitalize">
-                            {title}
-                          </p>
-                          <div className="space-y-2 pl-5">
-                            {options.map((value) => {
-                              return (
-                                <CheckButtons key={value}>
-                                  <CheckItem
-                                    type={inputType}
-                                    name={id}
-                                    label={value}
-                                    id={value.toLowerCase().trim()}
-                                    value={value.toLowerCase().trim()}
-                                  />
-                                </CheckButtons>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })} */}
                   </ul>
                 </div>
 
@@ -453,91 +435,25 @@ export default function HomePage() {
                     tabIndex={0}
                     className="dropdown-content menu bg-white dark:bg-gray-600 z-[1] w-60 pt-2 shadow"
                   >
+                    {/* Color Filter */}
                     <div className="space-y-4">
-                      {/* {option.map(({ id, title, options, inputType }) => {
-                        return (
-                          <div className="border-b pb-4" key={id}>
-                            <p className="font-medium mb-4 pt-5 pl-5 capitalize">
-                              {title}
-                            </p>
-                            <div className="space-y-2 pl-5">
-                              {options.map((value) => {
-                                return (
-                                  <CheckButtons key={value}>
-                                    <CheckItem
-                                      type={inputType}
-                                      name={id}
-                                      label={value}
-                                      id={value.toLowerCase().trim()}
-                                      value={value.toLowerCase().trim()}
-                                    />
-                                  </CheckButtons>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })} */}
-                    </div>
-                    {/* {option.map(({ id, title, options, inputType }) => {
-                      return (
-                        <div className="border-b pb-4" key={id}>
-                          <p className="font-medium mb-4 pt-5 pl-5 capitalize">
-                            {title}
-                          </p>
-                          <div className="space-y-2 pl-5">
-                            {options.map((value) => {
-                              return (
-                                <CheckButtons key={value}>
-                                  <CheckItem
-                                    type={inputType}
-                                    name={id}
-                                    label={value}
-                                    id={value.toLowerCase().trim()}
-                                    value={value.toLowerCase().trim()}
-                                  />
-                                </CheckButtons>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })} */}
-                  </ul>
-                  {/* <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                    {sortedTags.map((tag) => (
-                      <div key={tag.id}>
-                        <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                          <div className="h-22 w-30">
-                            <img
-                              src={tag.image}
-                              alt={tag.title}
-                              width={400}
-                              height={400}
-                              className="rounded-md shadow-sm object-cover object-top"
+                      <span>Select Colors:</span>
+                      <div className="flex flex-wrap gap-4">
+                        {color.map((color) => (
+                          <label key={color} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              value={color}
+                              checked={selectedColors.includes(color)}
+                              onChange={handleColorChange}
+                              className="mr-2"
                             />
-                          </div>
-                          <div className="space-y-1">
-                            <p className="mt-4 font-semibold pl-4 uppercase truncate">
-                              {tag.tagNum}
-                            </p>
-                            <p className="font-bold pl-4 uppercase truncate">
-                              {tag.title}
-                            </p>
-
-                            <div className="pt-3 pb-2 text-center">
-                              <button className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
-                                <FaRegEdit />
-                              </button>
-                              <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
-                                <FaRegTrashCan />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
+                            {color}
+                          </label>
+                        ))}
                       </div>
-                    ))}
-                  </div> */}
+                    </div>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -546,46 +462,8 @@ export default function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* collectibles */}
           <div className="w-full p-2">
-            {/* <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
-              {tags.map((tag) => (
-                <div key={tag.id}>
-                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                    <div className="h-22 w-30">
-                      <img
-                        src={tag.image}
-                        alt={tag.title}
-                        width={400}
-                        height={400}
-                        className="rounded-md shadow-sm object-cover object-top"
-                        onClick={() => handleOpenModal(tag)}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="mt-4 font-semibold pl-4 uppercase truncate">
-                        {tag.tagNum}
-                      </p>
-                      <p className="font-bold pl-4 uppercase truncate">
-                        {tag.title}
-                      </p>
-
-                      <div className="pt-3 pb-2 text-center">
-                        <button
-                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                          onClick={openEdit}
-                        >
-                          <FaRegEdit />
-                        </button>
-                        <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
-                          <FaRegTrashCan />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div> */}
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
-              {sortedTags.map((tag) => (
+              {processedTags.map((tag) => (
                 <div key={tag.id}>
                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
