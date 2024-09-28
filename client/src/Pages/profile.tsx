@@ -1,10 +1,10 @@
 import Header from "../Components/Header";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Description, Field, Label, Switch } from "@headlessui/react";
 ("use client");
 
 export default function Settings() {
-  const [enabled, setEnabled] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false); //doesn't work
 
   return (
     <>
@@ -14,7 +14,7 @@ export default function Settings() {
         <main className="px-4 py-16 sm:px-6 lg:flex-auto lg:px-0 lg:py-20">
           <div className="mx-auto max-w-2xl space-y-16 sm:space-y-20 lg:mx-0 lg:max-w-none">
             <div>
-              <h2 className="text-2xl font-extrabold leading-7 text-gray-900">
+              <h2 className="text-2xl font-extrabold leading-7">
                 Profile
               </h2>
               <p className="pb-3 mt-1 text-md leading-6 text-gray-500">
@@ -69,7 +69,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold leading-7 text-gray-900">
+              <h2 className="text-2xl font-extrabold leading-7">
                 Notification preferences
               </h2>
               <p className="pb-3 mt-1 text-md leading-6 text-gray-500">
@@ -82,7 +82,7 @@ export default function Settings() {
                   <div className="min-w-0 flex-1 text-sm leading-6">
                     <label
                       htmlFor="comments"
-                      className="text-lg font-bold text-gray-900"
+                      className="text-lg font-bold "
                     >
                       Text
                     </label>
@@ -105,7 +105,7 @@ export default function Settings() {
                   <div className="min-w-0 flex-1 text-sm leading-6">
                     <label
                       htmlFor="comments"
-                      className="text-lg font-bold text-gray-900"
+                      className="text-lg font-bold"
                     >
                       Email
                     </label>
@@ -139,7 +139,7 @@ export default function Settings() {
                   <Label
                     as="span"
                     passive
-                    className="text-2xl font-extrabold leading-7 text-gray-900"
+                    className="text-2xl font-extrabold leading-7"
                   >
                     Theme preferences
                   </Label>
@@ -150,9 +150,11 @@ export default function Settings() {
                     Change the theme to dark/light of your choice.
                   </Description>
                 </span>
-                <Switch
-                  checked={enabled}
-                  onChange={setEnabled}
+                <Switch data-toggle-theme="light,dark"
+                  data-act-class="ACTIVECLASS"
+                  checked={isDarkMode}
+                  onChange={setIsDarkMode}
+
                   className="group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 data-[checked]:bg-indigo-600"
                 >
                   <span
@@ -164,8 +166,8 @@ export default function Settings() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold leading-7 text-gray-900">
-                delete Account
+              <h2 className="text-2xl font-extrabold leading-7">
+                Delete Account
               </h2>
               <p className="pb-5 mt-1 text-md leading-6 text-gray-500">
                 No longer collecting? Delete it here. All your information

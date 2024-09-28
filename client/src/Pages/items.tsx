@@ -1,18 +1,40 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaListUl, FaRegEdit } from "react-icons/fa";
+import {
+  FaListUl,
+  FaRegEdit,
+  FaSortAmountDown,
+  FaFilter,
+} from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
-import { MdFilterAlt } from "react-icons/md";
 import { PhotoIcon } from "@heroicons/react/24/solid";
 
 import Header from "../Components/Header";
 import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 
-const sortBy = ["Year: Low to High", "Year: High to Low"];
-const color = ["Red", "Yellow", "Blue", "Green", "Black", "White"];
+const sortBy = [
+  { id: "yearLowToHigh", label: "Year: Low to High" },
+  { id: "yearHighToLow", label: "Year: High to Low" },
+  { id: "tagLowToHigh", label: "Tag ID: Low to High" },
+  { id: "tagHighToLow", label: "Tag ID: High to Low" },
+];
+const color = [
+  "purple",
+  "red",
+  "yellow",
+  "pink",
+  "brown",
+  "blue",
+  "orange",
+  "white",
+  "grey",
+  "black",
+  "green",
+];
+
 const formFields = [
   { label: "Title", placeholder: "Collectible Name", type: "text" },
   { label: "Tag ID", placeholder: "Tag ID", type: "text" },
@@ -25,44 +47,6 @@ const formFields = [
   },
 ];
 
-const option = [
-  {
-    id: "sort",
-    title: "sort By",
-    options: sortBy,
-    inputType: "radio",
-  },
-  {
-    id: "colors",
-    title: "Colors",
-    options: color,
-    inputType: "checkbox",
-  },
-];
-
-interface filterButtons {
-  children: React.ReactNode;
-}
-
-interface checkItems extends React.ComponentPropsWithoutRef<"input"> {
-  label: string;
-}
-
-function CheckButtons({ children }: filterButtons) {
-  return <div className="flex flex-items hover:opacity-75">{children}</div>;
-}
-
-function CheckItem({ id, label, ...props }: checkItems) {
-  return (
-    <div>
-      <input id={id} className="w-3 h-3 shrink-0 mr-3" {...props} />
-      <label htmlFor={id} className="text-md">
-        {label}
-      </label>
-    </div>
-  );
-}
-
 const tags = [
   {
     id: 1,
@@ -71,6 +55,7 @@ const tags = [
     createAt: "03/12/24",
     tagNum: "#55988",
     createdBy: "This person",
+    color: ["purple", "blue", "grey"],
   },
   {
     id: 2,
@@ -79,6 +64,7 @@ const tags = [
     createAt: "3/06/24",
     tagNum: "#55927",
     createdBy: "That person",
+    color: ["red", "black", "white"],
   },
   {
     id: 3,
@@ -87,6 +73,7 @@ const tags = [
     createAt: "02/28/24",
     tagNum: "#55881",
     createdBy: "Those person",
+    color: ["brown", "black", "orange"],
   },
   {
     id: 4,
@@ -95,6 +82,7 @@ const tags = [
     createAt: "03/04/24",
     tagNum: "#55915",
     createdBy: "This group",
+    color: ["yellow", "purple", "pink"],
   },
   {
     id: 5,
@@ -103,6 +91,7 @@ const tags = [
     createAt: "03/12/24",
     tagNum: "#55996",
     createdBy: "That group",
+    color: ["red", "brown", "black"],
   },
   {
     id: 6,
@@ -111,6 +100,7 @@ const tags = [
     createAt: "02/03/24",
     tagNum: "#55697",
     createdBy: "Those groups",
+    color: ["red", "green", "white"],
   },
   {
     id: 7,
@@ -119,6 +109,7 @@ const tags = [
     createAt: "03/12/24",
     tagNum: "#55994",
     createdBy: "me",
+    color: ["blue", "black", "white"],
   },
   {
     id: 8,
@@ -127,6 +118,7 @@ const tags = [
     createAt: "03/07/24",
     tagNum: "#55958",
     createdBy: "He",
+    color: ["red", "yellow", "purple", "blue"],
   },
   {
     id: 9,
@@ -135,6 +127,7 @@ const tags = [
     createAt: "03/06/24",
     tagNum: "#55949",
     createdBy: "She",
+    color: ["green", "yellow", "red"],
   },
   {
     id: 10,
@@ -143,6 +136,7 @@ const tags = [
     createAt: "03/05/24",
     tagNum: "#55917",
     createdBy: "Them",
+    color: ["brown", "blue", "yellow"],
   },
 ];
 
@@ -183,9 +177,67 @@ export default function HomePage() {
     setIsModalOpen(false);
   };
 
+  // edit collectible
+  const openEdit = () => {
+    setShowEdit(true);
+  };
+
+  const closeEdit = () => {
+    setShowEdit(false);
+  };
+
   const [isOwned, setIsOwned] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false); // card component
+  const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
+  const [showEdit, setShowEdit] = useState(false); // edit collectible
+  const [selectedSort, setSelectedSort] = useState<string>("");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+
+  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedSort(e.target.value);
+  };
+
+  // handle color checkbox changes
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const color = e.target.value;
+    setSelectedColors(
+      (prevSelectedColors) =>
+        prevSelectedColors.includes(color)
+          ? prevSelectedColors.filter((c) => c !== color) // Remove if already selected
+          : [...prevSelectedColors, color] // Add if not selected
+    );
+  };
+
+  // handle filter and sort
+  const processedTags = [...tags]
+    .filter((tag) => {
+      if (selectedColors.length > 0) {
+        // check array
+        return tag.color.some((color) =>
+          selectedColors.includes(color.toLowerCase())
+        );
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.createAt);
+      const dateB = new Date(b.createAt);
+      const tagNumA = parseInt(a.tagNum.replace("#", ""));
+      const tagNumB = parseInt(b.tagNum.replace("#", ""));
+
+      switch (selectedSort) {
+        case "yearLowToHigh":
+          return dateA.getTime() - dateB.getTime();
+        case "yearHighToLow":
+          return dateB.getTime() - dateA.getTime();
+        case "tagLowToHigh":
+          return tagNumA - tagNumB;
+        case "tagHighToLow":
+          return tagNumB - tagNumA;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <>
@@ -259,13 +311,15 @@ export default function HomePage() {
 
                 {isModalOpen && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-1/3">
-                      <h2 className="text-xl mb-4">Create New Collectible</h2>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-1/3">
+                      <h2 className="text-xl mb-4 dark:text-gray-300">
+                        Create New Collectible
+                      </h2>
 
                       <form>
                         {formFields.map((field, index) => (
                           <div key={index} className="mb-4 lg:max-w-lg">
-                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
                               {field.label}
                             </label>
                             {field.type === "textarea" ? (
@@ -285,22 +339,22 @@ export default function HomePage() {
 
                         <label
                           htmlFor="cover-photo"
-                          className="block text-sm font-medium leading-6 text-gray-900"
+                          className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300"
                         >
-                          Insert Photo
+                          Upload Photo
                         </label>
-                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
                           <div className="text-center">
                             <PhotoIcon
                               aria-hidden="true"
-                              className="mx-auto h-12 w-12 text-gray-300"
+                              className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
                             />
                             <div className="mt-4 flex text-sm leading-6 text-gray-600">
                               <label
                                 htmlFor="file-upload"
-                                className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
                               >
-                                <span>Upload a file</span>
+                                <span>Upload a photo</span>
                                 <input
                                   id="file-upload"
                                   name="file-upload"
@@ -342,167 +396,74 @@ export default function HomePage() {
                     role="button"
                     className="ml-4 text-black bg-yellow-300 hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-full text-lg px-4 py-2.5 text-center inline-flex items-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                   >
-                    filter
-                    <MdFilterAlt />
+                    <FaSortAmountDown />
                   </div>
 
                   <ul
                     tabIndex={0}
-                    className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-60 pt-2 shadow"
+                    className="dropdown-content menu bg-white dark:bg-gray-600 z-[1] w-60 pt-2 shadow"
                   >
-                    <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Sort By:
-                    </h6>
-                    <ul
-                      className="space-y-2 text-sm"
-                      aria-labelledby="dropdownDefault"
-                    >
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="radio"
-                            value=""
-                            name="row-height"
-                            checked
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded-full text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Year:Low to High
-                        </label>
-                      </li>
+                    <div className="space-y-4">
+                      {sortBy.map((option) => (
+                        <div key={option.id}>
+                          <label>
+                            <input
+                              type="radio"
+                              value={option.id}
+                              checked={selectedSort === option.id}
+                              onChange={handleRadioChange}
+                              className="mr-2"
+                            />
+                            {option.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </ul>
+                </div>
 
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="radio"
-                            value=""
-                            name="row-height"
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded-full text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Year:High to Low
-                        </label>
-                      </li>
-                    </ul>
+                <div className="dropdown">
+                  <div
+                    tabIndex={0}
+                    role="button"
+                    className="ml-4 text-black bg-yellow-300 hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-full text-lg px-4 py-2.5 text-center inline-flex items-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  >
+                    <FaFilter />
+                  </div>
 
-                    <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Colors:
-                    </h6>
-                    <ul
-                      className="space-y-2 text-sm"
-                      aria-labelledby="dropdownDefault"
-                    >
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Red
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Yellow
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Blue
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Green
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Black
-                        </label>
-                      </li>
-
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            value=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          White
-                        </label>
-                      </li>
-                    </ul>
+                  <ul
+                    tabIndex={0}
+                    className="dropdown-content menu bg-white dark:bg-gray-600 z-[1] w-60 pt-2 shadow"
+                  >
+                    {/* Color Filter */}
+                    <div className="space-y-4">
+                      <span>Select Colors:</span>
+                      <div className="flex flex-wrap gap-4">
+                        {color.map((color) => (
+                          <label key={color} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              value={color}
+                              checked={selectedColors.includes(color)}
+                              onChange={handleColorChange}
+                              className="mr-2"
+                            />
+                            {color}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        {/* side bar */}
         <div className="w-full flex flex-col md:flex-row">
-          {/* <div className="w-full md:w-[15%] p-2">
-            <div className="col-span-2 space-y6 top-12 h-fit">
-              <div className="py-2 mb-8 p-5">
-                <Link to="/home">
-                  <button className="whitespace-nowrap text-white bg-yellow-400 border-yellow-400 hover:bg-yellow-500 hover:shadow-md duration-100 h-11 rounded-lg sm:px-3 lg:px-7 w-auto py-3 font-semibold text-sm shadow-lg shadow-transparent cursor-pointer">
-                    Clear filters
-                  </button>
-                </Link>
-              </div>
-              {option.map(({ id, title, options, inputType }) => {
-                return (
-                  <div className="border-b pb-4" key={id}>
-                    <p className="font-medium mb-4 pt-5 pl-5 capitalize">
-                      {title}
-                    </p>
-                    <div className="space-y-2 pl-5">
-                      {options.map((value) => {
-                        return (
-                          <CheckButtons key={value}>
-                            <CheckItem
-                              type={inputType}
-                              name={id}
-                              label={value}
-                              id={value.toLowerCase().trim()}
-                              value={value.toLowerCase().trim()}
-                            />
-                          </CheckButtons>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div> */}
           {/* collectibles */}
           <div className="w-full p-2">
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
-              {tags.map((tag) => (
+              {processedTags.map((tag) => (
                 <div key={tag.id}>
                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
@@ -526,7 +487,7 @@ export default function HomePage() {
                       <div className="pt-3 pb-2 text-center">
                         <button
                           className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                          onClick={openModal}
+                          onClick={openEdit}
                         >
                           <FaRegEdit />
                         </button>
@@ -550,10 +511,89 @@ export default function HomePage() {
                 isVisible={showModal}
               />
             )}
+
+            {showEdit && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-1/3">
+                  <h2 className="text-xl mb-4">Edit your Collectible</h2>
+
+                  <form>
+                    {formFields.map((field, index) => (
+                      <div key={index} className="mb-4 lg:max-w-lg">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                          {field.label}
+                        </label>
+                        {field.type === "textarea" ? (
+                          <textarea
+                            placeholder={field.placeholder}
+                            className="border rounded w-full py-2 px-3 text-gray-700"
+                          />
+                        ) : (
+                          <input
+                            type={field.type}
+                            placeholder={field.placeholder}
+                            className="border rounded w-full py-2 px-3 text-gray-700"
+                          />
+                        )}
+                      </div>
+                    ))}
+
+                    <label
+                      htmlFor="cover-photo"
+                      className="block text-sm font-medium leading-6 text-gray-900"
+                    >
+                      Upload Photo
+                    </label>
+                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+                      <div className="text-center">
+                        <PhotoIcon
+                          aria-hidden="true"
+                          className="mx-auto h-12 w-12 text-gray-300"
+                        />
+                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                          <label
+                            htmlFor="file-upload"
+                            className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                          >
+                            <span>Upload a photo</span>
+                            <input
+                              id="file-upload"
+                              name="file-upload"
+                              type="file"
+                              className="sr-only"
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs leading-5 text-gray-600">
+                          PNG, JPG
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-4 mt-8">
+                      <button
+                        type="button"
+                        onClick={closeEdit}
+                        className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                      >
+                        Create
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+        <Footer />
       </div>
-      <Footer />
     </>
   );
 }

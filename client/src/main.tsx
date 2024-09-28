@@ -18,6 +18,7 @@ import NewCollectionSearchMatches from "./Pages/new_collection_search_matches.ts
 import UploadCollection1 from "./Pages/upload_collection_csv_page1.tsx";
 import UploadCollection2 from "./Pages/upload_collection_csv_page2.tsx";
 import Profile from "./Pages/profile.tsx";
+import MessageSignup from "./Pages/message_signup.tsx";
 
 import "./custom-amplify-styles.css";
 
@@ -41,6 +42,7 @@ createRoot(document.getElementById("root")!).render(
       <Route path="/" element={<App />} />
       <Route path="/login" element={<Login />} />
       <Route path="/auth" element={<Authentication />} />
+      <Route path="/message_signup" element={<MessageSignup />} />
 
       {/* authenticated routes */}
       <Route
@@ -115,6 +117,14 @@ createRoot(document.getElementById("root")!).render(
           </ProtectedRoute>
         }
       />
+      {/* <Route
+        path="/message_signup"
+        element={
+          <ProtectedRoute>
+            <MessageSignup />
+          </ProtectedRoute>
+        }
+      /> */}
     </Routes>
   </BrowserRouter>
 );
