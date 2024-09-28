@@ -1,0 +1,95 @@
+require("dotenv").config({ path: __dirname + "/.env" });
+const {db, pool} = require('../config/db');
+const {collections, collectionUniverses} = require('../config/schema');
+const express = require('express');
+const {eq} = require('drizzle-orm');
+
+const router = express.Router();
+
+// Collection CRUD APIs
+
+// Create
+router.post('', async (req, res) => {
+    const {userId, collectionUniverseId, customAttributes, collectionPic} = req.body;
+
+    if (!userId || !collectionUniverseId || !customAttributes) {
+        return res.status(400).send({ error: 'Request body is missing a parameter' });
+    }
+
+    try {
+
+        const lastItem = await db
+        .select()
+        .from(collections)
+        .orderBy({ id: 'desc' }) // Sort by ID in descending order
+        .limit(1) // Get the last item
+        .execute();
+
+        const newId = lastItem.length > 0 ? lastItem[0].collection_id + 1 : 1; // Increment last ID or start at 1
+        const newItem = await db.insert(collections).values({
+            collection_id: newId,
+            user_id: userId,
+            collection_universe_id: collectionUniverseId,
+            custom_attributes: customAttributes,
+            collectionPic: collectionPic,
+        }).returning();
+
+        res.status(201).json(newItem);
+    } catch (error){
+        console.error(error);
+        res.status(500).send({ error: 'Error creating item' });
+    }
+
+});
+
+// READ (All items)
+router.get('', async (req, res) => {
+  try {
+    const allItems = await db.select().from(collections).execute();
+    res.json(allItems);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching items' });
+  }
+});
+
+// READ (Single item)
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const item = await db.select()
+      .from(collections)
+      .where(eq(id, collections.collection_id))
+      .execute();
+
+    if (item.length === 0) {
+      return res.status(404).send({ error: 'Item not found' });
+    }
+    res.json(item[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching item' });
+  }
+});
+
+// DELETE
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deletedItem = await db.delete(collections)
+      .where(eq(id, collections.collection_id))
+      .returning(); // Fetch the deleted item
+
+    if (deletedItem.length === 0) {
+      return res.status(404).send({ error: 'Item not found' });
+    }
+    res.status(204).send(); // No content on successful delete
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error deleting item' });
+  }
+});
+
+module.exports = router;

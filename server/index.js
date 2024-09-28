@@ -4,6 +4,8 @@ const {collections, collectionUniverses} = require('./config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
 const attributeRouter = require('./routes/collectableAttributes');
+const universeRouter = require('./routes/collectionUniverse');
+const collectionRouter = require('./routes/collection')
 /*const { drizzle } = require('drizzle-orm');
 const { pgAdapter } = require('drizzle-orm-pg');
 const pg = require('pg');*/
@@ -11,6 +13,8 @@ const pg = require('pg');*/
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
 
 /*const db = drizzle(pgAdapter(pool));
 
@@ -27,6 +31,8 @@ app.listen(PORT, () => {
 
 app.use('/collectable-attributes', attributeRouter);
 
+app.use('/collection-universe', universeRouter);
 
+app.use('/collection', collectionRouter);
 
 //app.get('/users', getUsers)
