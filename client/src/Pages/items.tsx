@@ -10,10 +10,16 @@ import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
 import { PhotoIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowLongLeftIcon,
+  ArrowLongRightIcon,
+} from "@heroicons/react/20/solid";
 
 import Header from "../Components/Header";
 import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
+
+const ITEMS_PER_PAGE = 21;
 
 const sortBy = [
   { id: "yearLowToHigh", label: "Year: Low to High" },
@@ -138,6 +144,276 @@ const tags = [
     createdBy: "Them",
     color: ["brown", "blue", "yellow"],
   },
+  {
+    id: 11,
+    title: "galactic wars",
+    image: "/galacticwars.jpg",
+    createAt: "03/15/24",
+    tagNum: "#55928",
+    createdBy: "A Rebel",
+    color: ["black", "grey", "red"],
+  },
+  {
+    id: 12,
+    title: "mountain explorer",
+    image: "/mountainexplorer.jpg",
+    createAt: "03/18/24",
+    tagNum: "#55935",
+    createdBy: "Adventurer",
+    color: ["green", "blue", "brown"],
+  },
+  {
+    id: 13,
+    title: "sunset paradise",
+    image: "/sunsetparadise.jpg",
+    createAt: "03/20/24",
+    tagNum: "#55945",
+    createdBy: "Nature Lover",
+    color: ["orange", "yellow", "pink"],
+  },
+  {
+    id: 14,
+    title: "ocean depths",
+    image: "/oceandepths.jpg",
+    createAt: "03/22/24",
+    tagNum: "#55955",
+    createdBy: "Deep Diver",
+    color: ["blue", "aqua", "black"],
+  },
+  {
+    id: 15,
+    title: "cyberpunk city",
+    image: "/cyberpunkcity.jpg",
+    createAt: "03/25/24",
+    tagNum: "#55967",
+    createdBy: "Tech Guru",
+    color: ["purple", "pink", "neon green"],
+  },
+  {
+    id: 16,
+    title: "ancient ruins",
+    image: "/ancientruins.jpg",
+    createAt: "03/28/24",
+    tagNum: "#55974",
+    createdBy: "Archaeologist",
+    color: ["brown", "grey", "beige"],
+  },
+  {
+    id: 17,
+    title: "skylight dreams",
+    image: "/skylightdreams.jpg",
+    createAt: "03/30/24",
+    tagNum: "#55981",
+    createdBy: "Astronomer",
+    color: ["blue", "purple", "white"],
+  },
+  {
+    id: 18,
+    title: "desert wanderer",
+    image: "/desertwanderer.jpg",
+    createAt: "04/01/24",
+    tagNum: "#55989",
+    createdBy: "Nomad",
+    color: ["yellow", "brown", "red"],
+  },
+  {
+    id: 19,
+    title: "jungle adventure",
+    image: "/jungleadventure.jpg",
+    createAt: "04/03/24",
+    tagNum: "#55995",
+    createdBy: "Explorer",
+    color: ["green", "brown", "orange"],
+  },
+  {
+    id: 20,
+    title: "northern lights",
+    image: "/northernlights.jpg",
+    createAt: "04/05/24",
+    tagNum: "#56001",
+    createdBy: "Aurora Chaser",
+    color: ["green", "purple", "blue"],
+  },
+  {
+    id: 21,
+    title: "forest guardian",
+    image: "/forestguardian.jpg",
+    createAt: "04/08/24",
+    tagNum: "#56012",
+    createdBy: "Wildlife Protector",
+    color: ["green", "brown", "gold"],
+  },
+  {
+    id: 22,
+    title: "volcano eruption",
+    image: "/volcanoeruption.jpg",
+    createAt: "04/10/24",
+    tagNum: "#56018",
+    createdBy: "Geologist",
+    color: ["red", "orange", "black"],
+  },
+  {
+    id: 23,
+    title: "mystic cavern",
+    image: "/mysticcavern.jpg",
+    createAt: "04/12/24",
+    tagNum: "#56023",
+    createdBy: "Cave Explorer",
+    color: ["purple", "blue", "grey"],
+  },
+  {
+    id: 24,
+    title: "windy hills",
+    image: "/windyhills.jpg",
+    createAt: "04/14/24",
+    tagNum: "#56035",
+    createdBy: "Hill Climber",
+    color: ["green", "blue", "white"],
+  },
+  {
+    id: 25,
+    title: "urban skyline",
+    image: "/urbanskyline.jpg",
+    createAt: "04/16/24",
+    tagNum: "#56048",
+    createdBy: "City Planner",
+    color: ["grey", "blue", "yellow"],
+  },
+  {
+    id: 26,
+    title: "mysterious forest",
+    image: "/mysteriousforest.jpg",
+    createAt: "04/18/24",
+    tagNum: "#56056",
+    createdBy: "Wanderer",
+    color: ["green", "black", "dark brown"],
+  },
+  {
+    id: 27,
+    title: "glacial expedition",
+    image: "/glacialexpedition.jpg",
+    createAt: "04/20/24",
+    tagNum: "#56062",
+    createdBy: "Polar Explorer",
+    color: ["white", "blue", "grey"],
+  },
+  {
+    id: 28,
+    title: "retro arcade",
+    image: "/retroarcade.jpg",
+    createAt: "04/22/24",
+    tagNum: "#56071",
+    createdBy: "Gamer",
+    color: ["neon green", "pink", "black"],
+  },
+  {
+    id: 29,
+    title: "golden desert",
+    image: "/goldendesert.jpg",
+    createAt: "04/24/24",
+    tagNum: "#56085",
+    createdBy: "Desert Traveler",
+    color: ["gold", "yellow", "orange"],
+  },
+  {
+    id: 30,
+    title: "crystal caves",
+    image: "/crystalcaves.jpg",
+    createAt: "04/26/24",
+    tagNum: "#56094",
+    createdBy: "Gem Hunter",
+    color: ["purple", "blue", "white"],
+  },
+  {
+    id: 31,
+    title: "zen garden",
+    image: "/zengarden.jpg",
+    createAt: "04/28/24",
+    tagNum: "#56105",
+    createdBy: "Meditation Master",
+    color: ["green", "white", "brown"],
+  },
+  {
+    id: 32,
+    title: "robot revolution",
+    image: "/robotrevolution.jpg",
+    createAt: "04/30/24",
+    tagNum: "#56116",
+    createdBy: "Engineer",
+    color: ["silver", "blue", "red"],
+  },
+  {
+    id: 33,
+    title: "enchanted castle",
+    image: "/enchantedcastle.jpg",
+    createAt: "05/02/24",
+    tagNum: "#56125",
+    createdBy: "Storyteller",
+    color: ["purple", "gold", "white"],
+  },
+  {
+    id: 34,
+    title: "haunted mansion",
+    image: "/hauntedmansion.jpg",
+    createAt: "05/04/24",
+    tagNum: "#56137",
+    createdBy: "Ghost Hunter",
+    color: ["black", "grey", "blue"],
+  },
+  {
+    id: 35,
+    title: "deep space",
+    image: "/deepspace.jpg",
+    createAt: "05/06/24",
+    tagNum: "#56142",
+    createdBy: "Astronaut",
+    color: ["black", "blue", "silver"],
+  },
+  {
+    id: 36,
+    title: "sahara adventure",
+    image: "/saharaadventure.jpg",
+    createAt: "05/08/24",
+    tagNum: "#56154",
+    createdBy: "Explorer",
+    color: ["sand", "brown", "yellow"],
+  },
+  {
+    id: 37,
+    title: "hidden waterfall",
+    image: "/hiddenwaterfall.jpg",
+    createAt: "05/10/24",
+    tagNum: "#56161",
+    createdBy: "Nature Lover",
+    color: ["blue", "green", "white"],
+  },
+  {
+    id: 38,
+    title: "alien landscape",
+    image: "/alienlandscape.jpg",
+    createAt: "05/12/24",
+    tagNum: "#56176",
+    createdBy: "Sci-Fi Fan",
+    color: ["green", "purple", "blue"],
+  },
+  {
+    id: 39,
+    title: "frozen tundra",
+    image: "/frozentundra.jpg",
+    createAt: "05/14/24",
+    tagNum: "#56185",
+    createdBy: "Ice Explorer",
+    color: ["white", "blue", "grey"],
+  },
+  {
+    id: 40,
+    title: "victorian steampunk",
+    image: "/victoriansteampunk.jpg",
+    createAt: "05/16/24",
+    tagNum: "#56198",
+    createdBy: "Inventor",
+    color: ["brown", "gold", "black"],
+  },
 ];
 
 export default function HomePage() {
@@ -203,8 +479,8 @@ export default function HomePage() {
     setSelectedColors(
       (prevSelectedColors) =>
         prevSelectedColors.includes(color)
-          ? prevSelectedColors.filter((c) => c !== color) // Remove if already selected
-          : [...prevSelectedColors, color] // Add if not selected
+          ? prevSelectedColors.filter((c) => c !== color) // remove if already selected
+          : [...prevSelectedColors, color] // add if not selected
     );
   };
 
@@ -238,6 +514,22 @@ export default function HomePage() {
           return 0;
       }
     });
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  // calculate total pages
+  const totalPages: number = Math.ceil(processedTags.length / ITEMS_PER_PAGE);
+
+  // get items for the current page
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedTags = processedTags.slice(startIdx, endIdx);
+
+  // handle page change
+  const handlePageChange = (pageNum: number) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
+    }
+  };
 
   return (
     <>
@@ -463,7 +755,7 @@ export default function HomePage() {
           {/* collectibles */}
           <div className="w-full p-2">
             <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
-              {processedTags.map((tag) => (
+              {paginatedTags.map((tag) => (
                 <div key={tag.id}>
                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
@@ -483,7 +775,6 @@ export default function HomePage() {
                       <p className="font-bold pl-4 uppercase truncate">
                         {tag.title}
                       </p>
-
                       <div className="pt-3 pb-2 text-center">
                         <button
                           className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
@@ -500,6 +791,7 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+
             {showModal && specificTag && (
               <Modal
                 tagNum={specificTag.tagNum}
@@ -592,6 +884,54 @@ export default function HomePage() {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        <nav className="flex items-center justify-between px-4 sm:px-0 mt-8">
+          {/* Left Arrow */}
+          <div className="flex-1 flex justify-start ml-20">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="inline-flex items-center border-t-2 border-transparent px-6 pt-4 text-md text-gray-500 hover:border-gray-300"
+            >
+              <ArrowLongLeftIcon
+                aria-hidden="true"
+                className="h-8 w-8 text-gray-400"
+              />
+            </button>
+          </div>
+
+          {/* Page Numbers */}
+          <div className="flex items-center justify-center space-x-2">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => handlePageChange(i + 1)}
+                className={`inline-flex items-center border-t-4 px-4 pt-4 text-lg font-bold ${
+                  currentPage === i + 1
+                    ? "border-yellow-600 text-yellow-600"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          {/* Right Arrow */}
+          <div className="flex-1 flex justify-end mr-20">
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="inline-flex items-center border-t-2 border-transparent px-6 pt-4 text-md text-gray-500 hover:border-gray-300"
+            >
+              <ArrowLongRightIcon
+                aria-hidden="true"
+                className="h-8 w-8 text-gray-400"
+              />
+            </button>
+          </div>
+        </nav>
         <Footer />
       </div>
     </>
