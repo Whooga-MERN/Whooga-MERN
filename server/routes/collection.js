@@ -73,6 +73,26 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// UPDATE
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { customAttributes, collectionPic } = req.body;
+  try {
+    const result = await db.update(collections)
+      .set({custom_attributes: customAttributes, collectionPic: collectionPic})
+      .where(eq(collections.collection_id, id)).execute();
+    if (result.changes === 0)
+    {
+      res.status(404).send('User not found');
+    }
+    res.json({collection_id: id, customAttributes, collectionPic});
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching item' });
+  }
+});
+
 // DELETE
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;

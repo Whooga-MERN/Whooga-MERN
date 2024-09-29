@@ -73,6 +73,26 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// UPDATE
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, defaultAttributes, universeCollectionPic } = req.body;
+  try {
+    const result = await db.update(collectionUniverses)
+      .set({name: name, default_attributes: defaultAttributes, universeCollectionPic: universeCollectionPic})
+      .where(eq(collectionUniverses.collection_universe_id, id)).execute();
+    if (result.changes === 0)
+    {
+      res.status(404).send('User not found');
+    }
+    res.json({collection_universe_id: id, name, defaultAttributes, universeCollectionPic});
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching item' });
+  }
+});
+
 // DELETE
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
