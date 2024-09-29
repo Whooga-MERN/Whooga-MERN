@@ -9,7 +9,9 @@ const router = express.Router();
 router.get('/:id', async (req, res) => {
     const collectionId = parseInt(req.params.id);
     try {
-      const result = await db.select().from(collections).innerJoin(collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id)).where(eq(collections.collection_id, collectionId));
+      const result = await db.select().from(collections).innerJoin
+      (collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id)).where
+      (eq(collections.collection_id, collectionId));
       /*const result = await db.(`
         SELECT * 
         FROM collections 

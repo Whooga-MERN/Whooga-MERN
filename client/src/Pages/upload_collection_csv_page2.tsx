@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
+import fetchJWT from '../fetchJWT';
+import fetchUserLoginDetails from '../fetchUserLoginDetails';
+import Auth, { AuthUser } from '@aws-amplify/auth';
 
 function UploadCollection() {
 
@@ -10,8 +13,31 @@ function UploadCollection() {
     const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
     const [jsonData, setJsonData] = useState<any[]>([]);
     const [fileName, setFileName] = useState<string>('');
+    const [JWT, setJWT] = useState<string>('');
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
+
+        const fetchToken = async () => {
+            try {
+                const token = await fetchJWT();
+                setJWT(token || '');
+            } catch (error) {
+                console.error('Error fetching JWT');
+            }
+        }
+        fetchToken();
+
+        const fetchUserDetails = async () => {
+            try {
+                const userEmail = await fetchUserLoginDetails();
+                setUser(userEmail || '');
+            } catch (error) {
+                console.error("Error Fetching User");
+            }
+        }
+        fetchUserDetails();
+
         const storedFeatureTags = localStorage.getItem('featureTags');
         const storedCollectionName = localStorage.getItem('collectionName') ?? '';
         setCollectionName(storedCollectionName);
@@ -56,23 +82,35 @@ function UploadCollection() {
         console.log('CSV TO JSON: \n', jsonData);
     }, [jsonData]);
 
-    const handleUpload = () => {
-        // Insert API call here to upload the CSV file
+    useEffect(() => {
+        if(JWT != null)
+            console.log('JWT TOKEN: \n', JWT)
+    }, [JWT]);
 
-        // const response = await fetch('https://api.example.com/upload', {
-        //     method: 'POST',
-        //     body: JSON.stringify(jsonData),
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        // });
-        // const data = await response.json();
+    useEffect(() => {
+        if(user != null)
+            console.log('Current User:', user.loginId);
+    }, [user]);
 
-        // if (data.success) {
-        //     navigate('/new_collection_form');
-        // } else {
-        //     console.error('Upload failed');
-        // }
+    const handleUpload = async () => {
+        try {
+            const response = await fetch('/uploadCSV', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(jsonData),
+            });
+
+            if(!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const result = await response.json();
+            console.log('CSV upload succesful:', result);
+        } catch (error) {
+            console.error('Error uploading data:', error);
+        }
 
     };
 
