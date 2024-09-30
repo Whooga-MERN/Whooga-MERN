@@ -1,27 +1,26 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {collections, collectionUniverses} = require('../config/schema');
+const {collectables} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
 
 const router = express.Router();
 
-// Collection CRUD APIs
+// Collectable CRUD APIs
 
 // Create
 router.post('', async (req, res) => {
-    const {userId, collectionUniverseId, customAttributes, collectionPic} = req.body;
+    const {collectionId, universeCollectableId, collectablePic} = req.body;
 
-    if (!userId || !collectionUniverseId || !customAttributes) {
+    if (!collectionId || !universeCollectableId) {
         return res.status(400).send({ error: 'Request body is missing a parameter' });
     }
 
     try {
-        const newItem = await db.insert(collections).values({
-            user_id: userId,
-            collection_universe_id: collectionUniverseId,
-            custom_attributes: customAttributes,
-            collectionPic: collectionPic,
+        const newItem = await db.insert(collectables).values({
+            collection_id: collectionId,
+            universe_collectable_id: universeCollectableId,
+            collectablePic: collectablePic
         }).returning();
 
         res.status(201).json(newItem);
@@ -35,7 +34,7 @@ router.post('', async (req, res) => {
 // READ (All items)
 router.get('', async (req, res) => {
   try {
-    const allItems = await db.select().from(collections).execute();
+    const allItems = await db.select().from(collectables).execute();
     res.json(allItems);
   } catch (error) {
     console.error(error);
@@ -49,8 +48,8 @@ router.get('/:id', async (req, res) => {
 
   try {
     const item = await db.select()
-      .from(collections)
-      .where(eq(id, collections.collection_id))
+      .from(collectables)
+      .where(eq(id, collectables.collectable_id))
       .execute();
 
     if (item.length === 0) {
@@ -66,16 +65,16 @@ router.get('/:id', async (req, res) => {
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { customAttributes, collectionPic } = req.body;
+  const { collectablePic } = req.body;
   try {
-    const result = await db.update(collections)
-      .set({custom_attributes: customAttributes, collectionPic: collectionPic})
-      .where(eq(collections.collection_id, id)).execute();
+    const result = await db.update(collectables)
+      .set({collectablePic: collectablePic})
+      .where(eq(collectables.collectable_id, id)).execute();
     if (result.changes === 0)
     {
       res.status(404).send('User not found');
     }
-    res.json({collection_id: id, customAttributes, collectionPic});
+    res.json({collectable_id: id, collectablePic});
   }
   catch (error) {
     console.error(error);
@@ -88,8 +87,8 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedItem = await db.delete(collections)
-      .where(eq(id, collections.collection_id))
+    const deletedItem = await db.delete(collectables)
+      .where(eq(id, collectables.collectable_id))
       .returning(); // Fetch the deleted item
 
     if (deletedItem.length === 0) {

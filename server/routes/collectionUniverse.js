@@ -18,16 +18,9 @@ router.post('', async (req, res) => {
 
     try {
 
-        const lastItem = await db
-        .select()
-        .from(collectionUniverses)
-        .orderBy({ id: 'desc' }) // Sort by ID in descending order
-        .limit(1) // Get the last item
-        .execute();
 
-        const newId = lastItem.length > 0 ? lastItem[0].collection_universe_id + 1 : 1; // Increment last ID or start at 1
         const newItem = await db.insert(collectionUniverses).values({
-            collection_universe_id: newId,
+          
             name: name,
             created_by: createdBy,
             default_attributes: defaultAttributes,
