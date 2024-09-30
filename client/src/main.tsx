@@ -19,6 +19,7 @@ import UploadCollection1 from "./Pages/upload_collection_csv_page1.tsx";
 import UploadCollection2 from "./Pages/upload_collection_csv_page2.tsx";
 import Profile from "./Pages/profile.tsx";
 import MessageSignup from "./Pages/message_signup.tsx";
+import Wishlist from "./Pages/wishlist.tsx";
 
 import "./custom-amplify-styles.css";
 
@@ -125,6 +126,14 @@ createRoot(document.getElementById("root")!).render(
           </ProtectedRoute>
         }
       /> */}
+      <Route
+        path="/wishlist"
+        element={
+          <ProtectedRoute>
+            <Wishlist />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   </BrowserRouter>
 );
