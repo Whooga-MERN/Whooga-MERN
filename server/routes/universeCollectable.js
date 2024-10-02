@@ -1,32 +1,28 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {collections, collectionUniverses} = require('../config/schema');
+const {universeCollectables} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
-const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
-router.use(authenticateJWTToken);
 
-// Collection Universe CRUD APIs
+// Universe Collectable CRUD APIs
 
 // Create
 router.post('', async (req, res) => {
-    const {name, createdBy, defaultAttributes, universeCollectionPic} = req.body;
+    const {collectionUniverseId, universeCollectableId, typeId, name, universeCollectablePic} = req.body;
 
-    if (!name || !createdBy || !defaultAttributes) {
+    if (!collectionUniverseId || !collectableType || !typeId || !name || !universeCollectablePic) {
         return res.status(400).send({ error: 'Request body is missing a parameter' });
     }
 
     try {
-
-
-        const newItem = await db.insert(collectionUniverses).values({
-          
+        const newItem = await db.insert(universeCollectables).values({
+            collection_universe_id: collectionUniverseId,
+            collectable_type: collectableType,
+            type_id: typeId,
             name: name,
-            created_by: createdBy,
-            default_attributes: defaultAttributes,
-            universeCollectionPic: universeCollectionPic,
+            universeCollectablePic: universeCollectablePic
         }).returning();
 
         res.status(201).json(newItem);
@@ -40,7 +36,7 @@ router.post('', async (req, res) => {
 // READ (All items)
 router.get('', async (req, res) => {
   try {
-    const allItems = await db.select().from(collectionUniverses).execute();
+    const allItems = await db.select().from(universeCollectables).execute();
     res.json(allItems);
   } catch (error) {
     console.error(error);
@@ -54,8 +50,8 @@ router.get('/:id', async (req, res) => {
 
   try {
     const item = await db.select()
-      .from(collectionUniverses)
-      .where(eq(id, collectionUniverses.collection_universe_id))
+      .from(universeCollectables)
+      .where(eq(id, universeCollectables.universe_collectable_id))
       .execute();
 
     if (item.length === 0) {
@@ -71,16 +67,16 @@ router.get('/:id', async (req, res) => {
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, defaultAttributes, universeCollectionPic } = req.body;
+  const { name, universeCollectablePic } = req.body;
   try {
-    const result = await db.update(collectionUniverses)
-      .set({name: name, default_attributes: defaultAttributes, universeCollectionPic: universeCollectionPic})
-      .where(eq(collectionUniverses.collection_universe_id, id)).execute();
+    const result = await db.update(universeCollectables)
+      .set({name: name, universeCollectablePic: universeCollectablePic})
+      .where(eq(universeCollectables.universe_collectable_id, id)).execute();
     if (result.changes === 0)
     {
       res.status(404).send('User not found');
     }
-    res.json({collection_universe_id: id, name, defaultAttributes, universeCollectionPic});
+    res.json({universe_collectable_id_id: id, name, universeCollectablePic});
   }
   catch (error) {
     console.error(error);
@@ -93,8 +89,8 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedItem = await db.delete(collectionUniverses)
-      .where(eq(id, collectionUniverses.collection_universe_id))
+    const deletedItem = await db.delete(universeCollectables)
+      .where(eq(id, universeCollectables.universe_collectable_id))
       .returning(); // Fetch the deleted item
 
     if (deletedItem.length === 0) {

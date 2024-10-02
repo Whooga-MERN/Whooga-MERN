@@ -6,6 +6,8 @@ const {eq} = require('drizzle-orm');
 const attributeRouter = require('./routes/collectableAttributes');
 const universeRouter = require('./routes/collectionUniverse');
 const collectionRouter = require('./routes/collection');
+const universeCollectableRouter = require('./routes/universeCollectable');
+const collectableRouter = require('./routes/collectable');
 /*const { drizzle } = require('drizzle-orm');
 const { pgAdapter } = require('drizzle-orm-pg');
 const pg = require('pg');*/
@@ -34,5 +36,9 @@ app.use('/collectable-attributes', attributeRouter);
 app.use('/collection-universe', universeRouter);
 
 app.use('/collection', collectionRouter);
+
+app.use('/universe-collectable', universeCollectableRouter);
+
+app.use('/collectable', collectableRouter);
 
 //app.get('/users', getUsers)
