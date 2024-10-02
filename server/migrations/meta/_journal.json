@@ -15,6 +15,34 @@
       "when": 1727316203813,
       "tag": "0001_wet_catseye",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1727812733732,
+      "tag": "0002_fast_frank_castle",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1727815645107,
+      "tag": "0003_wet_post",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1727816476491,
+      "tag": "0004_careful_killraven",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1727828231492,
+      "tag": "0005_graceful_stingray",
+      "breakpoints": true
     }
   ]
 }

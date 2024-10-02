@@ -1,0 +1,1 @@
+ALTER TABLE "collectionUniverses" ADD COLUMN "description" varchar(255);

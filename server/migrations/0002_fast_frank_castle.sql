@@ -1,0 +1,1 @@
+ALTER TABLE "collectionUniverses" ADD COLUMN "user_id" serial NOT NULL;

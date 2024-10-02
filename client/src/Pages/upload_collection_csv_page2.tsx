@@ -28,10 +28,11 @@ function UploadCollection() {
         }
         fetchToken();
 
+        // user.loginId to get email
         const fetchUserDetails = async () => {
             try {
-                const userEmail = await fetchUserLoginDetails();
-                setUser(userEmail || '');
+                const user = await fetchUserLoginDetails();
+                setUser(user || '');
             } catch (error) {
                 console.error("Error Fetching User");
             }
@@ -81,16 +82,6 @@ function UploadCollection() {
     useEffect(() => {
         console.log('CSV TO JSON: \n', jsonData);
     }, [jsonData]);
-
-    useEffect(() => {
-        if(JWT != null)
-            console.log('JWT TOKEN: \n', JWT)
-    }, [JWT]);
-
-    useEffect(() => {
-        if(user != null)
-            console.log('Current User:', user.loginId);
-    }, [user]);
 
     const handleUpload = async () => {
         try {

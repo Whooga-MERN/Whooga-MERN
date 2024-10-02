@@ -3,8 +3,10 @@ const {db, pool} = require('../config/db');
 const {collections, collectionUniverses} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
+const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
+router.use(authenticateJWTToken);
 
 router.get('/:id', async (req, res) => {
     const collectionId = parseInt(req.params.id);
