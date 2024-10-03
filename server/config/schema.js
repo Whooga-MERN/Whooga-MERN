@@ -38,16 +38,14 @@ const collectables = pgTable('collectables', {
 const universeCollectables = pgTable('universeCollectables', {
   universe_collectable_id: serial('universe_collectable_id').primaryKey().notNull(),
   collection_universe_id: serial('collection_universe_id').notNull(),
-  collectable_type: varchar('collectable_type', { length: 255 }).notNull(),
-  type_id: serial('type_id').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   universeCollectablePic: varchar('universe_collectable_pic', { length: 2048} )
 });
 
 const collectableAttributes = pgTable('collectableAttributes', {
   collectable_attribute_id: serial('collectable_attribute_id').primaryKey().notNull(),
-  collection_id: serial('collection_id').notNull(),
-  collectable_id: serial('collectable_id').notNull(),
+  collection_id: serial('collection_id'),
+  collectable_id: serial('collectable_id'),
   universe_collectable_id: serial('universe_collectable_id').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull(),

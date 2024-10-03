@@ -13,10 +13,8 @@ const authenticateJWTToken = async (request, response, next) => {
         
         if(!token)
             return response.status(401).send("Unauthorized: No token provided");
-        console.log(token);
 
         const payload = await verifier.verify(token);
-        console.log("Token is valid. Payload:", payload);
         //response.status(200).send("Authorized");
         next();
     } catch {

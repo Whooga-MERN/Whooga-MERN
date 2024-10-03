@@ -43,6 +43,13 @@
       "when": 1727828231492,
       "tag": "0005_graceful_stingray",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1727912191706,
+      "tag": "0006_petite_omega_flight",
+      "breakpoints": true
     }
   ]
 }

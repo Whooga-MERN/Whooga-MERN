@@ -8,6 +8,7 @@ const universeRouter = require('./routes/collectionUniverse');
 const collectionRouter = require('./routes/collection');
 const universeCollectableRouter = require('./routes/universeCollectable');
 const collectableRouter = require('./routes/collectable');
+const uploadCSVRouter = require('./routes/uploadCVS');
 /*const { drizzle } = require('drizzle-orm');
 const { pgAdapter } = require('drizzle-orm-pg');
 const pg = require('pg');*/
@@ -40,5 +41,7 @@ app.use('/collection', collectionRouter);
 app.use('/universe-collectable', universeCollectableRouter);
 
 app.use('/collectable', collectableRouter);
+
+app.use('/upload-csv', uploadCSVRouter);
 
 //app.get('/users', getUsers)
