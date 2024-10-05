@@ -468,6 +468,7 @@ export default function HomePage() {
   const [showEdit, setShowEdit] = useState(false); // edit collectible
   const [selectedSort, setSelectedSort] = useState<string>("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [view, setView] = useState<"list" | "grid">("grid");
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
@@ -574,12 +575,24 @@ export default function HomePage() {
               </div>
               {/* icon button for view*/}
               <div className="hidden lg:block md:block">
-                <button className="inline-block pr-5">
+                <button
+                  className="inline-block pr-5"
+                  onClick={() => setView("list")}
+                >
+                  <FaListUl />
+                </button>
+                <button
+                  className="inline-block pr-16"
+                  onClick={() => setView("grid")}
+                >
+                  <BsFillGridFill />
+                </button>
+                {/* <button className="inline-block pr-5">
                   <FaListUl />
                 </button>
                 <button className="inline-block pr-16">
                   <BsFillGridFill />
-                </button>
+                </button> */}
                 {isOwned ? (
                   <button
                     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
@@ -754,43 +767,90 @@ export default function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* collectibles */}
           <div className="w-full p-2">
-            <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
-              {paginatedTags.map((tag) => (
-                <div key={tag.id}>
-                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                    <div className="h-22 w-30">
-                      <img
-                        src={tag.image}
-                        alt={tag.title}
-                        width={400}
-                        height={400}
-                        className="rounded-md shadow-sm object-cover object-top"
-                        onClick={() => handleOpenModal(tag)}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="mt-4 font-semibold pl-4 uppercase truncate">
-                        {tag.tagNum}
-                      </p>
-                      <p className="font-bold pl-4 uppercase truncate">
-                        {tag.title}
-                      </p>
-                      <div className="pt-3 pb-2 text-center">
+            {/* switch between grid and list */}
+            {view === "list" ? (
+              <div className="flex flex-wrap -mx-4">
+                {paginatedTags.map((tag) => (
+                  <div key={tag.id} className="w-full md:w-1/2 px-4 mb-6">
+                    <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                      <div className="h-24 w-24">
+                        <img
+                          src={tag.image}
+                          alt={tag.title}
+                          width={100}
+                          height={100}
+                          className="rounded-md shadow-sm object-cover"
+                          onClick={() => handleOpenModal(tag)}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p
+                          className="font-semibold uppercase truncate"
+                          onClick={() => handleOpenModal(tag)}
+                        >
+                          {tag.tagNum}
+                        </p>
+                        <p
+                          className="font-bold uppercase truncate"
+                          onClick={() => handleOpenModal(tag)}
+                        >
+                          {tag.title}
+                        </p>
+                      </div>
+                      <div className="flex space-x-4">
                         <button
-                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                          className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
                           onClick={openEdit}
                         >
                           <FaRegEdit />
                         </button>
-                        <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                        <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
                           <FaRegTrashCan />
                         </button>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                {paginatedTags.map((tag) => (
+                  <div key={tag.id}>
+                    <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                      <div className="h-22 w-30">
+                        <img
+                          src={tag.image}
+                          alt={tag.title}
+                          width={400}
+                          height={400}
+                          className="rounded-md shadow-sm object-cover object-top"
+                          onClick={() => handleOpenModal(tag)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="mt-4 font-semibold pl-4 uppercase truncate">
+                          {tag.tagNum}
+                        </p>
+                        <p className="font-bold pl-4 uppercase truncate">
+                          {tag.title}
+                        </p>
+                        <div className="pt-3 pb-2 text-center">
+                          <button
+                            className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                            onClick={openEdit}
+                          >
+                            <FaRegEdit />
+                          </button>
+                          <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                            <FaRegTrashCan />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {showModal && specificTag && (
               <Modal
