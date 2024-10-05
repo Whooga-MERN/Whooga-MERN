@@ -2,10 +2,10 @@ const { db } = require("../config/db");
 const {collectionUniverses, users, universeCollectables, collectableAttributes} = require('../config/schema');
 const {eq} = require('drizzle-orm');
 const express = require("express");
-//const { authenticateJWTToken } = require("../middleware/verifyJWT");
+const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
-//router.use(authenticateJWTToken);
+router.use(authenticateJWTToken);
 
 router.post('', async (req, res) => {
     const {
