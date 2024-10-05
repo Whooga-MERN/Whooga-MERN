@@ -109,7 +109,7 @@ function UploadCollection() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${JWT}`,
                 },
-                body: JSON.stringify(jsonData),
+                body: JSON.stringify(request),
             });
 
             if(!response.ok) {
