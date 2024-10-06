@@ -48,6 +48,6 @@ app.use('/collectable', collectableRouter);
 
 app.use('/upload-csv', uploadCSVRouter);
 
-app.use('/collectable-attribute', collectableAttributeRouter)
+app.use('/collectable-attribute', collectableAttributeRouter);
 
-app.use('/user', userRouter);
+app.get('/users', getUsers)
