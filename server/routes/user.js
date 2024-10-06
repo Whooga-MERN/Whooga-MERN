@@ -8,9 +8,9 @@ const { eq } = require('drizzle-orm');
 const router = express.Router();
 
 router.get('/:user_email', async (req, res) => {
-    const { user_email } = req.params;
+    const { user_email } = req.query;
     try {
-        console.log("Searching for user: ", user_email);
+        console.log("Searching for user:", user_email);
         const user = await db.select({ user_id: users.user_id })
             .from(users)
             .where(eq(users.email, user_email))
