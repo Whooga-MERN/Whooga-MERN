@@ -5,51 +5,53 @@ import Footer from "../Components/Footer";
 import { Link } from "react-router-dom";
 
 import { Collection } from "../Types/Collection";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import fetchUserLoginDetails from '../fetchUserLoginDetails';
+import fetchJWT from '../fetchJWT';
 
 const collections: Collection[] = [
-  {
-    name: "Pathtags",
-    id: 1,
-    image_url: "/bear.jpg",
-    description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
-    newListing: true,
-  },
-  {
-    name: "Shoes",
-    id: 2,
-    image_url: "/shoes.jpg",
-    description: "Shoes are a type of footwear that are typically worn on the feet.",
-    newListing: false,
-  },
-  {
-    name: "Cat Mugs",
-    id: 5,
-    image_url: "/catmug.jpg",
-    description: "ur mom",
-    newListing: false,
-  },
-  {
-    name: "Pokemon Cards",
-    id: 4,
-    image_url: "/pokemon.jpg",
-    description: "ur mom",
-    newListing: true,
-  },
-  {
-    name: "Snowglobes",
-    id: 3,
-    image_url: "/snowglobe.jpg",
-    description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
-    newListing: true,
-  },
-  {
-    name: "ur mom",
-    id: 6,
-    image_url: "/psycho.jpg",
-    description: "ur mom",
-    newListing: false,
-  },
+  // {
+  //   name: "Pathtags",
+  //   id: 1,
+  //   image_url: "/bear.jpg",
+  //   description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
+  //   newListing: true,
+  // },
+  // {
+  //   name: "Shoes",
+  //   id: 2,
+  //   image_url: "/shoes.jpg",
+  //   description: "Shoes are a type of footwear that are typically worn on the feet.",
+  //   newListing: false,
+  // },
+  // {
+  //   name: "Cat Mugs",
+  //   id: 5,
+  //   image_url: "/catmug.jpg",
+  //   description: "ur mom",
+  //   newListing: false,
+  // },
+  // {
+  //   name: "Pokemon Cards",
+  //   id: 4,
+  //   image_url: "/pokemon.jpg",
+  //   description: "ur mom",
+  //   newListing: true,
+  // },
+  // {
+  //   name: "Snowglobes",
+  //   id: 3,
+  //   image_url: "/snowglobe.jpg",
+  //   description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
+  //   newListing: true,
+  // },
+  // {
+  //   name: "ur mom",
+  //   id: 6,
+  //   image_url: "/psycho.jpg",
+  //   description: "ur mom",
+  //   newListing: false,
+  // },
 ];
 
 function handleClick() {
@@ -58,13 +60,44 @@ function handleClick() {
 
 export default function Collections() {
 
+  const [user, setUser] = useState<any>(null);
+  const [JWT, setJWT] = useState<string>('');
+
   useEffect(() => {
+    const fetchUserDetails = async () => {
+            try {
+                const user = await fetchUserLoginDetails();
+                setUser(user || '');
+            } catch (error) {
+                console.error("Error Fetching User");
+            }
+        }
+        fetchUserDetails();
+
+    const fetchToken = async () => {
+            try {
+                const token = await fetchJWT();
+                setJWT(token || '');
+            } catch (error) {
+                console.error('Error fetching JWT');
+            }
+        }
+        fetchToken();
+
+    const getUserId = async () => {};
+    getUserId();
+
     // fetch collections
-    const request = {};
-    fetch('http://localhost:3000/collections', {
+    const fetchCollections = async () => {
+    const response = await fetch('http://localhost:3000/collections', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',}}).then(response => response.json())
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${JWT}`,},
+      body: JSON.stringify(user.user),});
+      };
+        
+    fetchCollections();
   }, []);
 
     return (
