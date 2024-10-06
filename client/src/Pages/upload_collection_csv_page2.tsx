@@ -5,6 +5,7 @@ import Footer from "../Components/Footer";
 import fetchJWT from '../fetchJWT';
 import fetchUserLoginDetails from '../fetchUserLoginDetails';
 import Auth, { AuthUser } from '@aws-amplify/auth';
+import { useNavigate } from 'react-router-dom';
 
 function UploadCollection() {
 
@@ -17,6 +18,7 @@ function UploadCollection() {
     const [fileName, setFileName] = useState<string>('');
     const [JWT, setJWT] = useState<string>('');
     const [user, setUser] = useState<any>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
 
@@ -44,7 +46,7 @@ function UploadCollection() {
         const storedFeatureTags = localStorage.getItem('featureTags');
         const storedCollectionName = localStorage.getItem('collectionName') ?? '';
         const storedCollectionDescription = localStorage.getItem('collectionDescription') ?? '';
-        const storedCollectionImage = localStorage.getItem('collectionImageURL') ?? '';
+        const storedCollectionImage = localStorage.getItem('collectionImageURL') ?? 'https://www.cssscript.com/wp-content/uploads/2020/09/Animated-Skeleton-Loading-Screens-In-Pure-CSS.jpg';
         setCollectionName(storedCollectionName);
         setCollectionDescription(storedCollectionDescription);
         setCollectionImage(storedCollectionImage);
@@ -116,9 +118,15 @@ function UploadCollection() {
                 const errorData = await response.json();
                 throw new Error(errorData.error);
             }
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const result = await response.json();
+                console.log('CSV upload successful:', result);
+                navigate('/collections');
+            } else {
+                console.log('Upload successful, but no JSON response body');
+            }
 
-            const result = await response.json();
-            console.log('CSV upload succesful:', result);
         } catch (error) {
             console.error('Error uploading data:', error);
         }

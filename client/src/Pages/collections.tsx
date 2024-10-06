@@ -5,6 +5,7 @@ import Footer from "../Components/Footer";
 import { Link } from "react-router-dom";
 
 import { Collection } from "../Types/Collection";
+import { useEffect } from "react";
 
 const collections: Collection[] = [
   {
@@ -56,6 +57,16 @@ function handleClick() {
 }
 
 export default function Collections() {
+
+  useEffect(() => {
+    // fetch collections
+    const request = {};
+    fetch('http://localhost:3000/collections', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',}}).then(response => response.json())
+  }, []);
+
     return (
         <>
         <Header />
