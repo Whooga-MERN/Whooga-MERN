@@ -62,6 +62,7 @@ export default function Collections() {
 
   const [user, setUser] = useState<any>(null);
   const [JWT, setJWT] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -95,7 +96,7 @@ export default function Collections() {
           user_email: user.loginId,
         };
 
-        const response = await fetch('http://localhost:3000/user/userId?${params}', {
+        const response = await fetch('http://localhost:3000/user/userId' + user.loginId, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -107,11 +108,15 @@ export default function Collections() {
               throw new Error(errorData.error);
           };
           const data = await response.json();
-          console.log(data);
+          setUserId(data[0].user_id)
       };
       getUserId();
+    }
+    }, [user, JWT]);
 
+    useEffect(() => {
       // fetch collections
+      console.log(userId);
       const fetchCollections = async () => {
       const response = await fetch('http://localhost:3000/collections', {
         method: 'GET',
@@ -122,8 +127,7 @@ export default function Collections() {
         };
           
       //fetchCollections();
-    }
-    }, [user, JWT]);
+    }, [userId]);
 
     return (
         <>
