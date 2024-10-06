@@ -50,4 +50,4 @@ app.use('/upload-csv', uploadCSVRouter);
 
 app.use('/collectable-attribute', collectableAttributeRouter);
 
-app.get('/user', userRouter)
+app.get('/user', userRouter);
