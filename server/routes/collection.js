@@ -1,6 +1,6 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {collections, collectionUniverses} = require('../config/schema');
+const {collections, collectionUniverses, users} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
 const { authenticateJWTToken } = require("../middleware/verifyJWT");
@@ -36,8 +36,12 @@ router.post('', async (req, res) => {
 
 // READ (All items)
 router.get('', async (req, res) => {
+  const {
+    user_id,
+  } = req.body;
+
   try {
-    const allItems = await db.select().from(collections).execute();
+    const allItems = await db.select().from(collections).where(eq(collections.user_id, user_id)).execute();
     res.json(allItems);
   } catch (error) {
     console.error(error);
