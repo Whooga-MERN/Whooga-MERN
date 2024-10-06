@@ -14,7 +14,7 @@ function UploadCollection() {
         const storedCollectionName = localStorage.getItem('collectionName') ?? '';
         setCollectionName(storedCollectionName);
         if (storedFeatureTags) {
-            setFeatureTags("owned," + storedFeatureTags);
+            setFeatureTags(storedFeatureTags);
         }
     }, []);
 

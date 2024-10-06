@@ -8,8 +8,10 @@ import Auth, { AuthUser } from '@aws-amplify/auth';
 
 function UploadCollection() {
 
-    const [featureTags, setFeatureTags] = useState<string>('');
+    const [featureTags, setFeatureTags] = useState<string[]>([]);
     const [collectionName, setCollectionName] = useState<string>('');
+    const [collectionDescription, setCollectionDescription] = useState<string>('');
+    const [collectionImage, setCollectionImage] = useState<string>('');
     const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
     const [jsonData, setJsonData] = useState<any[]>([]);
     const [fileName, setFileName] = useState<string>('');
@@ -41,9 +43,15 @@ function UploadCollection() {
 
         const storedFeatureTags = localStorage.getItem('featureTags');
         const storedCollectionName = localStorage.getItem('collectionName') ?? '';
+        const storedCollectionDescription = localStorage.getItem('collectionDescription') ?? '';
+        const storedCollectionImage = localStorage.getItem('collectionImageURL') ?? '';
         setCollectionName(storedCollectionName);
+        setCollectionDescription(storedCollectionDescription);
+        setCollectionImage(storedCollectionImage);
         if (storedFeatureTags) {
-            setFeatureTags("owned," + storedFeatureTags);
+            const featureTagsArray = storedFeatureTags.split(',');
+            console.log('Feature Tags in local:', featureTagsArray);
+            setFeatureTags(featureTagsArray);
         }
     }, []);
 
@@ -63,6 +71,7 @@ function UploadCollection() {
             const contents = e.target?.result as string;
             const jsonItems = CSVToJSON(contents);
             setJsonData(jsonItems);
+            console.log('JSON Items:', jsonItems);
         };
         reader.readAsText(file);
     };
@@ -73,7 +82,7 @@ function UploadCollection() {
         return lines.slice(1).map(line => { 
             return line.split(',').reduce((acc, cur, i) => { 
                 const toAdd: { [key: string]: string } = {}; 
-                toAdd[keys[i]] = cur; 
+                toAdd[keys[i].trim()] = cur.trim(); 
                 return { ...acc, ...toAdd }; 
             }, {}); 
         }); 
@@ -84,17 +93,28 @@ function UploadCollection() {
     }, [jsonData]);
 
     const handleUpload = async () => {
+        const request = {
+            universeCollectionName: collectionName,
+            universeCollectionImage: collectionImage, // empty until we fix uploading images
+            universeCollectionDescription: collectionDescription,
+            defaultAttributes: featureTags,
+            csvJsonData: jsonData,
+            email: user.loginId
+        };
+        console.log('Request:', request);
         try {
-            const response = await fetch('/uploadCSV', {
+            const response = await fetch('http://localhost:3000/upload-csv', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${JWT}`,
                 },
-                body: JSON.stringify(jsonData),
+                body: JSON.stringify(request),
             });
 
             if(!response.ok) {
-                throw new Error('Network response was not ok');
+                const errorData = await response.json();
+                throw new Error(errorData.error);
             }
 
             const result = await response.json();

@@ -36,15 +36,14 @@ function NewCollectionForm(){
             setIsFeaturesEmpty(true);
             return;
         }
-        localStorage.setItem('collectionName', collectionObject?.name ?? '');
-        localStorage.setItem('collectionImageURL', collectionObject?.image_url ?? '');
-        localStorage.setItem('collectionDescription', collectionObject?.description ?? '');
-        localStorage.setItem('featureTags', featureTags.join(','));
-        console.log(collectionObject);
 
         // CALL API TO UPLOAD IMAGE HERE
 
-        // CALL API TO CREATE NEW COLLECTION HERE
+        localStorage.setItem('collectionName', collectionObject?.name ?? '');
+        localStorage.setItem('collectionImageURL', collectionObject?.image_url ?? 'https://www.cssscript.com/wp-content/uploads/2020/09/Animated-Skeleton-Loading-Screens-In-Pure-CSS.jpg');
+        localStorage.setItem('collectionDescription', collectionObject?.description ?? '');
+        localStorage.setItem('featureTags', featureTags.join(','));
+        console.log(collectionObject);
 
         navigate('/upload_collection_csv_page1');
     };
@@ -189,7 +188,7 @@ function NewCollectionForm(){
                         </form>
                         <h3 className="font-bold text-lg">Item attribute</h3>
                         <p className="py-4">These attribute tags refer to what you would like to view, sort, and search the items in this collection by.
-                            These will become the columns in your CSV file when you upload items to your collection. List them in order of relevence. We will automatically add an "owned" column for
+                            These will become the columns in your CSV file when you upload items to your collection. List them in order of relevence. We will automatically add an "owned" column (Y or N) for
                             if you own the item or not.
                         </p>
                     </div>
@@ -210,7 +209,7 @@ function NewCollectionForm(){
             {/* Dropdown Button */}
             <div className="flex justify-end mt-6">
                 <button className="btn btn-primary my-1 text-lg hover:btn-primary" onClick={handleContinue}
-                    >Create New Universe!</button>
+                    >Create New Collection!</button>
                 {/* <div className="dropdown">         SAVE AS DRAFT BUTTON (in case we want to add this feature later)
                 <div tabIndex={0} role="button" className="btn btn-primary my-1 text-lg rounded-l-lg hover:btn-primary"
                     style={{
