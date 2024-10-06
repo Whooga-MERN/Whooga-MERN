@@ -91,6 +91,7 @@ export default function Collections() {
       if (user && JWT)
       {
         console.log("user: ", user);
+        console.log("JWT: ", JWT);
         const getUserId = async () => {
         const params = {
           user_email: user.loginId,
@@ -108,6 +109,7 @@ export default function Collections() {
               throw new Error(errorData.error);
           };
           const data = await response.json();
+          console.log("setting user id: ", data[0].user_id);
           setUserId(data[0].user_id)
       };
       getUserId();
@@ -116,17 +118,24 @@ export default function Collections() {
 
     useEffect(() => {
       // fetch collections
-      console.log(userId);
-      const fetchCollections = async () => {
-      const response = await fetch('http://localhost:3000/collections', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${JWT}`,},
-        body: JSON.stringify(user.user),});
-        };
-          
-      //fetchCollections();
+      if (userId) {
+        console.log("in fetch collections ", userId);
+        const fetchCollections = async () => {
+        const response = await fetch('http://localhost:3000/collection?user_id=22', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${JWT}`,}
+          });
+
+          if(!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error);
+            };
+          };
+            
+        fetchCollections();
+      }
     }, [userId]);
 
     return (
