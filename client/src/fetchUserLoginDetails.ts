@@ -6,10 +6,10 @@ async function fetchUserLoginDetails(): Promise<any> {
         // Construct the key for the access token based on the known pattern
         const keyPrefix = 'CognitoIdentityServiceProvider.';
         const keys = Object.keys(localStorage);
-        const emailKey = keys.find(key => key.startsWith(keyPrefix) && key.endsWith('.signInDetails'));
+        const user = keys.find(key => key.startsWith(keyPrefix) && key.endsWith('.signInDetails'));
 
-        if (emailKey) {
-            const token = localStorage.getItem(emailKey);
+        if (user) {
+            const token = localStorage.getItem(user);
             if(token) {
                 const parsedToken = JSON.parse(token);
                 return parsedToken;
