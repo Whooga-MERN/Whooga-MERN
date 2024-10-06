@@ -90,8 +90,8 @@ export default function Collections() {
     useEffect(() => {
       if (user && JWT)
       {
-        console.log("user: ", user);
-        console.log("JWT: ", JWT);
+        // console.log("user: ", user);
+        // console.log("JWT: ", JWT);
         const getUserId = async () => {
         const params = {
           user_email: user.loginId,
@@ -121,7 +121,7 @@ export default function Collections() {
       if (userId) {
         console.log("in fetch collections ", userId);
         const fetchCollections = async () => {
-        const response = await fetch('http://localhost:3000/collection?user_id=22', {
+        const response = await fetch('http://localhost:3000/collection/' + userId, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
