@@ -7,7 +7,7 @@ const { eq } = require('drizzle-orm');
 //router.use(authenticateJWTToken);
 const router = express.Router();
 
-router.get('/userId', async (req, res) => {
+router.get('/userId:user_email', async (req, res) => {
     const { user_email } = req.body;
     try {
         const user = await db.select({ user_id: users.user_id })

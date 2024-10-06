@@ -83,22 +83,47 @@ export default function Collections() {
             }
         }
         fetchToken();
-
-    const getUserId = async () => {};
-    getUserId();
-
-    // fetch collections
-    const fetchCollections = async () => {
-    const response = await fetch('http://localhost:3000/collections', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${JWT}`,},
-      body: JSON.stringify(user.user),});
-      };
-        
-    fetchCollections();
+        //console.log(JWT);
   }, []);
+
+    useEffect(() => {
+      if (user && JWT)
+      {
+        console.log("user: ", user);
+        const getUserId = async () => {
+        const params = {
+          user_email: user.loginId,
+        };
+
+        const response = await fetch('http://localhost:3000/user/userId?${params}', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${JWT}`,},
+          });
+
+          if(!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error);
+          };
+          const data = await response.json();
+          console.log(data);
+      };
+      getUserId();
+
+      // fetch collections
+      const fetchCollections = async () => {
+      const response = await fetch('http://localhost:3000/collections', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${JWT}`,},
+        body: JSON.stringify(user.user),});
+        };
+          
+      //fetchCollections();
+    }
+    }, [user, JWT]);
 
     return (
         <>
