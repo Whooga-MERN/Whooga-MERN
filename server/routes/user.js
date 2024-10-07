@@ -7,10 +7,10 @@ const { eq } = require('drizzle-orm');
 //router.use(authenticateJWTToken);
 const router = express.Router();
 
-router.get('/userId:user_email', async (req, res) => {
-    const { user_email } = req.params;
+router.get('/:user_email', async (req, res) => {
+    const { user_email } = req.query;
     try {
-        console.log("Searching for user: ", user_email);
+        console.log("Searching for user:", user_email);
         const user = await db.select({ user_id: users.user_id })
             .from(users)
             .where(eq(users.email, user_email))

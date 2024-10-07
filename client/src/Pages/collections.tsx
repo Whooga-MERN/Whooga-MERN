@@ -9,50 +9,50 @@ import { useEffect, useState } from "react";
 import fetchUserLoginDetails from '../fetchUserLoginDetails';
 import fetchJWT from '../fetchJWT';
 
-const collections: Collection[] = [
-  // {
-  //   name: "Pathtags",
-  //   id: 1,
-  //   image_url: "/bear.jpg",
-  //   description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
-  //   newListing: true,
-  // },
-  // {
-  //   name: "Shoes",
-  //   id: 2,
-  //   image_url: "/shoes.jpg",
-  //   description: "Shoes are a type of footwear that are typically worn on the feet.",
-  //   newListing: false,
-  // },
-  // {
-  //   name: "Cat Mugs",
-  //   id: 5,
-  //   image_url: "/catmug.jpg",
-  //   description: "ur mom",
-  //   newListing: false,
-  // },
-  // {
-  //   name: "Pokemon Cards",
-  //   id: 4,
-  //   image_url: "/pokemon.jpg",
-  //   description: "ur mom",
-  //   newListing: true,
-  // },
-  // {
-  //   name: "Snowglobes",
-  //   id: 3,
-  //   image_url: "/snowglobe.jpg",
-  //   description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
-  //   newListing: true,
-  // },
-  // {
-  //   name: "ur mom",
-  //   id: 6,
-  //   image_url: "/psycho.jpg",
-  //   description: "ur mom",
-  //   newListing: false,
-  // },
-];
+// const collections: any[] = [
+//   // {
+//   //   name: "Pathtags",
+//   //   id: 1,
+//   //   image_url: "/bear.jpg",
+//   //   description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
+//   //   newListing: true,
+//   // },
+//   // {
+//   //   name: "Shoes",
+//   //   id: 2,
+//   //   image_url: "/shoes.jpg",
+//   //   description: "Shoes are a type of footwear that are typically worn on the feet.",
+//   //   newListing: false,
+//   // },
+//   // {
+//   //   name: "Cat Mugs",
+//   //   id: 5,
+//   //   image_url: "/catmug.jpg",
+//   //   description: "ur mom",
+//   //   newListing: false,
+//   // },
+//   // {
+//   //   name: "Pokemon Cards",
+//   //   id: 4,
+//   //   image_url: "/pokemon.jpg",
+//   //   description: "ur mom",
+//   //   newListing: true,
+//   // },
+//   // {
+//   //   name: "Snowglobes",
+//   //   id: 3,
+//   //   image_url: "/snowglobe.jpg",
+//   //   description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
+//   //   newListing: true,
+//   // },
+//   // {
+//   //   name: "ur mom",
+//   //   id: 6,
+//   //   image_url: "/psycho.jpg",
+//   //   description: "ur mom",
+//   //   newListing: false,
+//   // },
+// ];
 
 function handleClick() {
   console.log("clicked");
@@ -63,6 +63,7 @@ export default function Collections() {
   const [user, setUser] = useState<any>(null);
   const [JWT, setJWT] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
+  const [collections, setCollections] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -90,13 +91,14 @@ export default function Collections() {
     useEffect(() => {
       if (user && JWT)
       {
-        console.log("user: ", user);
+        // console.log("user: ", user);
+        // console.log("JWT: ", JWT);
         const getUserId = async () => {
         const params = {
           user_email: user.loginId,
         };
 
-        const response = await fetch('http://localhost:3000/user/userId' + user.loginId, {
+        const response = await fetch('http://localhost:3000/user/?user_email=' + user.loginId, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -108,6 +110,7 @@ export default function Collections() {
               throw new Error(errorData.error);
           };
           const data = await response.json();
+          console.log("setting user id: ", data[0].user_id);
           setUserId(data[0].user_id)
       };
       getUserId();
@@ -116,17 +119,37 @@ export default function Collections() {
 
     useEffect(() => {
       // fetch collections
-      console.log(userId);
-      const fetchCollections = async () => {
-      const response = await fetch('http://localhost:3000/collections', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${JWT}`,},
-        body: JSON.stringify(user.user),});
-        };
-          
-      //fetchCollections();
+      if (userId) {
+        console.log("in fetch collections ", userId);
+        const fetchCollections = async () => {
+        const response = await fetch('http://localhost:3000/collection/' + userId, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${JWT}`,}
+          });
+
+          if(!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error);
+            };
+
+            const data = await response.json();
+            console.log("collections: ", data);
+            setCollections(data.map((collection: any) => {
+              return {
+                name: "temp",
+                id: collection.collection_universe_id,
+                image_url: collection.collectionPic,
+                description: "",
+                newListing: false,
+              };
+            }));
+            console.log("collections: ", collections[0]);
+          };
+            
+        fetchCollections();
+      }
     }, [userId]);
 
     return (
@@ -167,7 +190,7 @@ export default function Collections() {
         {/* collectibles */}
           <div className="w-full px-32">
             <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
-              {collections.map((collection: Collection) => (
+              {collections.map((collection: any) => (
                 <div key={collection.id}>
                   <div className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300" onClick={handleClick}>
                     <div style={{
