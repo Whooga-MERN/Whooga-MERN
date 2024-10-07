@@ -2,10 +2,10 @@ const { db } = require("../config/db");
 const { collectionUniverses, users, universeCollectables, collectableAttributes } = require('../config/schema');
 const { eq } = require('drizzle-orm');
 const express = require("express");
-const { authenticateJWTToken } = require("../middleware/verifyJWT");
+//const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
-router.use(authenticateJWTToken);
+//router.use(authenticateJWTToken);
 
 router.post('', async (req, res) => {
     const {
@@ -16,12 +16,7 @@ router.post('', async (req, res) => {
         csvJsonData,
         email
     } = req.body;
-    console.log("universeCollectionName: " + universeCollectionName);
-    console.log("universeCollectionImage: " + universeCollectionImage);
-    console.log("universeCollectionDescription: " + universeCollectionDescription);
-    console.log("defaultAttributes: " + defaultAttributes);
-    console.log("csvJsonData: " + csvJsonData);
-    console.log("email: " + email);
+
     if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email)
         return res.status(400).send({
             error: `Request body is missing a either universeCollectionName,
@@ -34,10 +29,7 @@ router.post('', async (req, res) => {
 
         if (!user || user.length === 0)
             res.status(400).send({ error: "FAILED to find user" });
-        console.log("user found");
         const { user_id, userName } = user[0];
-        console.log(user_id);
-        console.log(userName);
 
         console.log("Inserting into collectionUniverses");
         // Creates the Universe NOT THE COLLECTABLES
@@ -55,18 +47,30 @@ router.post('', async (req, res) => {
 
         console.log("Creating Universe Collectables...");
         try {
+            const universeCollectablesData = [];
+            const collectableAttributesData = [];
+
             for (const row of csvJsonData) {
-                const [newUniverseCollectables] = await db.insert(universeCollectables).values({
+                universeCollectablesData.push({
                     collection_universe_id: collectionUniverseID,
                     name: row.name,
                     universe_collectable_pic: row.image,
-                }).returning({ universe_collectable_id: universeCollectables.universe_collectable_id });
+                });
+            }
+            
+            // After data is packaged insert data into universeCollectables table
+            const newUniverseCollectables = await db.insert(universeCollectables)
+                .values(universeCollectablesData)
+                .returning({ universe_collectable_id: universeCollectables.universe_collectable_id });
 
-                const universeCollectableID = newUniverseCollectables.universe_collectable_id;
+            // Packages attributes information and then inserts into collectableAttributes
+            newUniverseCollectables.forEach((collectable, index) => {
+                const universeCollectableID = collectable.universe_collectable_id;
+                const row = csvJsonData[index];
 
                 for (const [key, value] of Object.entries(row)) {
                     if (key !== 'name' && key !== 'image') {
-                        await db.insert(collectableAttributes).values({
+                        collectableAttributesData.push({
                             universe_collectable_id: universeCollectableID,
                             name: key,
                             slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -75,8 +79,12 @@ router.post('', async (req, res) => {
                         });
                     }
                 }
-            }
+            });
+
+            await db.insert(collectableAttributes).values(collectableAttributesData);
+
         } catch (error) {
+            console.error('Error:', error);
             try {
                 const deletedFailedUniverse = await db.delete(collectionUniverses)
                     .where(eq(collectionUniverseID, collectionUniverses.collection_universe_id))
@@ -85,10 +93,13 @@ router.post('', async (req, res) => {
                 if (deletedFailedUniverse.length === 0) {
                     return res.status(404).send({ error: "Failed Universe Not Found" });
                 }
-                console.log("Failed Universe Deleted")
+                console.log("Failed Universe Deleted");
                 return res.status(204).send({ message: 'Failed Universe Deleted' });
-            } catch {
-                return res.status(500).status({ error: 'Error deleting item' });
+            } catch (deleteError) {
+                console.error('Error during deletion:', deleteError);
+                if (!res.headersSent) {
+                    return res.status(500).send({ error: 'Internal Server Error' });
+                }
             }
         }
 
