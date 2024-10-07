@@ -62,8 +62,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// READ (Single item)
-router.get('/:universe_collection_id', async (req, res) => {
+// READ (All items from a universe collection)
+router.get('/universe_collection/:universe_collection_id', async (req, res) => {
   const { universe_collection_id } = req.params;
 
   try {

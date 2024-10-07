@@ -35,7 +35,7 @@ router.post('', async (req, res) => {
 });
 
 // READ (All items)
-router.get('/:user_id', async (req, res) => {
+router.get('/user/:user_id', async (req, res) => {
   const { user_id, } = req.params;
   console.log("user_id: " + user_id);
 
