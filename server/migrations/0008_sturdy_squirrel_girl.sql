@@ -1,0 +1,1 @@
+ALTER TABLE "collectables" ALTER COLUMN "isWishlist" DROP NOT NULL;

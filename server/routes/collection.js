@@ -3,10 +3,10 @@ const { db, pool } = require('../config/db');
 const { collections, collectionUniverses, users } = require('../config/schema');
 const express = require('express');
 const { eq } = require('drizzle-orm');
-const { authenticateJWTToken } = require("../middleware/verifyJWT");
+// const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
-router.use(authenticateJWTToken);
+// router.use(authenticateJWTToken);
 
 // Collection CRUD APIs
 
@@ -38,10 +38,23 @@ router.post('', async (req, res) => {
 router.get('/user/:user_id', async (req, res) => {
   const { user_id, } = req.params;
   console.log("user_id: " + user_id);
-
+  // needs the name of each collection which is stored in the universeCollections table
   try {
-    const allItems = await db.select().from(collections).where(eq(collections.user_id, user_id)).execute();
-    res.json(allItems);
+    const user_collections = await db.select().from(collections).where(eq(collections.user_id, user_id)).execute();
+
+    // Name column exists on the UniverseCollectable Table and does not exist in the collections table by default. 
+    // Therefore we must get it from the universeCollection. 
+    const user_collections_with_name = await Promise.all(user_collections.map(async (user_collection) => {
+      console.log(user_collection.collection_universe_id);
+      const name_obj = await db.select({ name: collectionUniverses.name })
+      .from(collectionUniverses)
+      .where(eq(collectionUniverses.collection_universe_id, user_collection.collection_universe_id))
+      .execute();
+
+      console.log("FLAG A");
+      const value = { ...user_collection, name: name_obj[0].name };
+      res.json(value);
+    }));
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error fetching items' });
