@@ -68,6 +68,22 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// READ (All collection universes from a user)
+router.get('/user/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const allItems = await db.select()
+      .from(collectionUniverses)
+      .where(eq(user_id, collectionUniverses.user_id))
+      .execute();
+    res.json(allItems);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching items' });
+  }
+})
+
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;

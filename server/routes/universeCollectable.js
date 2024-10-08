@@ -64,6 +64,26 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// READ (All universe collectables from a universe collection)
+router.get('/universe-collection/:universe_collection_id', async (req, res) => {
+  const { universe_collection_id } = req.params;
+
+  try {
+    const item = await db.select()
+      .from(universeCollectables)
+      .where(eq(universe_collection_id, universeCollectables.universe_collection_id))
+      .execute();
+
+    if (item.length === 0) {
+      return res.status(404).send({ error: 'Item not found' });
+    }
+    res.json(item[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching item' });
+  }
+})
+
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
