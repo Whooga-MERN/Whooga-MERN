@@ -134,7 +134,6 @@ function UploadCollection() {
             const response = await fetch('http://localhost:3000/upload-csv', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${JWT}`,
                 },
                 body: formData,
