@@ -75,12 +75,12 @@ router.post('', cpUpload, async (req, res) => {
                 };
                 return s3Client.send(new PutObjectCommand(params)).then(() => {
                     // Delete the file from the server after uploading to S3
+                    const originalName = file.originalname;
                     if(fs.existsSync(file.path))
                         fs.unlinkSync(file.path);
 
                     const objectUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${uniqueFilename}`;
-                    console.log("The object url: ", objectUrl);
-                    urlCollectableImages.push({ url: objectUrl, originalName: file.originalName });
+                    urlCollectableImages.push({ url: objectUrl, originalName: originalName });
                 }).catch(error => {
                     console.error(`Error uploading ${file.filename} to S3:`, error);
                     throw new Error(`Failed to upload ${file.filename}`);
@@ -88,12 +88,16 @@ router.post('', cpUpload, async (req, res) => {
             });
 
         await Promise.all(uploadPromises);
-        console.log(`collectableURLS: ${urlCollectableImages}`);
+        
+        urlCollectableImages.forEach(image => {
+            console.log("URL", image.url);
+            console.log("Original Name:", image.originalName);
+        });
         }
 
 
         await db.transaction(async (trx) => {
-            console.log("Searching for user");
+            console.log("\nSearching for user");
             const user = await trx.select({ user_id: users.user_id, userName: users.name }).from(users).where(eq(users.email, email)).execute();
 
             if (!user || user.length === 0)
@@ -136,10 +140,13 @@ router.post('', cpUpload, async (req, res) => {
             const ownedCollectable = [];
             const ownedCollectableImage = [];
 
+            let imageUrl = null
             for (const row of parsedCsvJsonData) {
                 const imageObject = urlCollectableImages.find(image => image.originalName === row.image);
-                const imageUrl = imageObject ? imageObject.url : null;
-
+                imageUrl = null
+                if(imageObject)
+                    imageUrl = imageObject.url;
+                console.log("\nimageUrl: ", imageUrl);
                 universeCollectablesData.push({
                     collection_universe_id: collectionUniverseID,
                     universe_collectable_pic: imageUrl,
