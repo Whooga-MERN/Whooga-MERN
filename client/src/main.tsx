@@ -55,7 +55,7 @@ createRoot(document.getElementById("root")!).render(
         }
       />
       <Route
-        path="/items"
+        path="/items/:collectionId"
         element={
           <ProtectedRoute>
             <Items />

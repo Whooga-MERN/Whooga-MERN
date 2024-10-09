@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   FaListUl,
   FaRegEdit,
@@ -469,6 +469,8 @@ export default function HomePage() {
   const [selectedSort, setSelectedSort] = useState<string>("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "grid">("grid");
+
+  const { collectionId } = useParams<{ collectionId: string }>();
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
