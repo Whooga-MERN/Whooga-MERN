@@ -5,6 +5,8 @@ import {
   FaRegEdit,
   FaSortAmountDown,
   FaFilter,
+  FaHeart,
+  FaRegHeart,
 } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
@@ -534,6 +536,17 @@ export default function HomePage() {
     }
   };
 
+  // -------------- handle heart click-------------------
+  const [filledHeartIds, setFilledHeartIds] = useState<number[]>([]);
+
+  const handleHeartClick = (tagId: number) => {
+    setFilledHeartIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
   return (
     <>
       <div>
@@ -775,6 +788,16 @@ export default function HomePage() {
                 {paginatedTags.map((tag) => (
                   <div key={tag.id} className="w-full md:w-1/2 px-4 mb-6">
                     <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                      <button
+                        className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                        onClick={() => handleHeartClick(tag.id)}
+                      >
+                        {filledHeartIds.includes(tag.id) ? (
+                          <FaHeart color="red" />
+                        ) : (
+                          <FaRegHeart />
+                        )}
+                      </button>
                       <div className="h-24 w-24">
                         <img
                           src={tag.image}
@@ -820,12 +843,24 @@ export default function HomePage() {
                   <div key={tag.id}>
                     <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                       <div className="h-22 w-30">
+                        <div className="absolute top-2 right-2 flex space-x-2">
+                          <button
+                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-white rounded-full"
+                            onClick={() => handleHeartClick(tag.id)}
+                          >
+                            {filledHeartIds.includes(tag.id) ? (
+                              <FaHeart color="red" />
+                            ) : (
+                              <FaRegHeart />
+                            )}
+                          </button>
+                        </div>
                         <img
                           src={tag.image}
                           alt={tag.title}
                           width={400}
                           height={400}
-                          className="rounded-md shadow-sm object-cover object-top"
+                          className="pt-3 rounded-md shadow-sm object-cover object-top"
                           onClick={() => handleOpenModal(tag)}
                         />
                       </div>
