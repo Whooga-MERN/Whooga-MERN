@@ -14,10 +14,14 @@ function UploadCollection() {
     const [collectionDescription, setCollectionDescription] = useState<string>('');
     const [collectionImage, setCollectionImage] = useState<string>('');
     const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
+    const [haveImages, setHaveImages] = useState<boolean>(false);
     const [jsonData, setJsonData] = useState<any[]>([]);
+    const [images, setImages] = useState<File[]>([]);
     const [fileName, setFileName] = useState<string>('');
     const [JWT, setJWT] = useState<string>('');
     const [user, setUser] = useState<any>(null);
+    const [isLoadingImages, setIsLoadingImages] = useState<boolean>(false);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -78,6 +82,26 @@ function UploadCollection() {
         reader.readAsText(file);
     };
 
+    const handleFolderUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files) {
+            setIsLoadingImages(true);
+            const imageFiles: File[] = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.startsWith('image/')) {
+                imageFiles.push(file);
+                }
+            }
+            console.log('Image Files:', imageFiles);
+            setImages((prevState) => {
+                console.log('Updated Images:', imageFiles);
+                setIsLoadingImages(false);
+                return imageFiles;
+            });
+        }
+    };
+
     const CSVToJSON = (csv: string) => { 
         const lines = csv.split('\n'); 
         const keys = lines[0].split(','); 
@@ -95,6 +119,7 @@ function UploadCollection() {
     }, [jsonData]);
 
     const handleUpload = async () => {
+        setIsUploading(true);
         const request = {
             universeCollectionName: collectionName,
             universeCollectionImage: collectionImage, // empty until we fix uploading images
@@ -122,6 +147,7 @@ function UploadCollection() {
             if (contentType && contentType.includes('application/json')) {
                 const result = await response.json();
                 console.log('CSV upload successful:', result);
+                setIsUploading(false);
                 navigate('/collections');
             } else {
                 console.log('Upload successful, but no JSON response body');
@@ -154,7 +180,7 @@ function UploadCollection() {
                 </div>
                 
                 {/* Upload CSV */}
-                <div className="flex flex-col justify-center mt-10">
+                <div className="flex flex-col justify-center mt-8">
                     <p className="font-semibold text-lg">Fill in and upload your .csv file:</p>
                     <p className="text-red-500 text-md">{isInputEmpty ? '* Please upload your filled in .csv file *' : ''}</p>
                     <label htmlFor="uploadFile1"
@@ -180,13 +206,38 @@ function UploadCollection() {
                     )}
                 </div>
 
+                {/* Upload Images */}
+                <div className="flex flex-col justify-center mt-8">
+                    <p className="font-semibold text-lg mb-2">Upload a folder of your item images:</p>
+                    <input
+                        type="file"
+                        ref={input => {
+                        if (input) {
+                            input.setAttribute('webkitdirectory', '');
+                            input.setAttribute('mozdirectory', '');
+                        }
+                        }}
+                        onChange={handleFolderUpload}
+                        multiple
+                        accept="image/*"
+                    />
+                    {haveImages && (
+                        <div className="mt-4">
+                            <p className="text-md">
+                                <span className="font-bold">Images Uploaded</span> {fileName}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Upload Button */}
                     <button className="btn btn-primary mt-10 text-lg hover:btn-primary"
                             onClick={handleUpload}
+                            disabled={isLoadingImages}
                             style={{
                                         borderBottomRightRadius: 0,
                                         borderTopRightRadius: 0,
-                                        }}>Upload to Collection!
+                                        }}>{isUploading ? "Loading..." : "Upload to Collection!"}
                                         </button>
             </div>
             <Footer />
