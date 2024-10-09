@@ -9,7 +9,7 @@ import {
   FaRegHeart,
 } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
-import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
+import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import {
@@ -20,6 +20,7 @@ import {
 import Header from "../Components/Header";
 import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
+import SearchBar from "../Components/searchBar";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -540,6 +541,9 @@ export default function HomePage() {
     );
   };
 
+  const [selectedOption, setSelectedOption] = useState<string>("Options");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
   return (
     <>
       <div>
@@ -567,20 +571,14 @@ export default function HomePage() {
 
             <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
-              <div className="">
-                <div className="pl-4 lg:w-[500px] relative sm: w-[400px] border-none">
-                  <div className="relative border-none">
-                    <input
-                      type="search"
-                      placeholder=" What are you looking for today?"
-                      className="border-none ring-1 ring-gray-200 w-full p-4 rounded-lg"
-                    ></input>
-                    <button className="absolute right-1 top-1/2 -translate-y-1/2 p-4 rounded-full">
-                      <FaMagnifyingGlass />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <SearchBar
+                selectedOption={selectedOption}
+                setSelectedOption={setSelectedOption}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                attributes={attributes}
+              />
+
               {/* icon button for view*/}
               <div className="hidden lg:block md:block">
                 <button
