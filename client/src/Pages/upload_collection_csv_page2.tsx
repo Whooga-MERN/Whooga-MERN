@@ -124,6 +124,7 @@ function UploadCollection() {
         const formData = new FormData();
         formData.append('universeCollectionName', collectionName);
         formData.append('universeCollectionImage', collectionImage); //still need to get from user
+        formData.append('collectableImages', JSON.stringify(images));
         formData.append('universeCollectionDescription', collectionDescription);
         formData.append('defaultAttributes', JSON.stringify(featureTags));
         formData.append('csvJsonData', JSON.stringify(jsonData));
