@@ -5,7 +5,7 @@ import Footer from "../Components/Footer";
 import fetchJWT from '../fetchJWT';
 import fetchUserLoginDetails from '../fetchUserLoginDetails';
 import Auth, { AuthUser } from '@aws-amplify/auth';
-import { useNavigate } from 'react-router-dom';
+import { Form, useNavigate } from 'react-router-dom';
 
 function UploadCollection() {
 
@@ -120,42 +120,34 @@ function UploadCollection() {
 
     const handleUpload = async () => {
         setIsUploading(true);
-        const request = {
-            universeCollectionName: collectionName,
-            universeCollectionImage: collectionImage, // empty until we fix uploading images
-            universeCollectionDescription: collectionDescription,
-            defaultAttributes: featureTags,
-            csvJsonData: jsonData,
-            email: user.loginId
-        };
-        console.log('Request:', request);
+        event?.preventDefault();
+        const formData = new FormData();
+        formData.append('universeCollectionName', collectionName);
+        formData.append('universeCollectionImage', collectionImage); //still need to get from user
+        formData.append('universeCollectionDescription', collectionDescription);
+        formData.append('defaultAttributes', JSON.stringify(featureTags));
+        formData.append('csvJsonData', JSON.stringify(jsonData));
+        formData.append('email', user.loginId);
+
+        console.log('Request:', formData);
         try {
             const response = await fetch('http://localhost:3000/upload-csv', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${JWT}`,
                 },
-                body: JSON.stringify(request),
+                body: formData,
             });
 
-            if(!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error);
-            }
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const result = await response.json();
-                console.log('CSV upload successful:', result);
-                setIsUploading(false);
-                navigate('/collections');
+            if (response.ok) {
+                console.log('Form submitted successfully');
             } else {
-                console.log('Upload successful, but no JSON response body');
+                console.error('Form submission failed');
             }
-
-        } catch (error) {
-            console.error('Error uploading data:', error);
-        }
+            } catch (error) {
+            console.error('Error submitting form:', error);
+            }
 
     };
 
