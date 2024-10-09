@@ -5,6 +5,8 @@ import {
   FaRegEdit,
   FaSortAmountDown,
   FaFilter,
+  FaHeart,
+  FaRegHeart,
 } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaMagnifyingGlass, FaRegTrashCan } from "react-icons/fa6";
@@ -19,7 +21,7 @@ import Header from "../Components/Header";
 import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 
-const ITEMS_PER_PAGE = 21;
+const ITEMS_PER_PAGE = 24;
 
 const sortBy = [
   { id: "yearLowToHigh", label: "Year: Low to High" },
@@ -416,30 +418,23 @@ const tags = [
   },
 ];
 
-export default function HomePage() {
-  // assign specific tag with all attribute
-  const [specificTag, setSelectedTag] = useState<{
-    id: number;
-    title: string;
-    createAt: string;
-    image: string;
-    tagNum: string;
-    createdBy: string;
-  } | null>(null);
+const attributes = ["title", "tagNum", "createAt", "createdBy", "image"];
 
-  // set whole tag and open modal
-  const handleOpenModal = (tag: {
-    id: number;
-    title: string;
-    createAt: string;
-    image: string;
-    tagNum: string;
-    createdBy: string;
-  }) => {
-    setSelectedTag(tag);
+export default function HomePage() {
+  // handle attributes dynamically
+  const [specificTag, setSelectedTag] = useState<Record<string, string> | null>(
+    null
+  );
+
+  const handleOpenModal = (tag: Record<string, any>) => {
+    const selectedTag = attributes.reduce((acc, attribute) => {
+      acc[attribute] = tag[attribute];
+      return acc;
+    }, {} as Record<string, string>);
+
+    setSelectedTag(selectedTag);
     setShowModal(true);
   };
-
   const handleCloseModal = () => {
     setShowModal(false);
   };
@@ -534,6 +529,17 @@ export default function HomePage() {
     }
   };
 
+  // -------------- handle heart click-------------------
+  const [filledHeartIds, setFilledHeartIds] = useState<number[]>([]);
+
+  const handleHeartClick = (tagId: number) => {
+    setFilledHeartIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
   return (
     <>
       <div>
@@ -589,12 +595,6 @@ export default function HomePage() {
                 >
                   <BsFillGridFill />
                 </button>
-                {/* <button className="inline-block pr-5">
-                  <FaListUl />
-                </button>
-                <button className="inline-block pr-16">
-                  <BsFillGridFill />
-                </button> */}
                 {isOwned ? (
                   <button
                     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
@@ -772,32 +772,44 @@ export default function HomePage() {
             {/* switch between grid and list */}
             {view === "list" ? (
               <div className="flex flex-wrap -mx-4">
-                {paginatedTags.map((tag) => (
-                  <div key={tag.id} className="w-full md:w-1/2 px-4 mb-6">
+                {paginatedTags.map((item: { [key: string]: any }) => (
+                  <div key={item.id} className="w-full md:w-1/2 px-4 mb-6">
                     <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                      <button
+                        className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                        onClick={() => handleHeartClick(item.id)}
+                      >
+                        {filledHeartIds.includes(item.id) ? (
+                          <FaHeart color="red" />
+                        ) : (
+                          <FaRegHeart />
+                        )}
+                      </button>
                       <div className="h-24 w-24">
                         <img
-                          src={tag.image}
-                          alt={tag.title}
+                          src={item.image}
+                          alt={item.title}
                           width={100}
                           height={100}
                           className="rounded-md shadow-sm object-cover"
-                          onClick={() => handleOpenModal(tag)}
+                          onClick={() => handleOpenModal(item)}
                         />
                       </div>
+
                       <div className="flex-1">
-                        <p
-                          className="font-semibold uppercase truncate"
-                          onClick={() => handleOpenModal(tag)}
-                        >
-                          {tag.tagNum}
-                        </p>
-                        <p
-                          className="font-bold uppercase truncate"
-                          onClick={() => handleOpenModal(tag)}
-                        >
-                          {tag.title}
-                        </p>
+                        {/* show first three attributes */}
+                        {attributes.slice(0, 3).map((attribute, index) => (
+                          <p
+                            key={attribute}
+                            className={
+                              index === 0
+                                ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                : "text-md font-semibold pl-4 capitalize truncate"
+                            }
+                          >
+                            {` ${item[attribute] || ""}`}
+                          </p>
+                        ))}
                       </div>
                       <div className="flex space-x-4">
                         <button
@@ -815,27 +827,48 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="mt-8 grid lg:grid-cols-7 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                {paginatedTags.map((tag) => (
-                  <div key={tag.id}>
+              <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                {paginatedTags.map((item: { [key: string]: any }) => (
+                  <div key={item.id}>
                     <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                       <div className="h-22 w-30">
+                        <div className="absolute top-2 right-2 flex space-x-2">
+                          <button
+                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-white rounded-full"
+                            onClick={() => handleHeartClick(item.id)}
+                          >
+                            {filledHeartIds.includes(item.id) ? (
+                              <FaHeart color="red" />
+                            ) : (
+                              <FaRegHeart />
+                            )}
+                          </button>
+                        </div>
                         <img
-                          src={tag.image}
-                          alt={tag.title}
+                          src={item.image}
+                          alt={item.title}
                           width={400}
                           height={400}
-                          className="rounded-md shadow-sm object-cover object-top"
-                          onClick={() => handleOpenModal(tag)}
+                          className="pt-3 rounded-md shadow-sm object-cover object-top"
+                          onClick={() => handleOpenModal(item)}
                         />
                       </div>
-                      <div className="space-y-1">
-                        <p className="mt-4 font-semibold pl-4 uppercase truncate">
-                          {tag.tagNum}
-                        </p>
-                        <p className="font-bold pl-4 uppercase truncate">
-                          {tag.title}
-                        </p>
+
+                      {/* show first three attribute */}
+                      <div className="space-y-1 p-4">
+                        {attributes.slice(0, 3).map((attribute, index) => (
+                          <p
+                            key={attribute}
+                            className={
+                              index === 0
+                                ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                : "text-md font-semibold pl-4 capitalize truncate"
+                            }
+                          >
+                            {` ${item[attribute] || ""}`}
+                          </p>
+                        ))}
+
                         <div className="pt-3 pb-2 text-center">
                           <button
                             className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
@@ -854,13 +887,11 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* send data to modal */}
             {showModal && specificTag && (
               <Modal
-                tagNum={specificTag.tagNum}
-                tagTitle={specificTag.title}
-                tagDate={specificTag.createAt}
-                tagImage={specificTag.image}
-                tagDesigner={specificTag.createdBy}
+                attributes={attributes}
+                tagData={specificTag}
                 onClose={handleCloseModal}
                 isVisible={showModal}
               />
