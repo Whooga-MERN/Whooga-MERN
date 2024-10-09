@@ -3,32 +3,23 @@ import { IoMdClose } from "react-icons/io";
 import { GoLinkExternal } from "react-icons/go";
 import { Link } from "react-router-dom";
 
-type propTypes = {
-  tagNum: string;
-  tagTitle: string;
-  tagDate: string;
-  tagImage: string;
-  tagDesigner: string;
+type ModalProps = {
+  attributes: string[];
+  tagData: Record<string, string>;
   isVisible: boolean;
   onClose: () => void;
 };
 
-const Modal: React.FC<propTypes> = ({
+const Modal: React.FC<ModalProps> = ({
   isVisible,
   onClose,
-  tagNum,
-  tagTitle,
-  tagDate,
-  tagImage,
-  tagDesigner,
+  attributes,
+  tagData,
 }) => {
   if (!isVisible) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-opacity-10
-        backdrop-blur-[2px] flex justify-center items-center bg-gray-600"
-    >
+    <div className="fixed inset-0 bg-opacity-10 backdrop-blur-[2px] flex justify-center items-center bg-gray-600">
       <div className="modal-box max-w-2xl">
         <div className="relative">
           <div className="absolute top-0 right-0">
@@ -37,22 +28,14 @@ const Modal: React.FC<propTypes> = ({
               to={{
                 pathname: "/details",
               }}
-              state={{
-                tagTitle,
-                tagNum,
-                tagDate,
-                tagImage,
-                tagDesigner,
-              }}
+              state={{ attributes, tagData }} // Passing dynamic data to details
             >
               <GoLinkExternal />
             </Link>
 
             <button
               className="btn bg-yellow-400 w-fit text-2xl text-black"
-              onClick={() => {
-                onClose();
-              }}
+              onClick={() => onClose()}
             >
               <IoMdClose />
             </button>
@@ -60,17 +43,26 @@ const Modal: React.FC<propTypes> = ({
         </div>
         <div className="mx-auto max-w-xl sm:px-2 sm:py-2 lg:grid lg:grid-cols-2 lg:gap-x-2 lg:px-5">
           <div className="lg:max-w-lg">
-            <div className="sm:mt-14 lg:mt-28">
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                {tagTitle}
-              </h1>
-              <p className="pt-2 text-2xl font-bold">{tagNum}</p>
-            </div>
-
             <section aria-labelledby="information-heading" className="mt-4">
-              <div className="mt-8 space-y-2 text-xl font-bold text-gray-500 dark:text-gray-400">
-                <p>Create At: {tagDate}</p>
-                <p>Owner: {tagDesigner}</p>
+              <div className="mt-8">
+                <div className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                  {attributes.slice(0, 2).map((attribute) => (
+                    <p key={attribute}>{tagData[attribute]}</p>
+                  ))}
+                </div>
+
+                <div className="py-3" />
+
+                <div className="space-y-2 text-lg font-bold text-gray-500 dark:text-gray-400">
+                  {attributes
+                    .slice(2)
+                    .filter((attribute) => attribute !== "image")
+                    .map((attribute) => (
+                      <p key={attribute}>
+                        {attribute}: {tagData[attribute]}
+                      </p>
+                    ))}
+                </div>
               </div>
             </section>
           </div>
@@ -78,8 +70,8 @@ const Modal: React.FC<propTypes> = ({
           <div className="lg:col-start-2 lg:row-span-2 lg:mt-0 lg:self-center sm:pt-10">
             <div className="mt-10 aspect-h-1 aspect-w-1 overflow-hidden rounded-lg">
               <img
-                src={tagImage}
-                alt={tagTitle}
+                src={tagData.image}
+                alt={tagData.title}
                 width={400}
                 height={400}
                 className="rounded-md shadow-sm object-cover object-top"
