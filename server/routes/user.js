@@ -7,18 +7,20 @@ const { eq } = require('drizzle-orm');
 //router.use(authenticateJWTToken);
 const router = express.Router();
 
-router.get('/:user_email', async (req, res) => {
+router.get('', async (req, res) => {
     const { user_email } = req.query;
     try {
         console.log("Searching for user:", user_email);
-        const user = await db.select({ user_id: users.user_id })
+        const user = await db
+            .select({ user_id: users.user_id })
             .from(users)
             .where(eq(users.email, user_email))
             .execute();
+            
         res.json(user);
     } catch (error) {
         console.error(error);
-        res.status(500).send({ error: 'Error fetching user_id' });
+        res.status(500).send({ error: 'Error fetching user_id by email' });
     }
 })
 

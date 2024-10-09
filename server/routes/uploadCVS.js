@@ -80,7 +80,7 @@ router.post('', cpUpload, async (req, res) => {
 
                     const objectUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${uniqueFilename}`;
                     console.log("The object url: ", objectUrl);
-                    urlCollectableImages.push(objectUrl);
+                    urlCollectableImages.push({ url: objectUrl, originalName: file.originalName });
                 }).catch(error => {
                     console.error(`Error uploading ${file.filename} to S3:`, error);
                     throw new Error(`Failed to upload ${file.filename}`);
@@ -136,23 +136,17 @@ router.post('', cpUpload, async (req, res) => {
             const ownedCollectable = [];
             const ownedCollectableImage = [];
 
-            let i = 0;
             for (const row of parsedCsvJsonData) {
-                if(row.image) {
-                    universeCollectablesData.push({
-                        collection_universe_id: collectionUniverseID,
-                        universe_collectable_pic: urlCollectableImages[i],
-                    });
-                    i++;
-                }
-                else {
-                    universeCollectablesData.push({
-                        collection_universe_id: collectionUniverseID,
-                        universe_collectable_pic: null,
-                    });
-                }
+                const imageObject = urlCollectableImages.find(image => image.originalName === row.image);
+                const imageUrl = imageObject ? imageObject.url : null;
+
+                universeCollectablesData.push({
+                    collection_universe_id: collectionUniverseID,
+                    universe_collectable_pic: imageUrl,
+                });
+
                 if(row.owned == 'T' && row.image)
-                    ownedCollectableImage.push(urlCollectableImages[i]);
+                    ownedCollectableImage.push(imageUrl);
             }
 
             // After data is packaged insert data into universeCollectables table
@@ -161,6 +155,7 @@ router.post('', cpUpload, async (req, res) => {
                 .returning({ universe_collectable_id: universeCollectables.universe_collectable_id });
 
             // Packages attributes information and then inserts into collectableAttributes
+            let j = 0
             newUniverseCollectables.forEach((collectable, index) => {
                 const universeCollectableID = collectable.universe_collectable_id;
                 const row = parsedCsvJsonData[index];
@@ -177,14 +172,15 @@ router.post('', cpUpload, async (req, res) => {
                         });
                     }
                     else if (key == 'owned' && value == 'T') {
-                        console.log(`####urlCollectableImages: ${urlCollectableImages[index]}`);
-                        if(row.image[index]) {
-                            console.log(`urlCollectableImages: ${urlCollectableImages[index]}`);
+                        console.log(`row.image: ${row.image}`);
+                        console.log("ownedCollectableImage: ", ownedCollectableImage[j]);
+                        if(row.image) {
                             ownedCollectable.push({
                                 collection_id: collectionID,
                                 universe_collectable_id: universeCollectableID,
-                                collectable_pic: ownedCollectableImage[index]
+                                collectable_pic: ownedCollectableImage[j]
                             })
+                            j++;
                         }
                         else {
                             ownedCollectable.push({
@@ -208,7 +204,7 @@ router.post('', cpUpload, async (req, res) => {
             console.error(error);
 
             // Cleanup: Delete uploaded files from S3
-            const deletePromises = [...urlCollectableImages, ...urlUniverseThumbnailImage].map(url => {
+            const deletePromises = [...urlCollectableImages.map(image => image.url), ...urlUniverseThumbnailImage].map(url => {
                 const filename = url.split('/').pop();
                 const params = {
                     Bucket: process.env.S3_BUCKET_NAME,
