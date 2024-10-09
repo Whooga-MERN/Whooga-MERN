@@ -2,7 +2,7 @@ import { IoMdAddCircleOutline } from "react-icons/io";
 import { IconContext } from "react-icons";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Collection } from "../Types/Collection";
 import { useEffect, useState } from "react";
@@ -54,8 +54,11 @@ import fetchJWT from '../fetchJWT';
 //   // },
 // ];
 
-function handleClick() {
+function handleClick(collectionId: number) {
+  const navigate = useNavigate();
+  navigate(`/items/${collectionId}`);
   console.log("clicked");
+
 }
 
 export default function Collections() {
@@ -192,7 +195,7 @@ export default function Collections() {
             <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
               {collections.map((collection: any) => (
                 <div key={collection.id}>
-                  <div className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300" onClick={handleClick}>
+                  <div className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300" onClick={() => handleClick(collection.id)}>
                     <div style={{
                       right: '3%',
                       bottom: '97%',
