@@ -26,7 +26,7 @@ function Header() {
           </div>
           <div className="flex-none gap-2">
             <div className="form-control">
-              <label className="input input-bordered flex items-center gap-2">
+              {/* <label className="input input-bordered flex items-center gap-2">
                 <input
                   type="text"
                   className="grow w-60"
@@ -44,7 +44,7 @@ function Header() {
                     clipRule="evenodd"
                   />
                 </svg>
-              </label>
+              </label> */}
             </div>
             <ul className="menu menu-horizontal px-1">
               <li>

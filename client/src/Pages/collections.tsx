@@ -125,11 +125,11 @@ export default function Collections() {
       if (userId) {
         console.log("in fetch collections ", userId);
         const fetchCollections = async () => {
-        const response = await fetch('http://localhost:3000/collection/' + userId, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${JWT}`,}
+          const response = await fetch('http://localhost:3000/collection/user/' + userId, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${JWT}`,}
           });
 
           if(!response.ok) {
@@ -138,18 +138,21 @@ export default function Collections() {
             };
 
             const data = await response.json();
-            console.log("collections: ", data);
-            setCollections(data.map((collection: any) => {
+            console.log("collections as data: ", data);
+            console.log("1st collection:", data[0].collection_pic );
+
+            setCollections(data.map((col: any) => {
               return {
-                name: "temp",
-                id: collection.collection_universe_id,
-                image_url: collection.collectionPic,
+                name: col.name,
+                id: col.collection_universe_id,
+                image_url: col.collection_pic,
                 description: "",
                 newListing: false,
               };
             }));
-            console.log("collections: ", collections[0]);
-          };
+
+            console.log("Collections as collection:", collections)
+        };
             
         fetchCollections();
       }
