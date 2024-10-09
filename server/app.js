@@ -12,6 +12,7 @@ const collectableRouter = require('./routes/collectable');
 const uploadCSVRouter = require('./routes/uploadCVS');
 const collectableAttributeRouter = require('./routes/collectableAttribute');
 const userRouter = require('./routes/user');
+const s3Router = require('./routes/s3Bucket');
 /*const { drizzle } = require('drizzle-orm');
 const { pgAdapter } = require('drizzle-orm-pg');
 const pg = require('pg');*/
@@ -50,4 +51,6 @@ app.use('/upload-csv', uploadCSVRouter);
 
 app.use('/collectable-attribute', collectableAttributeRouter);
 
-app.get('/user', userRouter);
+app.use('/user', userRouter);
+
+app.use('/s3', s3Router);

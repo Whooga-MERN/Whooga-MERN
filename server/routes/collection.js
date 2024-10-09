@@ -45,16 +45,16 @@ router.get('/user/:user_id', async (req, res) => {
     // Name column exists on the UniverseCollectable Table and does not exist in the collections table by default. 
     // Therefore we must get it from the universeCollection. 
     const user_collections_with_name = await Promise.all(user_collections.map(async (user_collection) => {
-      console.log(user_collection.collection_universe_id);
+      console.log("User Collection: ", user_collection.collection_universe_id);
       const name_obj = await db.select({ name: collectionUniverses.name })
       .from(collectionUniverses)
       .where(eq(collectionUniverses.collection_universe_id, user_collection.collection_universe_id))
       .execute();
 
-      console.log("FLAG A");
-      const value = { ...user_collection, name: name_obj[0].name };
-      res.json(value);
+      return value = { ...user_collection, name: name_obj[0].name };
+      
     }));
+    res.json(user_collections_with_name);
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error fetching items' });

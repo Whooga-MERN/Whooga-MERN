@@ -17,7 +17,7 @@ const collections = pgTable('collections', {
   custom_attributes: jsonb('custom_attributes'),
   favorite_attributes: jsonb('favorite_attributes'),
   hidden_attributes: jsonb('hidden_attributes'),
-  collectionPic: varchar('collection_pic', { length: 2048 })
+  collection_pic: varchar('collection_pic', { length: 2048 })
 });
 
 const collectionUniverses = pgTable('collectionUniverses', {
@@ -26,7 +26,7 @@ const collectionUniverses = pgTable('collectionUniverses', {
   name: varchar('name', { length: 255 }).notNull(),
   created_by: varchar('created_by', { length: 255 }).notNull(),
   default_attributes: jsonb('default_attributes').notNull(),
-  universeCollectionPic: varchar('universe_collection_pic', { length: 2048 }),
+  universe_collection_pic: varchar('universe_collection_pic', { length: 2048 }),
   description: varchar('description', { length: 255 })
 });
 
@@ -35,13 +35,13 @@ const collectables = pgTable('collectables', {
   collection_id: serial('collection_id').notNull(),
   universe_collectable_id: serial('universe_collectable_id').notNull(),
   isWishlist: boolean('isWishlist').default(false).notNull(),
-  collectablePic: varchar('collectable_pic', { length: 2048 })
+  collectable_pic: varchar('collectable_pic', { length: 2048 })
 });
 
 const universeCollectables = pgTable('universeCollectables', {
   universe_collectable_id: serial('universe_collectable_id').primaryKey().notNull(),
   collection_universe_id: serial('collection_universe_id').notNull(),
-  universeCollectablePic: varchar('universe_collectable_pic', { length: 2048} )
+  universe_collectable_pic: varchar('universe_collectable_pic', { length: 2048} )
 });
 
 const collectableAttributes = pgTable('collectableAttributes', {
