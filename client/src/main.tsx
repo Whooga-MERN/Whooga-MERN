@@ -22,8 +22,10 @@ import MessageSignup from "./Pages/message_signup.tsx";
 import Wishlist from "./Pages/wishlist.tsx";
 
 import "./custom-amplify-styles.css";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 Amplify.configure(awsExports);
+const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   return (
@@ -37,103 +39,107 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <Routes>
-      {/* unauthenticated routes */}
-      <Route path="/" element={<App />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/auth" element={<Authentication />} />
-      <Route path="/message_signup" element={<MessageSignup />} />
+  <>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          {/* unauthenticated routes */}
+          <Route path="/" element={<App />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/auth" element={<Authentication />} />
+          <Route path="/message_signup" element={<MessageSignup />} />
 
-      {/* authenticated routes */}
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/items/:collectionId"
-        element={
-          <ProtectedRoute>
-            <Items />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/collections"
-        element={
-          <ProtectedRoute>
-            <Collections />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/new_collection_form"
-        element={
-          <ProtectedRoute>
-            <NewCollectionForm />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/new_collection_start"
-        element={
-          <ProtectedRoute>
-            <NewCollectionStart />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/new_collection_search_matches"
-        element={
-          <ProtectedRoute>
-            <NewCollectionSearchMatches />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/upload_collection_csv_page1"
-        element={
-          <ProtectedRoute>
-            <UploadCollection1 />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/upload_collection_csv_page2"
-        element={
-          <ProtectedRoute>
-            <UploadCollection2 />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/details"
-        element={
-          <ProtectedRoute>
-            <Details />
-          </ProtectedRoute>
-        }
-      />
-      {/* <Route
-        path="/message_signup"
-        element={
-          <ProtectedRoute>
-            <MessageSignup />
-          </ProtectedRoute>
-        }
-      /> */}
-      <Route
-        path="/wishlist"
-        element={
-          <ProtectedRoute>
-            <Wishlist />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
-  </BrowserRouter>
+          {/* authenticated routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/items/:collectionId"
+            element={
+              <ProtectedRoute>
+                <Items />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/collections"
+            element={
+              <ProtectedRoute>
+                <Collections />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/new_collection_form"
+            element={
+              <ProtectedRoute>
+                <NewCollectionForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/new_collection_start"
+            element={
+              <ProtectedRoute>
+                <NewCollectionStart />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/new_collection_search_matches"
+            element={
+              <ProtectedRoute>
+                <NewCollectionSearchMatches />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/upload_collection_csv_page1"
+            element={
+              <ProtectedRoute>
+                <UploadCollection1 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/upload_collection_csv_page2"
+            element={
+              <ProtectedRoute>
+                <UploadCollection2 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/details"
+            element={
+              <ProtectedRoute>
+                <Details />
+              </ProtectedRoute>
+            }
+          />
+          {/* <Route
+      path="/message_signup"
+      element={
+        <ProtectedRoute>
+          <MessageSignup />
+        </ProtectedRoute>
+      }
+    /> */}
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedRoute>
+                <Wishlist />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </>
 );
