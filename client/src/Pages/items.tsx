@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import _, { debounce, set } from "lodash";
 import {
   FaListUl,
   FaRegEdit,
@@ -21,6 +22,8 @@ import Header from "../Components/Header";
 import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
+import { buildPath } from "../utils/utils";
+import { fetchSearchResults } from "../utils/fetchSearchResults";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -541,8 +544,45 @@ export default function HomePage() {
     );
   };
 
-  const [selectedOption, setSelectedOption] = useState<string>("Options");
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  // ------------------- search ------------------------
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  // Error handler for search queries
+  const handleError = (error: any) => {
+    console.error("Search error:", error);
+    alert("An error occurred during the search. Please try again.");
+  };
+
+  //------------------------------ add new collectible form -------------------------------
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  // handle form field change
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  // handle file upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
+  // handle form submit
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // form data for submission
+    const submittedData = {
+      ...formData,
+      image: imageFile,
+    };
+    console.log("Submitted data:", submittedData);
+    closeModal();
+  };
 
   return (
     <>
@@ -572,11 +612,11 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
               <SearchBar
-                selectedOption={selectedOption}
-                setSelectedOption={setSelectedOption}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
                 attributes={attributes}
+                fetchSearchResults={(attribute, term) =>
+                  fetchSearchResults(attribute, term)
+                }
+                handleError={handleError}
               />
 
               {/* icon button for view*/}
@@ -616,64 +656,68 @@ export default function HomePage() {
 
                 {isModalOpen && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-1/3">
-                      <h2 className="text-xl mb-4 dark:text-gray-300">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
+                      <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
                         Create New Collectible
                       </h2>
 
-                      <form>
-                        {formFields.map((field, index) => (
+                      <form onSubmit={handleSubmit}>
+                        {attributes.map((attribute, index) => (
                           <div key={index} className="mb-4 lg:max-w-lg">
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                              {field.label}
-                            </label>
-                            {field.type === "textarea" ? (
-                              <textarea
-                                placeholder={field.placeholder}
-                                className="border rounded w-full py-2 px-3 text-gray-700"
-                              />
+                            {attribute !== "image" ? (
+                              <>
+                                <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                  {attribute.charAt(0).toUpperCase() +
+                                    attribute.slice(1)}
+                                </label>
+                                <input
+                                  type="text"
+                                  name={attribute}
+                                  placeholder={`${attribute}`}
+                                  value={formData[attribute] || ""}
+                                  onChange={handleChange}
+                                  className="border rounded w-full py-2 px-3 text-gray-700"
+                                />
+                              </>
                             ) : (
-                              <input
-                                type={field.type}
-                                placeholder={field.placeholder}
-                                className="border rounded w-full py-2 px-3 text-gray-700"
-                              />
+                              <>
+                                <label
+                                  htmlFor="cover-photo"
+                                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                >
+                                  Upload Photo
+                                </label>
+                                <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                  <div className="text-center">
+                                    <PhotoIcon
+                                      aria-hidden="true"
+                                      className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                    />
+                                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                      <label
+                                        htmlFor="file-upload"
+                                        className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                      >
+                                        <span>Upload a photo</span>
+                                        <input
+                                          id="file-upload"
+                                          name="file-upload"
+                                          type="file"
+                                          className="sr-only"
+                                          onChange={handleFileChange}
+                                        />
+                                      </label>
+                                      <p>or drag and drop</p>
+                                    </div>
+                                    <p className="text-xs leading-5 text-gray-600">
+                                      PNG, JPG
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
                             )}
                           </div>
                         ))}
-
-                        <label
-                          htmlFor="cover-photo"
-                          className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300"
-                        >
-                          Upload Photo
-                        </label>
-                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                          <div className="text-center">
-                            <PhotoIcon
-                              aria-hidden="true"
-                              className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                            />
-                            <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                              <label
-                                htmlFor="file-upload"
-                                className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                              >
-                                <span>Upload a photo</span>
-                                <input
-                                  id="file-upload"
-                                  name="file-upload"
-                                  type="file"
-                                  className="sr-only"
-                                />
-                              </label>
-                              <p className="pl-1">or drag and drop</p>
-                            </div>
-                            <p className="text-xs leading-5 text-gray-600">
-                              PNG, JPG
-                            </p>
-                          </div>
-                        </div>
 
                         <div className="flex justify-end space-x-4 mt-8">
                           <button
@@ -832,7 +876,7 @@ export default function HomePage() {
                       <div className="h-22 w-30">
                         <div className="absolute top-2 right-2 flex space-x-2">
                           <button
-                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-white rounded-full"
+                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                             onClick={() => handleHeartClick(item.id)}
                           >
                             {filledHeartIds.includes(item.id) ? (
@@ -897,62 +941,68 @@ export default function HomePage() {
 
             {showEdit && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-1/3">
-                  <h2 className="text-xl mb-4">Edit your Collectible</h2>
+                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
+                  <h2 className="text-xl font-bold mb-4">
+                    Edit your Collectible
+                  </h2>
 
-                  <form>
-                    {formFields.map((field, index) => (
+                  <form onSubmit={handleSubmit}>
+                    {attributes.map((attribute, index) => (
                       <div key={index} className="mb-4 lg:max-w-lg">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          {field.label}
-                        </label>
-                        {field.type === "textarea" ? (
-                          <textarea
-                            placeholder={field.placeholder}
-                            className="border rounded w-full py-2 px-3 text-gray-700"
-                          />
+                        {attribute !== "image" ? (
+                          <>
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                              {attribute.charAt(0).toUpperCase() +
+                                attribute.slice(1)}
+                            </label>
+                            <input
+                              type="text"
+                              name={attribute}
+                              placeholder={`${attribute}`}
+                              value={formData[attribute] || ""}
+                              onChange={handleChange}
+                              className="border rounded w-full py-2 px-3 text-gray-700"
+                            />
+                          </>
                         ) : (
-                          <input
-                            type={field.type}
-                            placeholder={field.placeholder}
-                            className="border rounded w-full py-2 px-3 text-gray-700"
-                          />
+                          <>
+                            <label
+                              htmlFor="cover-photo"
+                              className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300"
+                            >
+                              Upload Photo
+                            </label>
+                            <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                              <div className="text-center">
+                                <PhotoIcon
+                                  aria-hidden="true"
+                                  className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                />
+                                <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                  <label
+                                    htmlFor="file-upload"
+                                    className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                  >
+                                    <span>Upload a photo</span>
+                                    <input
+                                      id="file-upload"
+                                      name="file-upload"
+                                      type="file"
+                                      className="sr-only"
+                                      onChange={handleFileChange}
+                                    />
+                                  </label>
+                                  <p className="pl-1">or drag and drop</p>
+                                </div>
+                                <p className="text-xs leading-5 text-gray-600">
+                                  PNG, JPG
+                                </p>
+                              </div>
+                            </div>
+                          </>
                         )}
                       </div>
                     ))}
-
-                    <label
-                      htmlFor="cover-photo"
-                      className="block text-sm font-medium leading-6 text-gray-900"
-                    >
-                      Upload Photo
-                    </label>
-                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
-                      <div className="text-center">
-                        <PhotoIcon
-                          aria-hidden="true"
-                          className="mx-auto h-12 w-12 text-gray-300"
-                        />
-                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                          <label
-                            htmlFor="file-upload"
-                            className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                          >
-                            <span>Upload a photo</span>
-                            <input
-                              id="file-upload"
-                              name="file-upload"
-                              type="file"
-                              className="sr-only"
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs leading-5 text-gray-600">
-                          PNG, JPG
-                        </p>
-                      </div>
-                    </div>
 
                     <div className="flex justify-end space-x-4 mt-8">
                       <button
@@ -966,7 +1016,7 @@ export default function HomePage() {
                         type="submit"
                         className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
                       >
-                        Create
+                        Save Changes
                       </button>
                     </div>
                   </form>
