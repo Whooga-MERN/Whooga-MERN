@@ -67,12 +67,16 @@ export default function Collections() {
   const [JWT, setJWT] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
   const [collections, setCollections] = useState<any[]>([]);
+  const [isUserFetched, setIsUserFetched] = useState(false);
+  const [isTokenFetched, setIsTokenFetched] = useState(false);
+  const [isUserIdFetched, setIsUserIdFetched] = useState(false);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
             try {
                 const user = await fetchUserLoginDetails();
                 setUser(user || '');
+                setIsUserFetched(true);
             } catch (error) {
                 console.error("Error Fetching User");
             }
@@ -83,6 +87,7 @@ export default function Collections() {
             try {
                 const token = await fetchJWT();
                 setJWT(token || '');
+                setIsTokenFetched(true);
             } catch (error) {
                 console.error('Error fetching JWT');
             }
@@ -92,10 +97,8 @@ export default function Collections() {
   }, []);
 
     useEffect(() => {
-      if (user && JWT)
+      if (isUserFetched && isTokenFetched && user && JWT)
       {
-        // console.log("user: ", user);
-        // console.log("JWT: ", JWT);
         const getUserId = async () => {
         const params = {
           user_email: user.loginId,
@@ -114,15 +117,16 @@ export default function Collections() {
           };
           const data = await response.json();
           console.log("setting user id: ", data[0].user_id);
-          setUserId(data[0].user_id)
+          setUserId(data[0].user_id);
+          setIsUserIdFetched(true);
       };
       getUserId();
     }
-    }, [user, JWT]);
+    }, [isUserFetched, isTokenFetched, user, JWT]);
 
     useEffect(() => {
       // fetch collections
-      if (userId) {
+      if (isUserIdFetched && userId) {
         console.log("in fetch collections ", userId);
         const fetchCollections = async () => {
           const response = await fetch('http://localhost:3000/collection/user/' + userId, {
@@ -156,7 +160,7 @@ export default function Collections() {
             
         fetchCollections();
       }
-    }, [userId]);
+    }, [isUserIdFetched, userId, JWT]);
 
     return (
         <>
