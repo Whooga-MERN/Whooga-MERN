@@ -12,7 +12,7 @@ function UploadCollection() {
     const [featureTags, setFeatureTags] = useState<string[]>([]);
     const [collectionName, setCollectionName] = useState<string>('');
     const [collectionDescription, setCollectionDescription] = useState<string>('');
-    const [collectionImage, setCollectionImage] = useState<string>('');
+    const [collectionImageURL, setCollectionImageURL] = useState<string>('');
     const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
     const [haveImages, setHaveImages] = useState<boolean>(false);
     const [jsonData, setJsonData] = useState<any[]>([]);
@@ -50,10 +50,11 @@ function UploadCollection() {
         const storedFeatureTags = localStorage.getItem('featureTags');
         const storedCollectionName = localStorage.getItem('collectionName') ?? '';
         const storedCollectionDescription = localStorage.getItem('collectionDescription') ?? '';
-        const storedCollectionImage = localStorage.getItem('collectionImageURL') ?? 'https://www.cssscript.com/wp-content/uploads/2020/09/Animated-Skeleton-Loading-Screens-In-Pure-CSS.jpg';
+        const storedCollectionImage = localStorage.getItem('collectionImageURL') ?? '';
         setCollectionName(storedCollectionName);
         setCollectionDescription(storedCollectionDescription);
-        setCollectionImage(storedCollectionImage);
+        console.log('Collection Image in local: ', storedCollectionImage);
+        setCollectionImageURL(storedCollectionImage);
         if (storedFeatureTags) {
             const featureTagsArray = storedFeatureTags.split(',');
             console.log('Feature Tags in local:', featureTagsArray);
@@ -123,14 +124,14 @@ function UploadCollection() {
         event?.preventDefault();
         const formData = new FormData();
         formData.append('universeCollectionName', collectionName);
-        formData.append('universeCollectionImage', collectionImage); //still need to get from user
-        formData.append('collectableImages', JSON.stringify(images));
         formData.append('universeCollectionDescription', collectionDescription);
+        formData.append('urlUniverseThumbnailImage', collectionImageURL);
         formData.append('defaultAttributes', JSON.stringify(featureTags));
         formData.append('csvJsonData', JSON.stringify(jsonData));
         formData.append('email', user.loginId);
+        formData.append('collectableImages', JSON.stringify(images));
 
-        console.log('Request:', formData);
+        console.log('Request image:', collectionImageURL);
         try {
             const response = await fetch('http://localhost:3000/upload-csv', {
                 method: 'POST',
@@ -142,12 +143,14 @@ function UploadCollection() {
 
             if (response.ok) {
                 console.log('Form submitted successfully');
+                setIsUploading(false);
+                navigate('/collections');
             } else {
                 console.error('Form submission failed');
             }
-            } catch (error) {
+        } catch (error) {
             console.error('Error submitting form:', error);
-            }
+        }
 
     };
 

@@ -8,15 +8,20 @@ import { IoMdClose } from "react-icons/io";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
 import { Collection } from '../Types/Collection';
+import fetchUserLoginDetails from '../fetchUserLoginDetails';
+import fetchJWT from '../fetchJWT';
 
 function NewCollectionForm(){
 
     const [collectionName, setCollectionName] = useState('');
     const [imageUpload, setImageUpload] = useState<File | null>(null);
+    const [imageURL, setImageURL] = useState<string>('');
     const [collectionObject, setCollectionObject] = useState<Collection>();
     const [featureTags, setFeatureTags] = useState<string[]>(["Name"]);
     const [isFeaturesEmpty, setIsFeaturesEmpty] = useState(false);
     const [isNameEmpty, setIsNameEmpty] = useState(false);
+
+    const [JWT, setJWT] = useState<string>('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -26,6 +31,19 @@ function NewCollectionForm(){
             setCollectionObject(new Collection(0, storedCollectionName, '', '', false));
         }
     }, []);
+
+    useEffect(() => {
+        const fetchToken = async () => {
+                try {
+                    const token = await fetchJWT();
+                    setJWT(token || '');
+                } catch (error) {
+                    console.error('Error fetching JWT');
+                }
+            }
+            fetchToken();
+            //console.log(JWT);
+  }, []);
 
     const handleContinue = async () => {
         if (collectionObject?.name === '') {
@@ -37,13 +55,40 @@ function NewCollectionForm(){
             return;
         }
 
-        // CALL API TO UPLOAD IMAGE HERE
+        const formData = new FormData();
+        if (imageUpload) {
+            formData.append('singularImage', imageUpload);
+
+            try {
+                const response = await fetch("http://localhost:3000/s3/upload", {
+                    method: 'POST',
+                    headers: {
+                    'Authorization': `Bearer ${JWT}`,},
+                    body: formData
+                });
+
+                if (response.ok) {
+                    console.log('Image uploaded successfully');
+                } else {
+                    console.error('Image upload failed');
+                }
+     
+                const data = await response.json();
+                console.log("url response as data: ", data);
+                localStorage.setItem('collectionImageURL', data.s3ImageUrl);
+
+                setImageURL(data.s3ImageUrl);
+            } catch (error) {
+                console.error('Error uploading image:', error);
+            }
+        }
 
         localStorage.setItem('collectionName', collectionObject?.name ?? '');
-        localStorage.setItem('collectionImageURL', collectionObject?.image_url ?? 'https://www.cssscript.com/wp-content/uploads/2020/09/Animated-Skeleton-Loading-Screens-In-Pure-CSS.jpg');
+        //localStorage.setItem('collectionImageURL', imageURL);
+        //console.log("set collection image url: ", imageURL);
         localStorage.setItem('collectionDescription', collectionObject?.description ?? '');
         localStorage.setItem('featureTags', featureTags.join(','));
-        console.log(collectionObject);
+        //console.log(collectionObject);
 
         navigate('/upload_collection_csv_page1');
     };
@@ -149,7 +194,7 @@ function NewCollectionForm(){
                     </svg>
                         Upload image
                     <input type="file" accept="image/*" id='uploadFile1' className="hidden" onChange={handleImageChange} />
-                    <p className="text-xs font-medium text-gray-400 mt-2">PNG, JPG SVG, WEBP, and GIF are Allowed.</p>
+                    <p className="text-xs font-medium text-gray-400 mt-2">PNG, or JPG Format Allowed.</p>
                 </label>
                 {/* Preview the selected image */}
             {imageUpload && (
