@@ -1,12 +1,60 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {collectables} = require('../config/schema');
+const {collectables, collectionUniverses, universeCollectables, collectableAttributes} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
 
 const router = express.Router();
 
 // Collectable CRUD APIs
+
+router.put('', async(req, res) => {
+
+  const {collection_id, attributes_json, isWishlist, universe_collectable_pic} = req.body;
+
+  /* attributes_json should have:
+  column for owned
+  column for image
+  column for each default attribute + custom attribute
+
+  */
+  if(!collection_id) {
+    console.log("Missing collection_id");
+    return res.status(404).send({ error: "Missing collection_id"});
+  }
+
+  try {
+    const fetchUniverseCollectionId = await db
+    .select({universe_collection_id: collectionUniverses.collection_universe_id})
+    .from(collectionUniverses)
+    .where(collectionUniverses.collection_id, collection_id)
+    .execute();
+
+    if(!fetchUniverseCollectionId) {
+      console.log("Could not find Universe Collection associated with collection");
+      return res.status(404).send({ error: "Could not find Universe Collection associated with collection"});
+    }
+
+    const collection_universe_id = fetchUniverseCollectionId[0].universe_collection_id;
+
+    const newUniverseCollectable = await db
+    .insert(universeCollectables)
+    .values({
+      collection_universe_id: collection_universe_id,
+      universe_collectable_pic: universe_collectable_pic,
+    })
+    .returning({ universe_collectable_id: universeCollectables.universe_collectable_id })
+    .execute();
+
+    const universe_collectable_id = newUniverseCollectable[0].universe_collectable_id;
+
+    
+
+  } catch (error) {
+    
+  }
+
+});
 
 // Create
 router.post('', async (req, res) => {
