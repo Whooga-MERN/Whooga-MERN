@@ -38,13 +38,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setSearchTags(searchTags.filter((t) => t !== tag));
   };
 
+  // clear all tags
   const handleResetTags = () => {
     setSearchTags([]);
   };
 
   return (
     <div className="flex flex-col justify-center mt-8">
-      {/* Search Bar */}
       <div className="relative items-center">
         {/* Dropdown Button */}
         <div className="absolute inset-y-0 left-0 flex items-center">
@@ -57,6 +57,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <IoMdArrowDropdown className="text-2xl pl-1" />
           </button>
         </div>
+
         {/* Input Box */}
         <input
           type="text"
@@ -66,6 +67,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           placeholder="What are you looking for today?"
           className="flex-grow border-none ring-1 ring-gray-200 w-96 p-4 rounded-lg pl-32"
         />
+
         {/* Search Button */}
         <button
           className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
