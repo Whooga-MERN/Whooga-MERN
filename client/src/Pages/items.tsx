@@ -47,18 +47,6 @@ const color = [
   "green",
 ];
 
-const formFields = [
-  { label: "Title", placeholder: "Collectible Name", type: "text" },
-  { label: "Tag ID", placeholder: "Tag ID", type: "text" },
-  { label: "Tag Owner", placeholder: "Tag Owner", type: "text" },
-  { label: "Created Date", placeholder: "Created Date", type: "text" },
-  {
-    label: "Description",
-    placeholder: "Collectible Description",
-    type: "textarea",
-  },
-];
-
 const tags = [
   {
     id: 1,
@@ -609,7 +597,7 @@ export default function HomePage() {
               </h2>
             )}
 
-            <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
+            <div className="flex md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
               <SearchBar
                 attributes={attributes}
@@ -620,7 +608,7 @@ export default function HomePage() {
               />
 
               {/* icon button for view*/}
-              <div className="hidden lg:block md:block">
+              <div className="hidden lg:block md:block pt-3 mt-3">
                 <button
                   className="inline-block pr-5"
                   onClick={() => setView("list")}
@@ -907,7 +895,8 @@ export default function HomePage() {
                                 : "text-md font-semibold pl-4 capitalize truncate"
                             }
                           >
-                            {` ${item[attribute] || ""}`}
+                            {/* Dynamically display attribute name and value */}
+                            {`${item[attribute] || ""}`}
                           </p>
                         ))}
 
@@ -968,7 +957,7 @@ export default function HomePage() {
                           <>
                             <label
                               htmlFor="cover-photo"
-                              className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300"
+                              className="block text-sm font-bold leading-6 text-gray-900 dark:text-gray-300"
                             >
                               Upload Photo
                             </label>
