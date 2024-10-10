@@ -553,7 +553,7 @@ export default function HomePage() {
     alert("An error occurred during the search. Please try again.");
   };
 
-  //------------------------------ add new collectible form -------------------------------
+  //--------------------- handle form field ------------------------
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
 
