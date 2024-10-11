@@ -24,6 +24,7 @@ import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
 import { buildPath } from "../utils/utils";
 import { fetchSearchResults } from "../utils/fetchSearchResults";
+import fetchUserLoginDetails from "../fetchUserLoginDetails";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -572,6 +573,24 @@ export default function HomePage() {
     closeModal();
   };
 
+  // --------------------- get userid----------========
+  const [userId, setUserId] = useState<any>(null);
+  //const [collectionId, setCollectionId] = useState<string>('');
+
+  useEffect(() => {
+    // user.loginId to get email
+    const fetchUserDetails = async () => {
+      try {
+        const user = await fetchUserLoginDetails();
+        setUserId(user || "");
+        console.log(userId);
+      } catch (error) {
+        console.error("Error Fetching User");
+      }
+    };
+    fetchUserDetails();
+  }, []);
+
   return (
     <>
       <div>
@@ -601,10 +620,10 @@ export default function HomePage() {
               {/* Search bar */}
               <SearchBar
                 attributes={attributes}
-                fetchSearchResults={(attribute, term) =>
-                  fetchSearchResults(attribute, term)
-                }
+                fetchSearchResults={(tags) => fetchSearchResults(tags, userId)}
                 handleError={handleError}
+                userId={userId}
+                // collectionId={currentCollectionId}
               />
 
               {/* icon button for view*/}
