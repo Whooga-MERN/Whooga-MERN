@@ -4,19 +4,28 @@ import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 
 interface SearchBarProps {
   attributes: string[];
-  fetchSearchResults: (attribute: string, searchTerm: string) => Promise<any>;
+  fetchSearchResults: (
+    tags: { attribute: string; term: string }[],
+    userId: string
+  ) => Promise<any>;
   handleError: (error: any) => void;
+  userId: string;
+  // collectionId: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   attributes,
+  userId,
+  // collectionId,
   fetchSearchResults,
   handleError,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>("Options");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const [searchTags, setSearchTags] = useState<string[]>([]);
+  const [searchTags, setSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
 
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
@@ -26,21 +35,47 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleEnterPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && searchTerm.trim()) {
       e.preventDefault();
-      const newTag = `${selectedOption}: ${searchTerm.trim()}`;
-      if (!searchTags.includes(newTag)) {
+      const newTag = { attribute: selectedOption, term: searchTerm.trim() };
+      if (
+        !searchTags.some(
+          (tag) =>
+            tag.attribute === newTag.attribute && tag.term === newTag.term
+        )
+      ) {
         setSearchTags([...searchTags, newTag]);
         setSearchTerm("");
       }
     }
   };
 
-  const deleteSearchTag = (tag: string) => {
-    setSearchTags(searchTags.filter((t) => t !== tag));
+  const deleteSearchTag = (tagToDelete: {
+    attribute: string;
+    term: string;
+  }) => {
+    setSearchTags(searchTags.filter((tag) => tag !== tagToDelete));
   };
 
   // clear all tags
   const handleResetTags = () => {
     setSearchTags([]);
+  };
+
+  const handleSearch = async () => {
+    if (searchTags.length === 0) {
+      alert("Please add at least one search tag.");
+      return;
+    }
+
+    // Log all attributes and corresponding search terms
+    searchTags.forEach((tag) => {
+      console.log(`Attribute: ${tag.attribute}, Search Term: ${tag.term}`);
+    });
+
+    try {
+      await fetchSearchResults(searchTags, userId);
+    } catch (error) {
+      handleError(error);
+    }
   };
 
   return (
@@ -71,9 +106,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         {/* Search Button */}
         <button
           className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
-          onClick={() => {
-            console.log("Search Button Clicked");
-          }}
+          onClick={handleSearch}
         >
           Search
           <FaMagnifyingGlass />
@@ -104,16 +137,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
             key={index}
             className="flex items-center bg-primary text-black font-semibold text-lg rounded-md pl-4 pr-2 py-1 mr-3 mt-2"
           >
-            {tag}
+            {`${tag.attribute}: ${tag.term}`}
             <button className="pl-4" onClick={() => deleteSearchTag(tag)}>
               <IoMdClose />
             </button>
           </div>
         ))}
 
+        {/* Reset Button */}
         {searchTags.length > 0 && (
           <button
-            className="ml-3 text-lg text-black bg-yellow-400 !important rounded-full px-4 py-2 mt-2"
+            className="ml-3 text-lg text-black bg-yellow-400 rounded-full px-4 py-2 mt-2"
             onClick={handleResetTags}
           >
             Reset
