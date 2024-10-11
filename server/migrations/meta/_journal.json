@@ -71,6 +71,13 @@
       "when": 1728414315177,
       "tag": "0009_nifty_unus",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1728678246549,
+      "tag": "0010_sour_inhumans",
+      "breakpoints": true
     }
   ]
 }

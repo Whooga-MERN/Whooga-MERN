@@ -35,13 +35,11 @@ const collectables = pgTable('collectables', {
   collection_id: serial('collection_id').notNull(),
   universe_collectable_id: serial('universe_collectable_id').notNull(),
   isWishlist: boolean('isWishlist').default(false).notNull(),
-  collectable_pic: varchar('collectable_pic', { length: 2048 })
 });
 
 const universeCollectables = pgTable('universeCollectables', {
   universe_collectable_id: serial('universe_collectable_id').primaryKey().notNull(),
   collection_universe_id: serial('collection_universe_id').notNull(),
-  universe_collectable_pic: varchar('universe_collectable_pic', { length: 2048} )
 });
 
 const collectableAttributes = pgTable('collectableAttributes', {

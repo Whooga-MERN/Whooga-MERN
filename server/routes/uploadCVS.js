@@ -138,7 +138,7 @@ router.post('', cpUpload, async (req, res) => {
             const universeCollectablesData = [];
             const collectableAttributesData = [];
             const ownedCollectable = [];
-            const ownedCollectableImage = [];
+            const mappedCollectableImage = [];
 
             let imageUrl = null
             for (const row of parsedCsvJsonData) {
@@ -148,13 +148,11 @@ router.post('', cpUpload, async (req, res) => {
                     imageUrl = imageObject.url;
                 
                 console.log("\nimageUrl: ", imageUrl);
+                mappedCollectableImage.push(imageUrl);
+
                 universeCollectablesData.push({
                     collection_universe_id: collectionUniverseID,
-                    universe_collectable_pic: imageUrl,
                 });
-
-                if(row.owned == 'T' && row.image)
-                    ownedCollectableImage.push(imageUrl);
             }
 
             // After data is packaged insert data into universeCollectables table
@@ -163,11 +161,10 @@ router.post('', cpUpload, async (req, res) => {
                 .returning({ universe_collectable_id: universeCollectables.universe_collectable_id });
 
             // Packages attributes information and then inserts into collectableAttributes
-            let j = 0
             newUniverseCollectables.forEach((collectable, index) => {
                 const universeCollectableID = collectable.universe_collectable_id;
                 const row = parsedCsvJsonData[index];
-
+                //collectable_pic: ownedCollectableImage[j]
                 // The owned should only be used for the collectables table. 
                 for (const [key, value] of Object.entries(row)) {
                     if (key !== 'owned' && key !== 'image') {
@@ -180,23 +177,19 @@ router.post('', cpUpload, async (req, res) => {
                         });
                     }
                     else if (key == 'owned' && value == 'T') {
-                        console.log(`row.image: ${row.image}`);
-                        console.log("ownedCollectableImage: ", ownedCollectableImage[j]);
-                        if(row.image) {
-                            ownedCollectable.push({
-                                collection_id: collectionID,
-                                universe_collectable_id: universeCollectableID,
-                                collectable_pic: ownedCollectableImage[j]
-                            })
-                            j++;
-                        }
-                        else {
-                            ownedCollectable.push({
-                                collection_id: collectionID,
-                                universe_collectable_id: universeCollectableID,
-                                collectable_pic: null
-                            })
-                        }
+                        ownedCollectable.push({
+                            collection_id: collectionID,
+                            universe_collectable_id: universeCollectableID,
+                        });
+                    }
+                    else if (key == 'image') {
+                        collectableAttributesData.push({
+                            universe_collectable_id: universeCollectableID,
+                            name: key,
+                            slug: key.toLowerCase().replace(/\s+/g, '_'),
+                            value: mappedCollectableImage[index],
+                            is_custom: false,
+                        });
                     }
                 }
             });

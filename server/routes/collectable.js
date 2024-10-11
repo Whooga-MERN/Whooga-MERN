@@ -8,9 +8,9 @@ const router = express.Router();
 
 // Collectable CRUD APIs
 
-router.put('', async(req, res) => {
+router.post('/newCollectable', async(req, res) => {
 
-  const {collection_id, attributes_json, isWishlist, universe_collectable_pic} = req.body;
+  const {collection_id, attributes_values_json, isWishlist, collectable_pic} = req.body;
 
   /* attributes_json should have:
   column for owned
@@ -41,14 +41,33 @@ router.put('', async(req, res) => {
     .insert(universeCollectables)
     .values({
       collection_universe_id: collection_universe_id,
-      universe_collectable_pic: universe_collectable_pic,
+      universe_collectable_pic: collectable_pic,
     })
     .returning({ universe_collectable_id: universeCollectables.universe_collectable_id })
     .execute();
 
     const universe_collectable_id = newUniverseCollectable[0].universe_collectable_id;
+    const row = attributes_values_json[0];
 
-    
+    for (const [key, value] of Object.entries(row)) {
+      if(key !== 'owned' && key !== 'image') {
+        collectable
+      }
+      else if (key == 'owned' && value == 'T') {
+        const newCollectable = await db
+        .insert(collectables)
+        .values({
+          collection_id: collection_id,
+          universe_collectable_id: universe_collectable_id,
+          collectable_pic: collectable_pic,
+          isWishlist: isWishlist
+        })
+        .execute();
+      }
+
+    }
+
+
 
   } catch (error) {
     
