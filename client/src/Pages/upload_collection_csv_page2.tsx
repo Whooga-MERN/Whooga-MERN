@@ -129,7 +129,9 @@ function UploadCollection() {
         formData.append('defaultAttributes', JSON.stringify(featureTags));
         formData.append('csvJsonData', JSON.stringify(jsonData));
         formData.append('email', user.loginId);
-        formData.append('collectableImages', JSON.stringify(images));
+        images.forEach((image, index) => {
+            formData.append('collectableImages', image);
+        });
 
         console.log('Request image:', collectionImageURL);
         try {

@@ -146,6 +146,7 @@ router.post('', cpUpload, async (req, res) => {
                 imageUrl = null
                 if(imageObject)
                     imageUrl = imageObject.url;
+                
                 console.log("\nimageUrl: ", imageUrl);
                 universeCollectablesData.push({
                     collection_universe_id: collectionUniverseID,
