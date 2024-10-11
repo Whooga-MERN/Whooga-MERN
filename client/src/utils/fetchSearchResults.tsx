@@ -1,16 +1,20 @@
 import { buildPath } from "./utils";
 
 export const fetchSearchResults = async (
-  attribute: string,
-  searchTerm: string
+  // attribute: string,
+  // searchTerm: string,
+  tags: { attribute: string; term: string }[],
+  userId: string,
+  collectionId: string
 ) => {
-  const lowerCaseAttribute = attribute.toLowerCase();
-  const lowerCasedSearchTerm = searchTerm.toLowerCase();
-  console.log("attribute: ", lowerCaseAttribute);
-  console.log("searchTerm: ", lowerCasedSearchTerm);
+  console.log("userid: ", userId);
+  console.log("conllectionid: ", collectionId);
 
-  const requestObj = { attribute, search: searchTerm };
+  // collectionId
+  const requestObj = { tags, userId, collectionId };
   const requestBody = JSON.stringify(requestObj);
+  // const requestObj = { attribute, search: searchTerm, userId };
+  // const requestBody = JSON.stringify(requestObj);
   console.log("SEARCH request: ", requestBody);
   try {
     const response = await fetch(buildPath("/search"), {

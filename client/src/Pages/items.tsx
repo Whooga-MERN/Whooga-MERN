@@ -24,6 +24,7 @@ import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
 import { buildPath } from "../utils/utils";
 import { fetchSearchResults } from "../utils/fetchSearchResults";
+import fetchUserLoginDetails from "../fetchUserLoginDetails";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -45,18 +46,6 @@ const color = [
   "grey",
   "black",
   "green",
-];
-
-const formFields = [
-  { label: "Title", placeholder: "Collectible Name", type: "text" },
-  { label: "Tag ID", placeholder: "Tag ID", type: "text" },
-  { label: "Tag Owner", placeholder: "Tag Owner", type: "text" },
-  { label: "Created Date", placeholder: "Created Date", type: "text" },
-  {
-    label: "Description",
-    placeholder: "Collectible Description",
-    type: "textarea",
-  },
 ];
 
 const tags = [
@@ -469,8 +458,6 @@ export default function HomePage() {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "grid">("grid");
 
-  const { collectionId } = useParams<{ collectionId: string }>();
-
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
   };
@@ -584,6 +571,28 @@ export default function HomePage() {
     closeModal();
   };
 
+  // --------------------- get user information -----------------
+  const [userId, setUserId] = useState<any>(null);
+  const { collectionId } = useParams<{ collectionId: string }>();
+
+  useEffect(() => {
+    // user.loginId to get email
+    const fetchUserDetails = async () => {
+      try {
+        const user = await fetchUserLoginDetails();
+        setUserId(user || "");
+        console.log(userId);
+      } catch (error) {
+        console.error("Error Fetching User");
+      }
+    };
+    fetchUserDetails();
+  }, []);
+
+  if (!collectionId) {
+    return <div>Error: Collection ID is missing!</div>;
+  }
+
   return (
     <>
       <div>
@@ -609,18 +618,20 @@ export default function HomePage() {
               </h2>
             )}
 
-            <div className="flex flex-col md:flex-row md:items-center justify-center gap-8 py-9 max-md:px-4">
+            <div className="flex md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
               <SearchBar
                 attributes={attributes}
-                fetchSearchResults={(attribute, term) =>
-                  fetchSearchResults(attribute, term)
+                fetchSearchResults={(tags) =>
+                  fetchSearchResults(tags, userId, collectionId)
                 }
                 handleError={handleError}
+                userId={userId}
+                collectionId={collectionId}
               />
 
               {/* icon button for view*/}
-              <div className="hidden lg:block md:block">
+              <div className="hidden lg:block md:block pt-3 mt-3">
                 <button
                   className="inline-block pr-5"
                   onClick={() => setView("list")}
@@ -656,7 +667,7 @@ export default function HomePage() {
 
                 {isModalOpen && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
                       <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
                         Create New Collectible
                       </h2>
@@ -907,7 +918,8 @@ export default function HomePage() {
                                 : "text-md font-semibold pl-4 capitalize truncate"
                             }
                           >
-                            {` ${item[attribute] || ""}`}
+                            {/* Dynamically display attribute name and value */}
+                            {`${item[attribute] || ""}`}
                           </p>
                         ))}
 
@@ -968,7 +980,7 @@ export default function HomePage() {
                           <>
                             <label
                               htmlFor="cover-photo"
-                              className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300"
+                              className="block text-sm font-bold leading-6 text-gray-900 dark:text-gray-300"
                             >
                               Upload Photo
                             </label>

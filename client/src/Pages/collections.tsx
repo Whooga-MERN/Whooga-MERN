@@ -54,13 +54,6 @@ import fetchJWT from '../fetchJWT';
 //   // },
 // ];
 
-function handleClick(collectionId: number) {
-  const navigate = useNavigate();
-  navigate(`/items/${collectionId}`);
-  console.log("clicked");
-
-}
-
 export default function Collections() {
 
   const [user, setUser] = useState<any>(null);
@@ -70,6 +63,7 @@ export default function Collections() {
   const [isUserFetched, setIsUserFetched] = useState(false);
   const [isTokenFetched, setIsTokenFetched] = useState(false);
   const [isUserIdFetched, setIsUserIdFetched] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -162,6 +156,11 @@ export default function Collections() {
       }
     }, [isUserIdFetched, userId, JWT]);
 
+    function handleClick(collectionId: number) {
+      navigate(`/items/${collectionId}`);
+      console.log("clicked collection");
+    }
+
     return (
         <>
         <Header />
@@ -197,7 +196,7 @@ export default function Collections() {
           </div>
         </div>
 
-        {/* collectibles */}
+        {/* collections */}
           <div className="w-full px-32">
             <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
               {collections.map((collection: any) => (

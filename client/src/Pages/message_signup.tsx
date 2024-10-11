@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function MessageSignup() {
   return (
     <>
@@ -88,9 +90,9 @@ export default function MessageSignup() {
               <br/>
               <br/>
               
-              <a href="#" className="font-semibold leading-6 text-yellow-600 hover:text-yellow-500">
-               View our Privacy Policy and Terms of Service.
-              </a> 
+              <Link to="/privacypolicy" className="font-semibold leading-6 text-yellow-600 hover:text-yellow-500">
+                View our Privacy Policy and Terms of Service.
+              </Link> 
             </p>
             
             
