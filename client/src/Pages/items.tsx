@@ -458,8 +458,6 @@ export default function HomePage() {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "grid">("grid");
 
-  const { collectionId } = useParams<{ collectionId: string }>();
-
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
   };
@@ -573,9 +571,9 @@ export default function HomePage() {
     closeModal();
   };
 
-  // --------------------- get userid----------========
+  // --------------------- get user information -----------------
   const [userId, setUserId] = useState<any>(null);
-  //const [collectionId, setCollectionId] = useState<string>('');
+  const { collectionId } = useParams<{ collectionId: string }>();
 
   useEffect(() => {
     // user.loginId to get email
@@ -590,6 +588,10 @@ export default function HomePage() {
     };
     fetchUserDetails();
   }, []);
+
+  if (!collectionId) {
+    return <div>Error: Collection ID is missing!</div>;
+  }
 
   return (
     <>
@@ -620,10 +622,12 @@ export default function HomePage() {
               {/* Search bar */}
               <SearchBar
                 attributes={attributes}
-                fetchSearchResults={(tags) => fetchSearchResults(tags, userId)}
+                fetchSearchResults={(tags) =>
+                  fetchSearchResults(tags, userId, collectionId)
+                }
                 handleError={handleError}
                 userId={userId}
-                // collectionId={currentCollectionId}
+                collectionId={collectionId}
               />
 
               {/* icon button for view*/}
