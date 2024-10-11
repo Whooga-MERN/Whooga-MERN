@@ -20,6 +20,9 @@ import UploadCollection2 from "./Pages/upload_collection_csv_page2.tsx";
 import Profile from "./Pages/profile.tsx";
 import MessageSignup from "./Pages/message_signup.tsx";
 import Wishlist from "./Pages/wishlist.tsx";
+import PrivacyPolicy from "./Pages/privacypolicy.tsx";
+import ContactUs from "./Pages/contactus.tsx";
+
 
 import "./custom-amplify-styles.css";
 import { QueryClient, QueryClientProvider } from "react-query";
@@ -48,6 +51,10 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/login" element={<Login />} />
           <Route path="/auth" element={<Authentication />} />
           <Route path="/message_signup" element={<MessageSignup />} />
+
+          {/* new routes for the Privacy Policy and Contact Us pages */}
+          <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+          <Route path="/contactus" element={<ContactUs />} />
 
           {/* authenticated routes */}
           <Route
