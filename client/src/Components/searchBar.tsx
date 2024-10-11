@@ -6,17 +6,18 @@ interface SearchBarProps {
   attributes: string[];
   fetchSearchResults: (
     tags: { attribute: string; term: string }[],
-    userId: string
+    userId: string,
+    collectionId: string
   ) => Promise<any>;
   handleError: (error: any) => void;
   userId: string;
-  // collectionId: string;
+  collectionId: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   attributes,
   userId,
-  // collectionId,
+  collectionId,
   fetchSearchResults,
   handleError,
 }) => {
@@ -72,7 +73,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     });
 
     try {
-      await fetchSearchResults(searchTags, userId);
+      await fetchSearchResults(searchTags, userId, collectionId);
     } catch (error) {
       handleError(error);
     }
