@@ -4,13 +4,14 @@ export const fetchSearchResults = async (
   // attribute: string,
   // searchTerm: string,
   tags: { attribute: string; term: string }[],
-  userId: string // collectionId: string
+  userId: string,
+  collectionId: string
 ) => {
   console.log("userid: ", userId);
-  // console.log("conllectionid: ", collectionId);
+  console.log("conllectionid: ", collectionId);
 
   // collectionId
-  const requestObj = { tags, userId };
+  const requestObj = { tags, userId, collectionId };
   const requestBody = JSON.stringify(requestObj);
   // const requestObj = { attribute, search: searchTerm, userId };
   // const requestBody = JSON.stringify(requestObj);
