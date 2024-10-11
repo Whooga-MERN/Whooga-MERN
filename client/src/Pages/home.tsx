@@ -3,19 +3,30 @@ import { GiPostStamp } from "react-icons/gi";
 import { PiScanSmiley } from "react-icons/pi";
 import { MdSecurity } from "react-icons/md";
 
-export default function home() {
+export default function Home() {
   return (
     <>
-      {/* TOP */}
-      <div className="relative">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="pt-28 pb-16 md:pt-40 md:pb-20">
-            {/* Hero content */}
-            <div className="max-w-3xl mx-auto text-center">
-              <p className="text-6xl md:text-7xl lg:text-8xl  mb-8 font-semibold text-opacity-85">
-                Take Control of Your Collection
-              </p>
-              <div>
+      {/* DETAIL */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="py-10 md:py-18">
+          {/* Section content */}
+          <div className="max-w-xl mx-auto md:max-w-none flex flex-col md:flex-row md:space-x-8 lg:space-x-16 xl:space-x-20 space-y-8 space-y-reverse md:space-y-0">
+            {/* Keep collection in hand */}
+            <div className="md:w-7/12 lg:w-1/2 order-1 md:order-none">
+              <div className="pt-10">
+                <h1 className="pb-10 font-cabinet-grotesk text-6xl font-extrabold mb-3">
+                  Organize, Track, and Treasure Your Collections
+                </h1>
+                <p className="text-lg">
+                  Welcome to WHOOGA, the ultimate platform for collectors!
+                  Whether you're passionate about sports cards, coins, stamps,
+                  or any other type of collectible, WHOOGA is designed to
+                  enhance and streamline your collecting experience like never
+                  before.
+                </p>
+              </div>
+              {/* Move Get Started Button Here */}
+              <div className="mt-6 text-center">
                 <Link
                   className="btn inline-flex items-center text-white bg-yellow-400 hover:bg-yellow-500 group"
                   to="/auth"
@@ -32,31 +43,6 @@ export default function home() {
                     </svg>
                   </span>
                 </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* TOP END */}
-
-      {/* DETAIL */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="py-10 md:py-18">
-          {/* Section content */}
-          <div className="max-w-xl mx-auto md:max-w-none flex flex-col md:flex-row md:space-x-8 lg:space-x-16 xl:space-x-20 space-y-8 space-y-reverse md:space-y-0">
-            {/* keep collection in hand */}
-            <div className="md:w-7/12 lg:w-1/2 order-1 md:order-none">
-              <div className="pt-10">
-                <h1 className="pb-10 font-cabinet-grotesk text-6xl font-extrabold mb-3">
-                  Organize, Track, and Treasure Your Collections
-                </h1>
-                <p className="text-lg">
-                  Welcome to WHOOGA, the ultimate platform for collectors!
-                  Whether you're passionate about sports cards, coins, stamps,
-                  or any other type of collectible, WHOOGA is designed to
-                  enhance and streamline your collecting experience like never
-                  before.
-                </p>
               </div>
             </div>
 
@@ -113,7 +99,7 @@ export default function home() {
                   <MdSecurity />
                 </div>
                 <h3 className="font-cabinet-grotesk font-bold text-2xl">
-                  Safty
+                  Safety
                 </h3>
               </div>
             </div>
