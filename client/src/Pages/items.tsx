@@ -663,7 +663,7 @@ export default function HomePage() {
 
                 {isModalOpen && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
                       <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
                         Create New Collectible
                       </h2>
