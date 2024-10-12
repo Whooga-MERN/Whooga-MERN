@@ -33,10 +33,6 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
 app.use('/collectable-attributes', attributeRouter);
 
 app.use('/collection-universe', universeRouter);
@@ -54,3 +50,7 @@ app.use('/collectable-attribute', collectableAttributeRouter);
 app.use('/user', userRouter);
 
 app.use('/s3', s3Router);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

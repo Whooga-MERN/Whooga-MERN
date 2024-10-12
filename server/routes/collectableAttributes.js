@@ -3,42 +3,41 @@ const {db, pool} = require('../config/db');
 const {collections, collectionUniverses} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
-const { authenticateJWTToken } = require("../middleware/verifyJWT");
+//const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
-router.use(authenticateJWTToken);
+//router.use(authenticateJWTToken);
 
-router.get('/:id', async (req, res) => {
-    const collectionId = parseInt(req.params.id);
+router.get('/:collectionId', async (req, res) => {
+    const { collectionId } = req.params;
     try {
-      const result = await db.select().from(collections).innerJoin
-      (collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id)).where
-      (eq(collections.collection_id, collectionId));
-      /*const result = await db.(`
-        SELECT * 
-        FROM collections 
-        INNER JOIN collectionUniverses 
-        ON collections.collection_universe_id = collectionUniverses.collection_universe_id 
-        WHERE collections.collection_id = ${collectionId}
-      `);*/
-  
-      if (result.length === 0) {
-        return res.status(404).json({ message: 'Collection not found' });
-      }
-  
-      // Extracting custom_attributes and default_attributes
-      const response = result.map(item => ({
-        default_attributes: item.collectionUniverses.default_attributes,
-        custom_attributes: item.collections.custom_attributes,
-      }));
-  
-      const firstItem = result[0];
-      const combinedAttributes = {
-        ...firstItem.collectionUniverses.default_attributes,
-        ...firstItem.collections.custom_attributes,
-      };
-  
-      res.json(combinedAttributes);
+      const attributesQuery = await db
+        .select({          
+          custom_attributes: collections.custom_attributes,
+          default_attributes: collectionUniverses.default_attributes
+        })
+        .from(collections)
+        .innerJoin
+        (collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id))
+        .where
+        (eq(collections.collection_id, collectionId));
+      
+        let customAttributes = [];
+        let defaultAttributes = [];
+        if(attributesQuery.length > 0) {
+          customAttributes = attributesQuery[0].custom_attributes;
+          defaultAttributes = attributesQuery[0].default_attributes;
+          console.log("customAttributes: ", customAttributes);
+          console.log("defaultAttributes: ", defaultAttributes);
+        }
+        else {
+          res.status(404).send("Did not find custom and default attributes");
+        }
+
+        const combinedAttributes = [...customAttributes, ...defaultAttributes];
+
+        console.log("combinedAttributes ", combinedAttributes);
+        res.json(combinedAttributes);
     } catch (error) {
       console.error('Error:', error);
       res.status(500).json({ message: 'Internal Server Error' });

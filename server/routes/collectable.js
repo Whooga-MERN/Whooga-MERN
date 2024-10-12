@@ -132,6 +132,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
 
       let customAttributeInsert = [];
       let defaultAttributeInsert = [];
+      let insertValue = null;
       // Create Attributes
       console.log("Creating attributes\n");
       if (row.owned === 'T') {
@@ -148,6 +149,11 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         
         for (const[key, value] of Object.entries(row)) {
 
+          if(!value)
+            insertValue = "empty";
+          else
+            insertValue = value;
+
           if(key != "owned") {
             if(customAttributes.includes(key)) {
               customAttributeInsert.push({
@@ -156,7 +162,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
-                value: value,
+                value: insertValue,
                 is_custom: true
               });
             }
@@ -167,7 +173,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
-                value: value,
+                value: insertValue,
                 is_custom: false
               });
             }
@@ -177,7 +183,10 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       else {
         for (const[key, value] of Object.entries(row)) {
           if(key != "owned") {
-
+            if(!value)
+              insertValue = "empty";
+            else
+              insertValue = value;
             if(customAttributes.includes(key)) {
               customAttributeInsert.push({
                 collection_id: collection_id,
@@ -185,7 +194,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
-                value: value,
+                value: insertValue,
                 is_custom: true
               });
             }
@@ -196,7 +205,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
-                value: value,
+                value: insertValue,
                 is_custom: false
               });
             }
