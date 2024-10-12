@@ -3,27 +3,66 @@ const {db, pool} = require('../config/db');
 const {collectables, collectionUniverses, universeCollectables, collectableAttributes} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
+const fs = require('fs');
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+
 
 const router = express.Router();
 
+const uploadsDir = path.join(__dirname, "../temporary_image_storage");
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir); 
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadsDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
+
+
 // Collectable CRUD APIs
 
-router.post('/newCollectable', async(req, res) => {
+router.post('/newCollectable', upload.single('collectableImage'), async(req, res) => {
+
+  /* attributes_json should have:
+    column for owned
+    column for image
+    column for each default attribute + custom attribute
+  */
 
   const {collection_id, attributes_values_json, isWishlist, collectable_pic} = req.body;
 
-  /* attributes_json should have:
-  column for owned
-  column for image
-  column for each default attribute + custom attribute
+  image = req.file;
 
-  */
+  if(!image)
+    return res.status(404).send({ error: 'No Image Given' });
+
   if(!collection_id) {
     console.log("Missing collection_id");
     return res.status(404).send({ error: "Missing collection_id"});
   }
 
   try {
+    const fileContent = fs.readFileSync(image.path);
+    const uniqueFilename = `${uuid4()}-${image.orginalname}`;
+
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: uniqueFilename,
+      Body: fileContent,
+      ContentType: image.mimetype
+  };
+
     const fetchUniverseCollectionId = await db
     .select({universe_collection_id: collectionUniverses.collection_universe_id})
     .from(collectionUniverses)
