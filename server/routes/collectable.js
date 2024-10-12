@@ -100,7 +100,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .innerJoin(collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id))
         .where(eq(collections.collection_id, collection_id))
         .execute();
-      console.log("flag A");
+
 
       let customAttributes = [];
       let defaultAttributes = [];
@@ -129,6 +129,9 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       const universe_collectable_id = newUniverseCollectable[0].universe_collectable_id;
       const row = parsedAttributeValues;
       console.log("row\n", row);
+
+      let customAttributeInsert = [];
+      let defaultAttributeInsert = [];
       // Create Attributes
       console.log("Creating attributes\n");
       if (row.owned === 'T') {
@@ -147,9 +150,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
 
           if(key != "owned") {
             if(customAttributes.includes(key)) {
-              await trx
-              .insert(collectableAttributes)
-              .values({
+              customAttributeInsert.push({
                 collection_id: collection_id,
                 collectable_id: newCollectable[0].collectable_id,
                 universe_collectable_id: universe_collectable_id,
@@ -157,13 +158,10 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
                 value: value,
                 is_custom: true
-              })
-              .execute();
+              });
             }
             else {
-              await trx
-              .insert(collectableAttributes)
-              .values({
+              defaultAttributeInsert.push({
                 collection_id: null,
                 collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
@@ -171,8 +169,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
                 value: value,
                 is_custom: false
-              })
-              .execute();
+              });
             }
           }
         }
@@ -182,9 +179,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
           if(key != "owned") {
 
             if(customAttributes.includes(key)) {
-              await trx
-              .insert(collectableAttributes)
-              .values({
+              customAttributeInsert.push({
                 collection_id: collection_id,
                 collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
@@ -192,13 +187,10 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
                 value: value,
                 is_custom: true
-              })
-              .execute();
+              });
             }
             else {
-              await trx
-              .insert(collectableAttributes)
-              .values({
+              defaultAttributeInsert.push({
                 collection_id: null,
                 collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
@@ -206,12 +198,26 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
                 value: value,
                 is_custom: false
-              })
-              .execute();
+              });
             }
           }
         }
       }
+
+      console.log("customAttributeInsert.length: ", customAttributeInsert.length);
+      if(customAttributeInsert.length > 0) {
+        await trx.insert(collectableAttributes)
+        .values(customAttributeInsert)
+        .execute();
+      }
+      
+      console.log("defaultAttributeInsert.length: ", defaultAttributeInsert.length);
+      if(defaultAttributeInsert.length > 0) {
+        await trx.insert(collectableAttributes)
+        .values(defaultAttributeInsert)
+        .execute();
+      }
+
 
       //Insert the image row
       if(imageUrl) {
