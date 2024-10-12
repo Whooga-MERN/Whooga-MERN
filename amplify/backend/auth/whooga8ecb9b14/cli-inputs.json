@@ -1,10 +1,10 @@
 {
   "version": "1",
   "cognitoConfig": {
-    "identityPoolName": "whooga4380886d_identitypool_4380886d",
+    "identityPoolName": "whooga8ecb9b14_identitypool_8ecb9b14",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "whooga4380886d",
-    "userPoolName": "whooga4380886d_userpool_4380886d",
+    "resourceNameTruncated": "whooga8ecb9b14",
+    "userPoolName": "whooga8ecb9b14_userpool_8ecb9b14",
     "autoVerifiedAttributes": [
       "email"
     ],
@@ -20,7 +20,6 @@
     "passwordPolicyMinLength": 8,
     "passwordPolicyCharacters": [],
     "requiredAttributes": [
-      "birthdate",
       "email",
       "name",
       "phone_number"
@@ -34,10 +33,10 @@
     "userpoolClientReadAttributes": [
       "email"
     ],
-    "userpoolClientLambdaRole": "whooga4380886d_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "whooga8ecb9b14_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "4380886d",
-    "resourceName": "whooga4380886d",
+    "sharedId": "8ecb9b14",
+    "resourceName": "whooga8ecb9b14",
     "authSelections": "identityPoolAndUserPool",
     "useDefault": "default",
     "usernameAttributes": [

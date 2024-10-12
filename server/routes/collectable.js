@@ -106,7 +106,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       let defaultAttributes = [];
       if(attributesQuery.length > 0) {
         customAttributes = attributesQuery[0].custom_attributes;
-        defaultAttributes = attributesQuery[0].default_attributes
+        defaultAttributes = attributesQuery[0].default_attributes;
         console.log("customAttributes: ", customAttributes);
         console.log("defaultAttributes: ", defaultAttributes);
       }

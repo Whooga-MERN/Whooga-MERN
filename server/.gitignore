@@ -25,4 +25,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/lambdas
 
