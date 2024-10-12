@@ -38,7 +38,7 @@ async function createS3File(image) {
     return imageUrl[0];
 }
 
-async function deleteSingularS3File(imageUrl) {
+async function deleteS3File(imageUrl) {
 // Cleanup: Delete uploaded files from S3
     const filename = imageUrl.split('/').pop();
     const params = {
@@ -51,10 +51,11 @@ async function deleteSingularS3File(imageUrl) {
         console.log(`File ${filename} deleted from S3`);
     } catch (error) {
         console.error(('Error deleting file from S3:', deleteError));
+        throw error;
     }
 }
 
 module.exports = {
     createS3File,
-    deleteSingularS3File
+    deleteS3File
 };
