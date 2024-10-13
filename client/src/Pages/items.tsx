@@ -565,24 +565,19 @@ export default function HomePage() {
   // handle form submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // form data for submission
-    // const submittedData: Record<string, any> = {
-    //   ...formData,
-    //   image: imageFile,
-    // };
-
     const request = new FormData();
-    if (imageFile) {
-      request.append("collectablePic", imageFile);
-    }
+    
     if (collectionId) {
-      request.append("collectionId", collectionId);
+      request.append("collection_id", collectionId);
     } else {
       console.error("Collection ID is undefined");
       return;
     }
-    request.append("attributesValuesJson", JSON.stringify(formData));
+    request.append("attributes_values_json", JSON.stringify(formData));
     request.append("isWishlist", isNewCollectableWishlist ? "true" : "false");
+    if (imageFile) {
+      request.append("collectableImage", imageFile);
+    }
 
     logFormData(request);
 
@@ -592,11 +587,16 @@ export default function HomePage() {
           method: "POST",
           body: request,
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${JWT}`,
           },
         }
       )
+
+      if (response.ok) {
+        console.log("Form submitted successfully");
+      } else {
+        console.error("Error submitting form:", response);
+      }
     }
     catch (error) {
       console.error("Error submitting form:", error);
@@ -659,6 +659,7 @@ export default function HomePage() {
         }
     };
     getAttributes();
+    console.log(collectionId);
   }, []);
 
   if (!collectionId) {
