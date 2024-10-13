@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import _, { debounce, set } from "lodash";
+import _, { debounce, get, set } from "lodash";
 import {
   FaListUl,
   FaRegEdit,
@@ -25,6 +25,7 @@ import SearchBar from "../Components/searchBar";
 import { buildPath } from "../utils/utils";
 import { fetchSearchResults } from "../utils/fetchSearchResults";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
+import fetchJWT from "../fetchJWT";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -435,6 +436,7 @@ export default function HomePage() {
   // add collectible form modal open handler
   const openModal = () => {
     setIsModalOpen(true);
+    console.log("attributes", favoriteAttributes.concat(customAttributes));
   };
 
   const closeModal = () => {
@@ -543,6 +545,7 @@ export default function HomePage() {
   //--------------------- handle form field ------------------------
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isNewCollectableWishlist, setIsNewCollectableWishlist] = useState<boolean>(false);
 
   // handle form field change
   const handleChange = (
@@ -560,23 +563,66 @@ export default function HomePage() {
   };
 
   // handle form submit
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // form data for submission
-    const submittedData = {
-      ...formData,
-      image: imageFile,
-    };
-    console.log("Submitted data:", submittedData);
+    // const submittedData: Record<string, any> = {
+    //   ...formData,
+    //   image: imageFile,
+    // };
+
+    const request = new FormData();
+    if (imageFile) {
+      request.append("collectablePic", imageFile);
+    }
+    if (collectionId) {
+      request.append("collectionId", collectionId);
+    } else {
+      console.error("Collection ID is undefined");
+      return;
+    }
+    request.append("attributesValuesJson", JSON.stringify(formData));
+    request.append("isWishlist", isNewCollectableWishlist ? "true" : "false");
+
+    logFormData(request);
+
+    try {
+      const response = await fetch("http://localhost:3000/collectable/newCollectable",
+        {
+          method: "POST",
+          body: request,
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      )
+    }
+    catch (error) {
+      console.error("Error submitting form:", error);
+    }
+
     closeModal();
   };
 
+  const logFormData = (formData: FormData) => {
+  const formDataEntries: Record<string, any> = {};
+  formData.forEach((value, key) => {
+    formDataEntries[key] = value;
+  });
+  console.log("FormData Contents:", formDataEntries);
+};
+
   // --------------------- get user information -----------------
   const [userId, setUserId] = useState<any>(null);
+  const [JWT, setJWT] = useState<string>("");
   const { collectionId } = useParams<{ collectionId: string }>();
+  const [customAttributes, setCustomAttributes] = useState<string[]>([]);
+  const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
+  const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
 
   useEffect(() => {
-    // user.loginId to get email
+    // user.loginId to get email, get attributes, and get JWT
     const fetchUserDetails = async () => {
       try {
         const user = await fetchUserLoginDetails();
@@ -587,6 +633,32 @@ export default function HomePage() {
       }
     };
     fetchUserDetails();
+
+    const fetchToken = async () => {
+      try {
+        const token = await fetchJWT();
+        setJWT(token || "");
+      } catch (error) {
+        console.error("Error fetching JWT");
+      }
+    };
+    fetchToken();
+
+    const getAttributes = async () => {
+      const storedCustomeAttributes = localStorage.getItem('customAttributes');
+      const storedFavoriteAttributes = localStorage.getItem("favoriteAttributes");
+      const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
+        if (storedCustomeAttributes) {
+            setCustomAttributes(JSON.parse(storedCustomeAttributes));
+        }
+        if (storedFavoriteAttributes) {
+            setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
+        }
+        if (storedHiddenAttributes) {
+            setHiddenAttributes(JSON.parse(storedHiddenAttributes));
+        }
+    };
+    getAttributes();
   }, []);
 
   if (!collectionId) {
@@ -673,7 +745,7 @@ export default function HomePage() {
                       </h2>
 
                       <form onSubmit={handleSubmit}>
-                        {attributes.map((attribute, index) => (
+                        {(favoriteAttributes.concat(customAttributes).concat("image").filter(attr => attr !== null)).map((attribute, index) => (
                           <div key={index} className="mb-4 lg:max-w-lg">
                             {attribute !== "image" ? (
                               <>
