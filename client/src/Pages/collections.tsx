@@ -62,6 +62,9 @@ export default function Collections() {
   const [JWT, setJWT] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const [collections, setCollections] = useState<any[]>([]);
+  const [customAttributes, setCustomAttributes] = useState<string>('');
+  const [favoriteAttributes, setFavoriteAttributes] = useState<string>('');
+  const [hiddenAttributes, setHiddenAttributes] = useState<string>('');
   const [isUserFetched, setIsUserFetched] = useState(false);
   const [isTokenFetched, setIsTokenFetched] = useState(false);
   const [isUserIdFetched, setIsUserIdFetched] = useState(false);
@@ -143,7 +146,6 @@ export default function Collections() {
           const errorData = await response.json();
           throw new Error(errorData.error);
         }
-
         const data = await response.json();
         console.log("collections as data: ", data);
         console.log("1st collection:", data[0].collection_pic);
@@ -156,11 +158,14 @@ export default function Collections() {
               image_url: col.collection_pic,
               description: "",
               newListing: false,
+              customAttributes: col.custom_attributes,
+              favoriteAttributes: col.favorite_attributes,
+              hiddenAttributes: col.hidden_attributes,
             };
           })
         );
 
-        console.log("Collections as collection:", collections);
+        //console.log("Collections as collection:", collections);
       };
 
       fetchCollections();
@@ -168,8 +173,16 @@ export default function Collections() {
   }, [isUserIdFetched, userId, JWT]);
 
   function handleClick(collectionId: number) {
-    navigate(`/items/${collectionId}`);
-    console.log("clicked collection");
+    const collection = collections.find(col => col.id === collectionId);
+    if (collection) {
+        localStorage.setItem("customAttributes", JSON.stringify(collection.customAttributes));
+        localStorage.setItem("favoriteAttributes", JSON.stringify(collection.favoriteAttributes));
+        localStorage.setItem("hiddenAttributes", JSON.stringify(collection.hiddenAttributes));
+        navigate(`/items/${collectionId}`);
+        console.log("clicked collection");
+    } else {
+        console.error("Collection not found");
+    }
   }
 
   // ------------------------- search --------------------------
