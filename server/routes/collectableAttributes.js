@@ -98,7 +98,10 @@ router.get('/custom-attributes/:collectionId', async (req, res) => {
 
   let custom_attributes = [];
   if(customAttributesQuery.length > 0)
+  {
+    console.log("found custom attributes");
     custom_attributes = customAttributesQuery[0].custom_attributes;
+  }
   else
     return res.status(404).json({ error: "Did not find custom attributes"});
   
@@ -112,6 +115,7 @@ router.get('/attributes-with-hidden/:collectionId', async (req, res) => {
   if(!collectionId || isNaN(collectionId))
     return res.status(400).json({ message: "Invalid input for collectionId"});
 
+  console.log("collectionId: ", collectionId);
   console.log("Searching for, custom, hidden and default attributes...");
   const attributesQuery = await db
   .select({
@@ -120,10 +124,10 @@ router.get('/attributes-with-hidden/:collectionId', async (req, res) => {
     default_attributes: collectionUniverses.default_attributes
   })
   .from(collections)
-  .innerJoin(collectionUniverses, eq(collections.collection_id, collectionUniverses.collection_id))
+  .innerJoin(collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id))
   .where(eq(collectionId, collections.collection_id));
 
-  console.log("Query Finished");
+  console.log("Query Finished");  
   let customAttributes = [];
   let hiddenAttributes = [];
   let defaultAttributes = [];
@@ -133,20 +137,25 @@ router.get('/attributes-with-hidden/:collectionId', async (req, res) => {
     hiddenAttributes = attributesQuery.hidden_attributes;
     default_attributes = attributesQuery.defaultAttributes;
   }
+  console.log(customAttributes);
+  console.log(hiddenAttributes);
+  console.log(defaultAttributes);
 
   if(!customAttributes && !hiddenAttributes) {
+    console.log("CustomAttributes and Hidden attributes are null\n");
     console.log("Combined Attributes: ", defaultAttributes);
     return res.status(200).json(defaultAttributes);
   }
 
   if(!hiddenAttributes) {
+    console.log("Hidden attributes are null\n");
     combinedAttributes = [...defaultAttributes, ...customAttributes];
     console.log("Combined Atributes: ", combinedAttributes);
     return res.status(200).json(combinedAttributes);
   }
 
   if(!customAttributes) {
-    combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includs(attr));
+    combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
     console.log("Combined Attributes: ", combinedAttributes);
     return res.status(200).json(combinedAttributes);
   }

@@ -111,7 +111,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         console.log("defaultAttributes: ", defaultAttributes);
       }
       else {
-        res.status(404).send("Did not find custom and default attributes");
+        return res.status(404).send("Did not find custom and default attributes");
       }
 
       // Create Universe Collectable
@@ -155,18 +155,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             insertValue = value;
 
           if(key != "owned") {
-            if(customAttributes.includes(key)) {
-              customAttributeInsert.push({
-                collection_id: collection_id,
-                collectable_id: newCollectable[0].collectable_id,
-                universe_collectable_id: universe_collectable_id,
-                name: key,
-                slug: key.toLowerCase().replace(/\s+/g, '_'),
-                value: insertValue,
-                is_custom: true
-              });
-            }
-            else {
+            if(defaultAttributes.includes(key)) {
               defaultAttributeInsert.push({
                 collection_id: null,
                 collectable_id: null,
@@ -175,6 +164,17 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
                 value: insertValue,
                 is_custom: false
+              });
+            }
+            else {
+              customAttributeInsert.push({
+                collection_id: collection_id,
+                collectable_id: newCollectable[0].collectable_id,
+                universe_collectable_id: universe_collectable_id,
+                name: key,
+                slug: key.toLowerCase().replace(/\s+/g, '_'),
+                value: insertValue,
+                is_custom: true
               });
             }
           }
@@ -187,7 +187,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
               insertValue = "empty";
             else
               insertValue = value;
-            if(customAttributes.includes(key)) {
+            if(defaultAttributes.includes(key)) {
               customAttributeInsert.push({
                 collection_id: collection_id,
                 collectable_id: null,
@@ -199,14 +199,14 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
               });
             }
             else {
-              defaultAttributeInsert.push({
-                collection_id: null,
+              customAttributeInsert.push({
+                collection_id: collection_id,
                 collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
                 value: insertValue,
-                is_custom: false
+                is_custom: true
               });
             }
           }
@@ -258,7 +258,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .execute();
       }
 
-      res.status(200).send({ message: 'Collectable created successfully' });
+      return res.status(200).send({ message: 'Collectable created successfully' });
   }) } catch (error) {
     console.log(error);
     
@@ -266,10 +266,10 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       if(imageUrl)
         await deleteS3File(imageUrl);
     } catch (error) {
-      res.status(500).send({ error: 'Failed to create new collectable... Failed to delete new S3 Image'});
+      return res.status(500).send({ error: 'Failed to create new collectable... Failed to delete new S3 Image'});
     }
 
-    res.status(500).send({ error: 'Failed to create new collectable'});
+    return res.status(500).send({ error: 'Failed to create new collectable'});
   }
 
 });
