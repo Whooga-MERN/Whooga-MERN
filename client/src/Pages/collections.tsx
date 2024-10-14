@@ -154,7 +154,7 @@ export default function Collections() {
           data.map((col: any) => {
             return {
               name: col.name,
-              id: col.collection_universe_id,
+              id: col.collection_id,
               image_url: col.collection_pic,
               description: "",
               newListing: false,
@@ -174,6 +174,7 @@ export default function Collections() {
 
   function handleClick(collectionId: number) {
     const collection = collections.find(col => col.id === collectionId);
+    console.log("collection upon being clicked: ", collection);
     if (collection) {
         localStorage.setItem("customAttributes", JSON.stringify(collection.customAttributes));
         localStorage.setItem("favoriteAttributes", JSON.stringify(collection.favoriteAttributes));
@@ -272,45 +273,49 @@ export default function Collections() {
       {/* collections */}
       <div className="w-full px-32">
         <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
-          {collections.map((collection: any) => (
-            <div key={collection.id}>
-              <div
-                className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                onClick={() => handleClick(collection.id)}
-              >
+          {collections.length > 0 ? (
+            collections.map((collection: any) => (
+              <div key={collection.id}>
                 <div
-                  style={{
-                    right: "3%",
-                    bottom: "97%",
-                    position: "absolute",
-                  }}
+                  className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
+                  onClick={() => handleClick(collection.id)}
                 >
-                  {collection.newListing ? (
-                    <div className="badge h-8 text-lg font-bold badge-primary">
-                      WHOOGA!
-                    </div>
-                  ) : (
-                    ""
-                  )}
-                </div>
-                <figure style={{ aspectRatio: "1 / 1" }}>
-                  <img
-                    className="object-cover w-full h-full rounded-t-lg border-b-2"
+                  <div
                     style={{
-                      height: "95%",
-                      width: "95%",
-                      aspectRatio: "1 / 1",
+                      right: "3%",
+                      bottom: "97%",
+                      position: "absolute",
                     }}
-                    src={collection.image_url}
-                    alt={collection.name}
-                  />
-                </figure>
-                <div className="card-body">
-                  <h2 className="card-title">{collection.name}</h2>
+                  >
+                    {collection.newListing ? (
+                      <div className="badge h-8 text-lg font-bold badge-primary">
+                        WHOOGA!
+                      </div>
+                    ) : (
+                      ""
+                    )}
+                  </div>
+                  <figure style={{ aspectRatio: "1 / 1" }}>
+                    <img
+                      className="object-cover w-full h-full rounded-t-lg border-b-2"
+                      style={{
+                        height: "95%",
+                        width: "95%",
+                        aspectRatio: "1 / 1",
+                      }}
+                      src={collection.image_url}
+                      alt={collection.name}
+                    />
+                  </figure>
+                  <div className="card-body">
+                    <h2 className="card-title">{collection.name}</h2>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center">No collections found</div>
+          )}
         </div>
       </div>
       <Footer />
