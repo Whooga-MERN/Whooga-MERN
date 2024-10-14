@@ -1,6 +1,6 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const { db, pool } = require('../config/db');
-const {collectionUniverses} = require('../config/schema');
+const {collectionUniverses, collections} = require('../config/schema');
 const express = require('express');
 const { eq, ilike, and } = require('drizzle-orm');
 // const { authenticateJWTToken } = require("../middleware/verifyJWT");
@@ -19,10 +19,14 @@ router.get('', async (req, res) => {
 
     const items = await db
         .select()
-        .from(collectionUniverses)
+        .from(collections)
+        .innerJoin(
+            collectionUniverses,
+            eq(collections.collection_universe_id, collectionUniverses.collection_universe_id)
+        )
         .where(
             and(
-                eq(collectionUniverses.user_id, userId),
+                eq(collections.user_id, userId),
                 ilike(collectionUniverses.name, `%${searchTerm}%`)
             )
         );
