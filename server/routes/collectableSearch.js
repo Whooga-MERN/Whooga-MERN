@@ -11,7 +11,7 @@ const router = express.Router();
 // Collectable Search APIs
 
 router.get('', async (req, res) => {
-    const {collectionId, attributeToSearch, searchTerm} = req.body;
+    const {collectionId, attributeToSearch, searchTerm} = req.query;
 
     if (!searchTerm || !attributeToSearch || !collectionId) {
         return res.status(400).send({error: 'Missing a request parameter'});

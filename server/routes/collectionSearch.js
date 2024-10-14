@@ -11,7 +11,7 @@ const router = express.Router();
 // Collection Search APIs
 
 router.get('', async (req, res) => {
-    const {userId, searchTerm} = req.body;
+    const {userId, searchTerm} = req.query;
 
     if (!userId || !searchTerm) {
         return res.status(400).send({error: 'Missing a request parameter'});
