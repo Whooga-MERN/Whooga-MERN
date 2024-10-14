@@ -1,0 +1,1 @@
+ALTER TABLE "wishlit" RENAME TO "wishlist";

@@ -13,6 +13,7 @@ const uploadCSVRouter = require('./routes/uploadCVS');
 const collectableAttributeRouter = require('./routes/collectableAttribute');
 const userRouter = require('./routes/user');
 const s3Router = require('./routes/s3Bucket');
+const wishlist = require('./routes/wishlist');
 /*const { drizzle } = require('drizzle-orm');
 const { pgAdapter } = require('drizzle-orm-pg');
 const pg = require('pg');*/
@@ -50,6 +51,8 @@ app.use('/collectable-attribute', collectableAttributeRouter);
 app.use('/user', userRouter);
 
 app.use('/s3', s3Router);
+
+app.use('/wishlist', wishlist);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -1,4 +1,4 @@
-const { pgTable, serial, varchar, date, jsonb, boolean, } = require("drizzle-orm/pg-core");
+const { pgTable, serial, varchar, date, jsonb, boolean, text, } = require("drizzle-orm/pg-core");
 
 const users = pgTable('users', {
   user_id: serial('user_id').primaryKey(),
@@ -53,6 +53,23 @@ const collectableAttributes = pgTable('collectableAttributes', {
   is_custom: boolean('is_custom').notNull()
 });
 
+const scraped = pgTable('scraped', {
+  id: serial('id').primaryKey().notNull(),
+  collection_id: serial('collection_id').notNull(),
+  collection_universe_id: serial('collection_universe_id').notNull(),
+  title: varchar('title', { length: 255 }),
+  price: varchar('price', { length: 255 }),
+  link: text('link'),
+  image_url: text('image_url')
+});
+
+const wishlist = pgTable('wishlist', {
+  id: serial('id').primaryKey().notNull(),
+  collection_id: serial('collection_id').notNull(),
+  collection_universe_id: serial('collection_universe_id').notNull(),
+  universe_collectable_id: serial('universe_collectable_id').notNull(),
+});
+
 module.exports = {
   users, 
   collections,
@@ -60,4 +77,6 @@ module.exports = {
   collectables,
   universeCollectables,
   collectableAttributes,
+  scraped,
+  wishlist
 };
