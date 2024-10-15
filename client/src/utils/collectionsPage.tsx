@@ -1,31 +1,35 @@
-import { buildPath } from "./utils";
-
 export const fetchCollectionSearchResults = async (
   searchTerm: string,
   userId: string
 ) => {
   const lowerCasedSearchTerm = searchTerm.toLowerCase();
-  console.log("searchTerm: ", lowerCasedSearchTerm);
 
-  const requestObj = { search: searchTerm, userId: userId };
-  const requestBody = JSON.stringify(requestObj);
-  console.log("searchRequest: ", requestBody);
+  if (!userId || !searchTerm) {
+    console.error("Missing userId or searchTerm", {
+      userId,
+      lowerCasedSearchTerm,
+    });
+    throw new Error("Missing a request parameter");
+  }
+
   try {
-    const response = await fetch(buildPath("/search"), {
-      method: "POST",
-      body: requestBody,
-      credentials: "include",
+    const url = `http://localhost:3000/collection-search?userId=${userId}&searchTerm=${lowerCasedSearchTerm}`;
+    console.log("Request URL:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
-      throw new Error("HTTP error! status: ${response.status}");
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Error fetching collections.");
     }
 
-    let jsonResponse = await response.json();
-    console.log("search result: ", jsonResponse);
+    const jsonResponse = await response.json();
+    // console.log("search result: ", jsonResponse);
     return jsonResponse;
   } catch (e) {
     console.error("Error thrown when fetching search results: ${e}");
