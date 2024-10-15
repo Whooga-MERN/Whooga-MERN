@@ -21,11 +21,9 @@ router.get('', async (req, res) => {
         .select()
         .from(collectables)
         .innerJoin(
-            collectableAttributes, 
-            and(
-                eq(collectables.collectable_id, collectableAttributes.collectable_id),
-                eq(collectables.collection_id, collectableAttributes.collection_id)
-            )
+            collectableAttributes,
+            eq(collectables.collection_id, collectableAttributes.collection_id)
+
         )
         .where(
             and(
