@@ -283,7 +283,7 @@ router.post('', async (req, res) => {
     }
 
     try {
-        const newItem = await trx.insert(collectables).values({
+        const newItem = await db.insert(collectables).values({
             collection_id: collectionId,
             universe_collectable_id: universeCollectableId,
             collectablePic: collectablePic
@@ -300,7 +300,7 @@ router.post('', async (req, res) => {
 // READ (All items)
 router.get('', async (req, res) => {
   try {
-    const allItems = await trx.select().from(collectables).execute();
+    const allItems = await db.select().from(collectables).execute();
     res.json(allItems);
   } catch (error) {
     console.error(error);
@@ -313,7 +313,7 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const item = await trx.select()
+    const item = await db.select()
       .from(collectables)
       .where(eq(id, collectables.collectable_id))
       .execute();
@@ -333,7 +333,7 @@ router.get('/universe_collection/:universe_collection_id', async (req, res) => {
   const { universe_collection_id } = req.params;
 
   try {
-    const allItems = await trx.select()
+    const allItems = await db.select()
       .from(collectables)
       .where(eq(universe_collection_id, collectables.universe_collection_id))
       .execute();
@@ -353,11 +353,10 @@ router.get('/collection/:collection_id', async (req, res) => {
   const { collection_id } = req.params;
 
   try {
-    const allItems = await trx.select()
+    const allItems = await db.select()
       .from(collectables)
       .where(eq(collection_id, collectables.collection_id))
       .execute();
-
 
     res.json(allItems);
   } catch (error) {
@@ -371,7 +370,7 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { collectablePic } = req.body;
   try {
-    const result = await trx.update(collectables)
+    const result = await db.update(collectables)
       .set({collectablePic: collectablePic})
       .where(eq(collectables.collectable_id, id)).execute();
     if (result.changes === 0)
@@ -391,7 +390,7 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedItem = await trx.delete(collectables)
+    const deletedItem = await db.delete(collectables)
       .where(eq(id, collectables.collectable_id))
       .returning(); // Fetch the deleted item
 
