@@ -14,7 +14,7 @@ const collectableAttributeRouter = require('./routes/collectableAttribute');
 const userRouter = require('./routes/user');
 const s3Router = require('./routes/s3Bucket');
 const wishlist = require('./routes/wishlist');
-const collectableSearchRouter = require('./routes/collectableSearch');
+const universeCollectableSearchRouter = require('./routes/universeCollectableSearch');
 const collectionSearchRouter = require('./routes/collectionSearch');
 /*const { drizzle } = require('drizzle-orm');
 const { pgAdapter } = require('drizzle-orm-pg');
@@ -56,7 +56,7 @@ app.use('/s3', s3Router);
 
 app.use('/wishlist', wishlist);
 
-app.use('/collectable-search', collectableSearchRouter);
+app.use('/universe-collectable-search', universeCollectableSearchRouter);
 
 app.use('/collection-search', collectionSearchRouter);
 
