@@ -1,8 +1,8 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {universeCollectables} = require('../config/schema');
+const {universeCollectables, collectableAttributes} = require('../config/schema');
 const express = require('express');
-const {eq} = require('drizzle-orm');
+const { eq, and } = require('drizzle-orm');
 
 const router = express.Router();
 
@@ -71,8 +71,16 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
   try {
     const item = await db.select()
       .from(universeCollectables)
-      .where(eq(universe_collection_id, universeCollectables.universe_collection_id))
-      .execute();
+      .innerJoin(
+        collectableAttributes,
+        eq(universeCollectables.universe_collectable_id, collectableAttributes.universe_collectable_id)
+      )
+      .where(
+        and(
+          eq(universeCollectables.collection_universe_id, universe_collection_id),
+          eq(collectableAttributes.slug, 'name')
+        )
+      );
 
     if (item.length === 0) {
       return res.status(404).send({ error: 'Item not found' });
