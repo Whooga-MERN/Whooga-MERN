@@ -69,7 +69,7 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
   const { universe_collection_id } = req.params;
 
   try {
-    const item = await db.select()
+    const items = await db.select()
       .from(universeCollectables)
       .innerJoin(
         collectableAttributes,
@@ -82,7 +82,7 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
         )
       );
 
-    if (item.length === 0) {
+    if (items.length === 0) {
       return res.status(404).send({ error: 'Item not found' });
     }
     res.json(items);
