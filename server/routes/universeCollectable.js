@@ -85,7 +85,7 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
     if (item.length === 0) {
       return res.status(404).send({ error: 'Item not found' });
     }
-    res.json(item[0]);
+    res.json(items);
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error fetching item' });
