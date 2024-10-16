@@ -271,26 +271,27 @@ export default function HomePage() {
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
+    var collectionUID = localStorage.getItem("collectionUniverseId") ?? '';
+          console.log("collectionUID ", collectionUID);
+          setUniverseCollectionId(collectionUID);
+  }, []);
+
+  useEffect(() => {
     const getUniverseCollectionId = async () => {
       const startTime = Date.now();
       try {
         if (collectionId) {
-          var collectionUID = localStorage.getItem("collectionUniverseId") ?? '';
-          console.log("collectionUID ", collectionUID);
-          setUniverseCollectionId(collectionUID);
-
-          if (collectionUID) {
+            console.log("universeCollectionId right before call ", universeCollectionId);
             if (universeCollectionId) {
               const collectables = await fetchUniverseCollectables(
                 universeCollectionId
               );
               setUniverseCollectables(collectables);
-            } 
-          }
-          else {
+            }          
+        }
+        else {
               console.error("universeCollectionId is null");
             }
-        }
       } catch (e) {
         setError("Error fetching universe collection ID");
         console.error(e);
@@ -299,7 +300,7 @@ export default function HomePage() {
 
     getUniverseCollectionId();
     
-  }, [collectionId]);
+  }, [collectionId, universeCollectionId]);
 
   // Get items for the current page
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
