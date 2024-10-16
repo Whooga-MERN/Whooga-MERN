@@ -7,19 +7,23 @@ interface SearchBarProps {
   fetchSearchResults: (
     tags: { attribute: string; term: string }[],
     userId: string,
-    collectionId: string
+    universeCollectionId: string
   ) => Promise<any>;
   handleError: (error: any) => void;
   userId: string;
-  collectionId: string;
+  universeCollectionId: string;
+  onSearchResults: (results: any[]) => void;
+  onResetSearch: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   attributes,
   userId,
-  collectionId,
+  universeCollectionId,
   fetchSearchResults,
   handleError,
+  onSearchResults,
+  onResetSearch,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>("Options");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -59,6 +63,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // clear all tags
   const handleResetTags = () => {
     setSearchTags([]);
+    onResetSearch();
   };
 
   const handleSearch = async () => {
@@ -67,13 +72,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
       return;
     }
 
-    // Log all attributes and corresponding search terms
-    searchTags.forEach((tag) => {
-      console.log(`Attribute: ${tag.attribute}, Search Term: ${tag.term}`);
-    });
-
     try {
-      await fetchSearchResults(searchTags, userId, collectionId);
+      const searchResults = await fetchSearchResults(
+        searchTags,
+        userId,
+        universeCollectionId
+      );
+      onSearchResults(searchResults);
     } catch (error) {
       handleError(error);
     }

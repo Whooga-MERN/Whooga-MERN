@@ -23,10 +23,10 @@ import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
 import { buildPath } from "../utils/utils";
-import { fetchSearchResults } from "../utils/fetchSearchResults";
 import {
   fetchUniverseCollectionId,
   fetchUniverseCollectables,
+  fetchSearchResults,
 } from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
@@ -158,15 +158,6 @@ export default function HomePage() {
     );
   };
 
-  // ------------------- search ------------------------
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-
-  // Error handler for search queries
-  const handleError = (error: any) => {
-    console.error("Search error:", error);
-    alert("An error occurred during the search. Please try again.");
-  };
-
   //--------------------- handle form field ------------------------
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -253,7 +244,6 @@ export default function HomePage() {
       try {
         const user = await fetchUserLoginDetails();
         setUserId(user || "");
-        console.log(userId);
       } catch (error) {
         console.error("Error Fetching User");
       }
@@ -303,15 +293,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const getUniverseCollectionId = async () => {
-      const startTime = Date.now(); // Start timing
+      const startTime = Date.now();
       try {
         if (collectionId) {
-          const universeId = await fetchUniverseCollectionId(collectionId);
-          console.log("API Response Time:", Date.now() - startTime); // Log time
-          setUniverseCollectionId(universeId);
+          const universeCollecitonId = await fetchUniverseCollectionId(
+            collectionId
+          );
+          setUniverseCollectionId(universeCollecitonId);
 
-          if (universeId) {
-            const collectables = await fetchUniverseCollectables(universeId);
+          if (universeCollecitonId) {
+            const collectables = await fetchUniverseCollectables(
+              universeCollecitonId
+            );
             setUniverseCollectables(collectables);
           }
         }
@@ -352,6 +345,24 @@ export default function HomePage() {
   //   }
   // };
 
+  // ------------------- search ------------------------
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  // Error handler for search queries
+  const handleError = (error: any) => {
+    console.error("Search error:", error);
+    alert("An error occurred during the search. Please try again.");
+  };
+
+  const handleSearchResults = (results: any[]) => {
+    setSearchResults(results);
+    console.log(searchResults);
+  };
+
+  function handleClearSearch(): void {
+    setSearchResults([]);
+  }
+
   return (
     <>
       <div>
@@ -379,15 +390,19 @@ export default function HomePage() {
 
             <div className="flex md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
-              <SearchBar
-                attributes={favoriteAttributes}
-                fetchSearchResults={(tags) =>
-                  fetchSearchResults(tags, userId, collectionId)
-                }
-                handleError={handleError}
-                userId={userId}
-                collectionId={collectionId}
-              />
+              {universeCollectionId && (
+                <SearchBar
+                  attributes={favoriteAttributes}
+                  fetchSearchResults={(tags) =>
+                    fetchSearchResults(tags, userId, universeCollectionId)
+                  }
+                  handleError={handleError}
+                  userId={userId}
+                  universeCollectionId={universeCollectionId}
+                  onSearchResults={handleSearchResults}
+                  onResetSearch={handleClearSearch}
+                />
+              )}
 
               {/* icon button for view*/}
               <div className="hidden lg:block md:block pt-3 mt-3">
@@ -588,7 +603,10 @@ export default function HomePage() {
             {/* switch between grid and list */}
             {view === "list" ? (
               <div className="flex flex-wrap -mx-4">
-                {paginatedCollectables.map((item) => (
+                {(searchResults.length > 0
+                  ? searchResults
+                  : paginatedCollectables
+                ).map((item) => (
                   <div
                     key={item.universeCollectableId}
                     className="w-full md:w-1/2 px-4 mb-6"
@@ -658,80 +676,80 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                {paginatedCollectables.map((item) => {
-                  return (
-                    <div key={item.universeCollectableId}>
-                      <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                        <div className="h-22 w-30">
-                          <div className="absolute top-2 right-2 flex space-x-2">
-                            <button
-                              className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                              onClick={() =>
-                                handleHeartClick(item.universeCollectableId)
+                {(searchResults.length > 0
+                  ? searchResults
+                  : paginatedCollectables
+                ).map((item) => (
+                  <div key={item.universeCollectableId}>
+                    <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                      <div className="h-22 w-30">
+                        <div className="absolute top-2 right-2 flex space-x-2">
+                          <button
+                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                            onClick={() =>
+                              handleHeartClick(item.universeCollectableId)
+                            }
+                          >
+                            {filledHeartIds.includes(
+                              item.universeCollectableId
+                            ) ? (
+                              <FaHeart color="red" />
+                            ) : (
+                              <FaRegHeart />
+                            )}
+                          </button>
+                        </div>
+                        <img
+                          src={
+                            item.attributes.find(
+                              (attr: any) => attr.name === "image"
+                            )?.value || "/placeholder.jpg"
+                          }
+                          alt={
+                            item.attributes.find(
+                              (attr: any) => attr.name === "name"
+                            )?.value || "No Name"
+                          }
+                          width={400}
+                          height={400}
+                          className="rounded-md shadow-sm object-cover"
+                          onClick={() => handleOpenModal(item)}
+                        />
+                      </div>
+
+                      <div className="space-y-1 p-4">
+                        {item.attributes
+                          .slice(0, 3)
+                          .map((attribute: any, index: number) => (
+                            <p
+                              key={attribute.slug}
+                              className={
+                                index === 0
+                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                  : "text-md font-semibold pl-4 capitalize truncate"
                               }
                             >
-                              {filledHeartIds.includes(
-                                item.universeCollectableId
-                              ) ? (
-                                <FaHeart color="red" />
-                              ) : (
-                                <FaRegHeart />
-                              )}
-                            </button>
-                          </div>
-                          <img
-                            src={
-                              item.attributes.find(
-                                (attr: any) => attr.name === "image"
-                              )?.value || "/placeholder.jpg"
-                            }
-                            alt={
-                              item.attributes.find(
-                                (attr: any) => attr.name === "name"
-                              )?.value || "No Name"
-                            }
-                            width={400}
-                            height={400}
-                            className="rounded-md shadow-sm object-cover"
-                            onClick={() => handleOpenModal(item)}
-                          />
-                        </div>
+                              {`${attribute.value}`}
+                            </p>
+                          ))}
 
-                        <div className="space-y-1 p-4">
-                          {item.attributes
-                            .slice(0, 3)
-                            .map((attribute: any, index: number) => (
-                              <p
-                                key={attribute.slug}
-                                className={
-                                  index === 0
-                                    ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                    : "text-md font-semibold pl-4 capitalize truncate"
-                                }
-                              >
-                                {`${attribute.value}`}
-                              </p>
-                            ))}
-
-                          <div className="pt-3 pb-2 text-center">
-                            <button
-                              className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={openEdit}
-                            >
-                              <FaRegEdit />
-                            </button>
-                            <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
-                              <FaRegTrashCan />
-                            </button>
-                          </div>
+                        <div className="pt-3 pb-2 text-center">
+                          <button
+                            className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                            onClick={openEdit}
+                          >
+                            <FaRegEdit />
+                          </button>
+                          <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                            <FaRegTrashCan />
+                          </button>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
-
             {/* send data to modal */}
             {showModal && specificTag && (
               <Modal
@@ -741,7 +759,6 @@ export default function HomePage() {
                 isVisible={showModal}
               />
             )}
-
             {showEdit && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
