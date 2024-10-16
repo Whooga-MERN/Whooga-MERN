@@ -146,6 +146,7 @@ export default function Collections() {
       );
       console.log("sending UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionUniverseId", collection.collectionUniverseId);
+      localStorage.setItem("collectionName", collection.name);
       navigate(`/items/${collectionId}`);
       console.log("clicked collection");
     } else {
