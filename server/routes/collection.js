@@ -69,6 +69,10 @@ router.get('/:id', async (req, res) => {
     const item = await db.select()
       .from(collections)
       .where(eq(id, collections.collection_id))
+      .innerJoin(
+        collectionUniverses,
+        eq(collections.collection_universe_id, collectionUniverses.collection_universe_id)
+      )
       .execute();
 
     if (item.length === 0) {
