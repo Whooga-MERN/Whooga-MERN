@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
 const {universeCollectables, collectableAttributes} = require('../config/schema');
 const express = require('express');
-const { eq, and } = require('drizzle-orm');
+const { eq, and, inArray } = require('drizzle-orm');
 
 const router = express.Router();
 
@@ -64,33 +64,48 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// READ (All universe collectables from a universe collection)
 router.get('/universe-collection/:universe_collection_id', async (req, res) => {
   const { universe_collection_id } = req.params;
 
   try {
-    const items = await db.select()
+    const collectables = await db
+      .select()
       .from(universeCollectables)
-      .innerJoin(
-        collectableAttributes,
-        eq(universeCollectables.universe_collectable_id, collectableAttributes.universe_collectable_id)
-      )
-      .where(
-        and(
-          eq(universeCollectables.collection_universe_id, universe_collection_id),
-          eq(collectableAttributes.slug, 'name')
-        )
+      .where(eq(universeCollectables.collection_universe_id, universe_collection_id));
+
+    if (collectables.length === 0) {
+      return res.status(404).send({ error: 'No collectables found in this collection' });
+    }
+    const collectableIds = collectables.map(c => c.universe_collectable_id);
+
+    const attributes = await db
+      .select()
+      .from(collectableAttributes)
+      .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
+
+    const collectablesWithAttributes = collectables.map(collectable => {
+      const relatedAttributes = attributes.filter(
+        attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
       );
 
-    if (items.length === 0) {
-      return res.status(404).send({ error: 'Item not found' });
-    }
-    res.json(items);
+      return {
+        ...collectable,
+        attributes: relatedAttributes.map(attr => ({
+          collectable_attribute_id: attr.collectable_attribute_id,
+          name: attr.name,
+          slug: attr.slug,
+          value: attr.value,
+          is_custom: attr.is_custom
+        }))
+      };
+    });
+    res.json(collectablesWithAttributes);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ error: 'Error fetching item' });
+    res.status(500).send({ error: 'Error fetching collectables and attributes' });
   }
-})
+});
+
 
 // UPDATE
 router.put('/:id', async (req, res) => {
