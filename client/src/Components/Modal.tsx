@@ -25,7 +25,7 @@ const Modal: React.FC<ModalProps> = ({ isVisible, onClose, itemData }) => {
             <Link
               className="mr-3 btn bg-yellow-400 w-fit text-2xl text-black"
               to={{ pathname: "/details" }}
-              state={{ itemData }}
+              state={{ attributes, itemData: itemData }}
             >
               <GoLinkExternal />
             </Link>
