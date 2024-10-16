@@ -23,7 +23,11 @@ import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
 import { buildPath } from "../utils/utils";
-import { fetchSearchResults } from "../utils/fetchSearchResults";
+import {
+  fetchUniverseCollectionId,
+  fetchUniverseCollectables,
+  fetchSearchResults,
+} from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 
@@ -47,369 +51,6 @@ const color = [
   "grey",
   "black",
   "green",
-];
-
-const tags = [
-  {
-    id: 1,
-    title: "eagle",
-    image: "/eagle.jpg",
-    createAt: "03/12/24",
-    tagNum: "#55988",
-    createdBy: "This person",
-    color: ["purple", "blue", "grey"],
-  },
-  {
-    id: 2,
-    title: "psycho",
-    image: "/psycho.jpg",
-    createAt: "3/06/24",
-    tagNum: "#55927",
-    createdBy: "That person",
-    color: ["red", "black", "white"],
-  },
-  {
-    id: 3,
-    title: "shawshank",
-    image: "/shawshank.jpg",
-    createAt: "02/28/24",
-    tagNum: "#55881",
-    createdBy: "Those person",
-    color: ["brown", "black", "orange"],
-  },
-  {
-    id: 4,
-    title: "golddog",
-    image: "/golddog.jpg",
-    createAt: "03/04/24",
-    tagNum: "#55915",
-    createdBy: "This group",
-    color: ["yellow", "purple", "pink"],
-  },
-  {
-    id: 5,
-    title: "Bear",
-    image: "/bear.jpg",
-    createAt: "03/12/24",
-    tagNum: "#55996",
-    createdBy: "That group",
-    color: ["red", "brown", "black"],
-  },
-  {
-    id: 6,
-    title: "Ghostbusters",
-    image: "/ghostbusters.jpg",
-    createAt: "02/03/24",
-    tagNum: "#55697",
-    createdBy: "Those groups",
-    color: ["red", "green", "white"],
-  },
-  {
-    id: 7,
-    title: "braveheart",
-    image: "/braveheart.jpg",
-    createAt: "03/12/24",
-    tagNum: "#55994",
-    createdBy: "me",
-    color: ["blue", "black", "white"],
-  },
-  {
-    id: 8,
-    title: "tiny toon",
-    image: "/tinytoon.jpg",
-    createAt: "03/07/24",
-    tagNum: "#55958",
-    createdBy: "He",
-    color: ["red", "yellow", "purple", "blue"],
-  },
-  {
-    id: 9,
-    title: "alien invasion club",
-    image: "/alienclub.jpg",
-    createAt: "03/06/24",
-    tagNum: "#55949",
-    createdBy: "She",
-    color: ["green", "yellow", "red"],
-  },
-  {
-    id: 10,
-    title: "lisboa portugal train 28",
-    image: "/lisboaportugal28.jpg",
-    createAt: "03/05/24",
-    tagNum: "#55917",
-    createdBy: "Them",
-    color: ["brown", "blue", "yellow"],
-  },
-  {
-    id: 11,
-    title: "galactic wars",
-    image: "/galacticwars.jpg",
-    createAt: "03/15/24",
-    tagNum: "#55928",
-    createdBy: "A Rebel",
-    color: ["black", "grey", "red"],
-  },
-  {
-    id: 12,
-    title: "mountain explorer",
-    image: "/mountainexplorer.jpg",
-    createAt: "03/18/24",
-    tagNum: "#55935",
-    createdBy: "Adventurer",
-    color: ["green", "blue", "brown"],
-  },
-  {
-    id: 13,
-    title: "sunset paradise",
-    image: "/sunsetparadise.jpg",
-    createAt: "03/20/24",
-    tagNum: "#55945",
-    createdBy: "Nature Lover",
-    color: ["orange", "yellow", "pink"],
-  },
-  {
-    id: 14,
-    title: "ocean depths",
-    image: "/oceandepths.jpg",
-    createAt: "03/22/24",
-    tagNum: "#55955",
-    createdBy: "Deep Diver",
-    color: ["blue", "aqua", "black"],
-  },
-  {
-    id: 15,
-    title: "cyberpunk city",
-    image: "/cyberpunkcity.jpg",
-    createAt: "03/25/24",
-    tagNum: "#55967",
-    createdBy: "Tech Guru",
-    color: ["purple", "pink", "neon green"],
-  },
-  {
-    id: 16,
-    title: "ancient ruins",
-    image: "/ancientruins.jpg",
-    createAt: "03/28/24",
-    tagNum: "#55974",
-    createdBy: "Archaeologist",
-    color: ["brown", "grey", "beige"],
-  },
-  {
-    id: 17,
-    title: "skylight dreams",
-    image: "/skylightdreams.jpg",
-    createAt: "03/30/24",
-    tagNum: "#55981",
-    createdBy: "Astronomer",
-    color: ["blue", "purple", "white"],
-  },
-  {
-    id: 18,
-    title: "desert wanderer",
-    image: "/desertwanderer.jpg",
-    createAt: "04/01/24",
-    tagNum: "#55989",
-    createdBy: "Nomad",
-    color: ["yellow", "brown", "red"],
-  },
-  {
-    id: 19,
-    title: "jungle adventure",
-    image: "/jungleadventure.jpg",
-    createAt: "04/03/24",
-    tagNum: "#55995",
-    createdBy: "Explorer",
-    color: ["green", "brown", "orange"],
-  },
-  {
-    id: 20,
-    title: "northern lights",
-    image: "/northernlights.jpg",
-    createAt: "04/05/24",
-    tagNum: "#56001",
-    createdBy: "Aurora Chaser",
-    color: ["green", "purple", "blue"],
-  },
-  {
-    id: 21,
-    title: "forest guardian",
-    image: "/forestguardian.jpg",
-    createAt: "04/08/24",
-    tagNum: "#56012",
-    createdBy: "Wildlife Protector",
-    color: ["green", "brown", "gold"],
-  },
-  {
-    id: 22,
-    title: "volcano eruption",
-    image: "/volcanoeruption.jpg",
-    createAt: "04/10/24",
-    tagNum: "#56018",
-    createdBy: "Geologist",
-    color: ["red", "orange", "black"],
-  },
-  {
-    id: 23,
-    title: "mystic cavern",
-    image: "/mysticcavern.jpg",
-    createAt: "04/12/24",
-    tagNum: "#56023",
-    createdBy: "Cave Explorer",
-    color: ["purple", "blue", "grey"],
-  },
-  {
-    id: 24,
-    title: "windy hills",
-    image: "/windyhills.jpg",
-    createAt: "04/14/24",
-    tagNum: "#56035",
-    createdBy: "Hill Climber",
-    color: ["green", "blue", "white"],
-  },
-  {
-    id: 25,
-    title: "urban skyline",
-    image: "/urbanskyline.jpg",
-    createAt: "04/16/24",
-    tagNum: "#56048",
-    createdBy: "City Planner",
-    color: ["grey", "blue", "yellow"],
-  },
-  {
-    id: 26,
-    title: "mysterious forest",
-    image: "/mysteriousforest.jpg",
-    createAt: "04/18/24",
-    tagNum: "#56056",
-    createdBy: "Wanderer",
-    color: ["green", "black", "dark brown"],
-  },
-  {
-    id: 27,
-    title: "glacial expedition",
-    image: "/glacialexpedition.jpg",
-    createAt: "04/20/24",
-    tagNum: "#56062",
-    createdBy: "Polar Explorer",
-    color: ["white", "blue", "grey"],
-  },
-  {
-    id: 28,
-    title: "retro arcade",
-    image: "/retroarcade.jpg",
-    createAt: "04/22/24",
-    tagNum: "#56071",
-    createdBy: "Gamer",
-    color: ["neon green", "pink", "black"],
-  },
-  {
-    id: 29,
-    title: "golden desert",
-    image: "/goldendesert.jpg",
-    createAt: "04/24/24",
-    tagNum: "#56085",
-    createdBy: "Desert Traveler",
-    color: ["gold", "yellow", "orange"],
-  },
-  {
-    id: 30,
-    title: "crystal caves",
-    image: "/crystalcaves.jpg",
-    createAt: "04/26/24",
-    tagNum: "#56094",
-    createdBy: "Gem Hunter",
-    color: ["purple", "blue", "white"],
-  },
-  {
-    id: 31,
-    title: "zen garden",
-    image: "/zengarden.jpg",
-    createAt: "04/28/24",
-    tagNum: "#56105",
-    createdBy: "Meditation Master",
-    color: ["green", "white", "brown"],
-  },
-  {
-    id: 32,
-    title: "robot revolution",
-    image: "/robotrevolution.jpg",
-    createAt: "04/30/24",
-    tagNum: "#56116",
-    createdBy: "Engineer",
-    color: ["silver", "blue", "red"],
-  },
-  {
-    id: 33,
-    title: "enchanted castle",
-    image: "/enchantedcastle.jpg",
-    createAt: "05/02/24",
-    tagNum: "#56125",
-    createdBy: "Storyteller",
-    color: ["purple", "gold", "white"],
-  },
-  {
-    id: 34,
-    title: "haunted mansion",
-    image: "/hauntedmansion.jpg",
-    createAt: "05/04/24",
-    tagNum: "#56137",
-    createdBy: "Ghost Hunter",
-    color: ["black", "grey", "blue"],
-  },
-  {
-    id: 35,
-    title: "deep space",
-    image: "/deepspace.jpg",
-    createAt: "05/06/24",
-    tagNum: "#56142",
-    createdBy: "Astronaut",
-    color: ["black", "blue", "silver"],
-  },
-  {
-    id: 36,
-    title: "sahara adventure",
-    image: "/saharaadventure.jpg",
-    createAt: "05/08/24",
-    tagNum: "#56154",
-    createdBy: "Explorer",
-    color: ["sand", "brown", "yellow"],
-  },
-  {
-    id: 37,
-    title: "hidden waterfall",
-    image: "/hiddenwaterfall.jpg",
-    createAt: "05/10/24",
-    tagNum: "#56161",
-    createdBy: "Nature Lover",
-    color: ["blue", "green", "white"],
-  },
-  {
-    id: 38,
-    title: "alien landscape",
-    image: "/alienlandscape.jpg",
-    createAt: "05/12/24",
-    tagNum: "#56176",
-    createdBy: "Sci-Fi Fan",
-    color: ["green", "purple", "blue"],
-  },
-  {
-    id: 39,
-    title: "frozen tundra",
-    image: "/frozentundra.jpg",
-    createAt: "05/14/24",
-    tagNum: "#56185",
-    createdBy: "Ice Explorer",
-    color: ["white", "blue", "grey"],
-  },
-  {
-    id: 40,
-    title: "victorian steampunk",
-    image: "/victoriansteampunk.jpg",
-    createAt: "05/16/24",
-    tagNum: "#56198",
-    createdBy: "Inventor",
-    color: ["brown", "gold", "black"],
-  },
 ];
 
 const attributes = ["title", "tagNum", "createAt", "createdBy", "image"];
@@ -476,51 +117,35 @@ export default function HomePage() {
   };
 
   // handle filter and sort
-  const processedTags = [...tags]
-    .filter((tag) => {
-      if (selectedColors.length > 0) {
-        // check array
-        return tag.color.some((color) =>
-          selectedColors.includes(color.toLowerCase())
-        );
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.createAt);
-      const dateB = new Date(b.createAt);
-      const tagNumA = parseInt(a.tagNum.replace("#", ""));
-      const tagNumB = parseInt(b.tagNum.replace("#", ""));
+  // const processedTags = [...tags]
+  //   .filter((tag) => {
+  //     if (selectedColors.length > 0) {
+  //       // check array
+  //       return tag.color.some((color) =>
+  //         selectedColors.includes(color.toLowerCase())
+  //       );
+  //     }
+  //     return true;
+  //   })
+  //   .sort((a, b) => {
+  //     const dateA = new Date(a.createAt);
+  //     const dateB = new Date(b.createAt);
+  //     const tagNumA = parseInt(a.tagNum.replace("#", ""));
+  //     const tagNumB = parseInt(b.tagNum.replace("#", ""));
 
-      switch (selectedSort) {
-        case "yearLowToHigh":
-          return dateA.getTime() - dateB.getTime();
-        case "yearHighToLow":
-          return dateB.getTime() - dateA.getTime();
-        case "tagLowToHigh":
-          return tagNumA - tagNumB;
-        case "tagHighToLow":
-          return tagNumB - tagNumA;
-        default:
-          return 0;
-      }
-    });
-
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  // calculate total pages
-  const totalPages: number = Math.ceil(processedTags.length / ITEMS_PER_PAGE);
-
-  // get items for the current page
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIdx = startIdx + ITEMS_PER_PAGE;
-  const paginatedTags = processedTags.slice(startIdx, endIdx);
-
-  // handle page change
-  const handlePageChange = (pageNum: number) => {
-    if (pageNum >= 1 && pageNum <= totalPages) {
-      setCurrentPage(pageNum);
-    }
-  };
+  //     switch (selectedSort) {
+  //       case "yearLowToHigh":
+  //         return dateA.getTime() - dateB.getTime();
+  //       case "yearHighToLow":
+  //         return dateB.getTime() - dateA.getTime();
+  //       case "tagLowToHigh":
+  //         return tagNumA - tagNumB;
+  //       case "tagHighToLow":
+  //         return tagNumB - tagNumA;
+  //       default:
+  //         return 0;
+  //     }
+  //   });
 
   // -------------- handle heart click-------------------
   const [filledHeartIds, setFilledHeartIds] = useState<number[]>([]);
@@ -533,19 +158,11 @@ export default function HomePage() {
     );
   };
 
-  // ------------------- search ------------------------
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-
-  // Error handler for search queries
-  const handleError = (error: any) => {
-    console.error("Search error:", error);
-    alert("An error occurred during the search. Please try again.");
-  };
-
   //--------------------- handle form field ------------------------
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isNewCollectableWishlist, setIsNewCollectableWishlist] = useState<boolean>(false);
+  const [isNewCollectableWishlist, setIsNewCollectableWishlist] =
+    useState<boolean>(false);
 
   // handle form field change
   const handleChange = (
@@ -566,7 +183,7 @@ export default function HomePage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const request = new FormData();
-    
+
     if (collectionId) {
       request.append("collection_id", collectionId);
     } else {
@@ -582,7 +199,8 @@ export default function HomePage() {
     logFormData(request);
 
     try {
-      const response = await fetch("http://localhost:3000/collectable/newCollectable",
+      const response = await fetch(
+        "http://localhost:3000/collectable/newCollectable",
         {
           method: "POST",
           body: request,
@@ -590,15 +208,14 @@ export default function HomePage() {
             Authorization: `Bearer ${JWT}`,
           },
         }
-      )
+      );
 
       if (response.ok) {
         console.log("Form submitted successfully");
       } else {
         console.error("Error submitting form:", response);
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error submitting form:", error);
     }
 
@@ -606,12 +223,12 @@ export default function HomePage() {
   };
 
   const logFormData = (formData: FormData) => {
-  const formDataEntries: Record<string, any> = {};
-  formData.forEach((value, key) => {
-    formDataEntries[key] = value;
-  });
-  console.log("FormData Contents:", formDataEntries);
-};
+    const formDataEntries: Record<string, any> = {};
+    formData.forEach((value, key) => {
+      formDataEntries[key] = value;
+    });
+    console.log("FormData Contents:", formDataEntries);
+  };
 
   // --------------------- get user information -----------------
   const [userId, setUserId] = useState<any>(null);
@@ -627,7 +244,6 @@ export default function HomePage() {
       try {
         const user = await fetchUserLoginDetails();
         setUserId(user || "");
-        console.log(userId);
       } catch (error) {
         console.error("Error Fetching User");
       }
@@ -645,25 +261,106 @@ export default function HomePage() {
     fetchToken();
 
     const getAttributes = async () => {
-      const storedCustomeAttributes = localStorage.getItem('customAttributes');
-      const storedFavoriteAttributes = localStorage.getItem("favoriteAttributes");
+      const storedCustomeAttributes = localStorage.getItem("customAttributes");
+      const storedFavoriteAttributes =
+        localStorage.getItem("favoriteAttributes");
       const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
-        if (storedCustomeAttributes) {
-            setCustomAttributes(JSON.parse(storedCustomeAttributes));
-        }
-        if (storedFavoriteAttributes) {
-            setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
-        }
-        if (storedHiddenAttributes) {
-            setHiddenAttributes(JSON.parse(storedHiddenAttributes));
-        }
+      if (storedCustomeAttributes) {
+        setCustomAttributes(JSON.parse(storedCustomeAttributes));
+      }
+      if (storedFavoriteAttributes) {
+        setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
+      }
+      if (storedHiddenAttributes) {
+        setHiddenAttributes(JSON.parse(storedHiddenAttributes));
+      }
     };
     getAttributes();
-    console.log(collectionId);
   }, []);
 
   if (!collectionId) {
     return <div>Error: Collection ID is missing!</div>;
+  }
+
+  // -------------------------- show universecollectables------------------
+  const [universeCollectionId, setUniverseCollectionId] = useState<
+    string | null
+  >(null);
+  const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+
+  useEffect(() => {
+    const getUniverseCollectionId = async () => {
+      const startTime = Date.now();
+      try {
+        if (collectionId) {
+          const universeCollecitonId = await fetchUniverseCollectionId(
+            collectionId
+          );
+          setUniverseCollectionId(universeCollecitonId);
+
+          if (universeCollecitonId) {
+            const collectables = await fetchUniverseCollectables(
+              universeCollecitonId
+            );
+            setUniverseCollectables(collectables);
+          }
+        }
+      } catch (e) {
+        setError("Error fetching universe collection ID");
+        console.error(e);
+      }
+    };
+
+    getUniverseCollectionId();
+  }, [collectionId]);
+
+  // Get items for the current page
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedCollectables = universeCollectables.slice(startIdx, endIdx);
+
+  // Handle page change
+  const handlePageChange = (pageNum: number) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
+    }
+  };
+
+  // const [currentPage, setCurrentPage] = useState<number>(1);
+  // // calculate total pages
+  // const totalPages: number = Math.ceil(processedTags.length / ITEMS_PER_PAGE);
+
+  // // get items for the current page
+  // const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  // const endIdx = startIdx + ITEMS_PER_PAGE;
+  // const paginatedTags = processedTags.slice(startIdx, endIdx);
+
+  // // handle page change
+  // const handlePageChange = (pageNum: number) => {
+  //   if (pageNum >= 1 && pageNum <= totalPages) {
+  //     setCurrentPage(pageNum);
+  //   }
+  // };
+
+  // ------------------- search ------------------------
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  // Error handler for search queries
+  const handleError = (error: any) => {
+    console.error("Search error:", error);
+    alert("An error occurred during the search. Please try again.");
+  };
+
+  const handleSearchResults = (results: any[]) => {
+    setSearchResults(results);
+    console.log(searchResults);
+  };
+
+  function handleClearSearch(): void {
+    setSearchResults([]);
   }
 
   return (
@@ -693,15 +390,19 @@ export default function HomePage() {
 
             <div className="flex md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
-              <SearchBar
-                attributes={attributes}
-                fetchSearchResults={(tags) =>
-                  fetchSearchResults(tags, userId, collectionId)
-                }
-                handleError={handleError}
-                userId={userId}
-                collectionId={collectionId}
-              />
+              {universeCollectionId && (
+                <SearchBar
+                  attributes={favoriteAttributes}
+                  fetchSearchResults={(tags) =>
+                    fetchSearchResults(tags, userId, universeCollectionId)
+                  }
+                  handleError={handleError}
+                  userId={userId}
+                  universeCollectionId={universeCollectionId}
+                  onSearchResults={handleSearchResults}
+                  onResetSearch={handleClearSearch}
+                />
+              )}
 
               {/* icon button for view*/}
               <div className="hidden lg:block md:block pt-3 mt-3">
@@ -746,62 +447,66 @@ export default function HomePage() {
                       </h2>
 
                       <form onSubmit={handleSubmit}>
-                        {(favoriteAttributes.concat(customAttributes).concat("image").filter(attr => attr !== null)).map((attribute, index) => (
-                          <div key={index} className="mb-4 lg:max-w-lg">
-                            {attribute !== "image" ? (
-                              <>
-                                <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                  {attribute.charAt(0).toUpperCase() +
-                                    attribute.slice(1)}
-                                </label>
-                                <input
-                                  type="text"
-                                  name={attribute}
-                                  placeholder={`${attribute}`}
-                                  value={formData[attribute] || ""}
-                                  onChange={handleChange}
-                                  className="border rounded w-full py-2 px-3 text-gray-700"
-                                />
-                              </>
-                            ) : (
-                              <>
-                                <label
-                                  htmlFor="cover-photo"
-                                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                                >
-                                  Upload Photo
-                                </label>
-                                <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                                  <div className="text-center">
-                                    <PhotoIcon
-                                      aria-hidden="true"
-                                      className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                    />
-                                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                      <label
-                                        htmlFor="file-upload"
-                                        className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                                      >
-                                        <span>Upload a photo</span>
-                                        <input
-                                          id="file-upload"
-                                          name="file-upload"
-                                          type="file"
-                                          className="sr-only"
-                                          onChange={handleFileChange}
-                                        />
-                                      </label>
-                                      <p>or drag and drop</p>
+                        {favoriteAttributes
+                          .concat(customAttributes)
+                          .concat("image")
+                          .filter((attr) => attr !== null)
+                          .map((attribute, index) => (
+                            <div key={index} className="mb-4 lg:max-w-lg">
+                              {attribute !== "image" ? (
+                                <>
+                                  <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                    {attribute.charAt(0).toUpperCase() +
+                                      attribute.slice(1)}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    name={attribute}
+                                    placeholder={`${attribute}`}
+                                    value={formData[attribute] || ""}
+                                    onChange={handleChange}
+                                    className="border rounded w-full py-2 px-3 text-gray-700"
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <label
+                                    htmlFor="cover-photo"
+                                    className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                  >
+                                    Upload Photo
+                                  </label>
+                                  <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                    <div className="text-center">
+                                      <PhotoIcon
+                                        aria-hidden="true"
+                                        className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                      />
+                                      <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                        <label
+                                          htmlFor="file-upload"
+                                          className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                        >
+                                          <span>Upload a photo</span>
+                                          <input
+                                            id="file-upload"
+                                            name="file-upload"
+                                            type="file"
+                                            className="sr-only"
+                                            onChange={handleFileChange}
+                                          />
+                                        </label>
+                                        <p>or drag and drop</p>
+                                      </div>
+                                      <p className="text-xs leading-5 text-gray-600">
+                                        PNG, JPG
+                                      </p>
                                     </div>
-                                    <p className="text-xs leading-5 text-gray-600">
-                                      PNG, JPG
-                                    </p>
                                   </div>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        ))}
+                                </>
+                              )}
+                            </div>
+                          ))}
 
                         <div className="flex justify-end space-x-4 mt-8">
                           <button
@@ -898,14 +603,22 @@ export default function HomePage() {
             {/* switch between grid and list */}
             {view === "list" ? (
               <div className="flex flex-wrap -mx-4">
-                {paginatedTags.map((item: { [key: string]: any }) => (
-                  <div key={item.id} className="w-full md:w-1/2 px-4 mb-6">
+                {(searchResults.length > 0
+                  ? searchResults
+                  : paginatedCollectables
+                ).map((item) => (
+                  <div
+                    key={item.universeCollectableId}
+                    className="w-full md:w-1/2 px-4 mb-6"
+                  >
                     <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                       <button
                         className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                        onClick={() => handleHeartClick(item.id)}
+                        onClick={() =>
+                          handleHeartClick(item.universeCollectableId)
+                        }
                       >
-                        {filledHeartIds.includes(item.id) ? (
+                        {filledHeartIds.includes(item.universeCollectableId) ? (
                           <FaHeart color="red" />
                         ) : (
                           <FaRegHeart />
@@ -913,8 +626,16 @@ export default function HomePage() {
                       </button>
                       <div className="h-24 w-24">
                         <img
-                          src={item.image}
-                          alt={item.title}
+                          src={
+                            item.attributes.find(
+                              (attr: any) => attr.name === "image"
+                            )?.value || "/placeholder.jpg"
+                          }
+                          alt={
+                            item.attributes.find(
+                              (attr: any) => attr.name === "name"
+                            )?.value || "No Name"
+                          }
                           width={100}
                           height={100}
                           className="rounded-md shadow-sm object-cover"
@@ -923,19 +644,20 @@ export default function HomePage() {
                       </div>
 
                       <div className="flex-1">
-                        {/* show first three attributes */}
-                        {attributes.slice(0, 3).map((attribute, index) => (
-                          <p
-                            key={attribute}
-                            className={
-                              index === 0
-                                ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                : "text-md font-semibold pl-4 capitalize truncate"
-                            }
-                          >
-                            {` ${item[attribute] || ""}`}
-                          </p>
-                        ))}
+                        {item.attributes
+                          .slice(0, 3)
+                          .map((attribute: any, index: number) => (
+                            <p
+                              key={attribute.name}
+                              className={
+                                index === 0
+                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                  : "text-md font-semibold pl-4 capitalize truncate"
+                              }
+                            >
+                              {`${attribute.value}`}
+                            </p>
+                          ))}
                       </div>
                       <div className="flex space-x-4">
                         <button
@@ -954,16 +676,23 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                {paginatedTags.map((item: { [key: string]: any }) => (
-                  <div key={item.id}>
+                {(searchResults.length > 0
+                  ? searchResults
+                  : paginatedCollectables
+                ).map((item) => (
+                  <div key={item.universeCollectableId}>
                     <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                       <div className="h-22 w-30">
                         <div className="absolute top-2 right-2 flex space-x-2">
                           <button
                             className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                            onClick={() => handleHeartClick(item.id)}
+                            onClick={() =>
+                              handleHeartClick(item.universeCollectableId)
+                            }
                           >
-                            {filledHeartIds.includes(item.id) ? (
+                            {filledHeartIds.includes(
+                              item.universeCollectableId
+                            ) ? (
                               <FaHeart color="red" />
                             ) : (
                               <FaRegHeart />
@@ -971,30 +700,38 @@ export default function HomePage() {
                           </button>
                         </div>
                         <img
-                          src={item.image}
-                          alt={item.title}
+                          src={
+                            item.attributes.find(
+                              (attr: any) => attr.name === "image"
+                            )?.value || "/placeholder.jpg"
+                          }
+                          alt={
+                            item.attributes.find(
+                              (attr: any) => attr.name === "name"
+                            )?.value || "No Name"
+                          }
                           width={400}
                           height={400}
-                          className="pt-3 rounded-md shadow-sm object-cover object-top"
+                          className="rounded-md shadow-sm object-cover"
                           onClick={() => handleOpenModal(item)}
                         />
                       </div>
 
-                      {/* show first three attribute */}
                       <div className="space-y-1 p-4">
-                        {attributes.slice(0, 3).map((attribute, index) => (
-                          <p
-                            key={attribute}
-                            className={
-                              index === 0
-                                ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                : "text-md font-semibold pl-4 capitalize truncate"
-                            }
-                          >
-                            {/* Dynamically display attribute name and value */}
-                            {`${item[attribute] || ""}`}
-                          </p>
-                        ))}
+                        {item.attributes
+                          .slice(0, 3)
+                          .map((attribute: any, index: number) => (
+                            <p
+                              key={attribute.slug}
+                              className={
+                                index === 0
+                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                  : "text-md font-semibold pl-4 capitalize truncate"
+                              }
+                            >
+                              {`${attribute.value}`}
+                            </p>
+                          ))}
 
                         <div className="pt-3 pb-2 text-center">
                           <button
@@ -1013,7 +750,6 @@ export default function HomePage() {
                 ))}
               </div>
             )}
-
             {/* send data to modal */}
             {showModal && specificTag && (
               <Modal
@@ -1023,7 +759,6 @@ export default function HomePage() {
                 isVisible={showModal}
               />
             )}
-
             {showEdit && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
