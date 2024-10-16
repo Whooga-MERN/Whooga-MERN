@@ -44,18 +44,28 @@ const Modal: React.FC<ModalProps> = ({ isVisible, onClose, itemData }) => {
             <section aria-labelledby="information-heading" className="mt-4">
               <div className="mt-8">
                 <div className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                  {attributes.slice(0, 2).map((attribute: any) => (
-                    <p key={attribute.name}>
-                      {attribute.value.toUpperCase() || "N/A"}
-                    </p>
-                  ))}
+                  {attributes
+                    .filter(
+                      (attribute: any) =>
+                        attribute.name !== "image" && attribute.name !== "owned"
+                    )
+                    .slice(0, 2)
+                    .map((attribute: any) => (
+                      <p key={attribute.name}>
+                        {attribute.value.toUpperCase() || "N/A"}
+                      </p>
+                    ))}
                 </div>
 
                 <div className="py-3" />
 
                 <div className="space-y-2 text-lg font-bold text-gray-500 dark:text-gray-400">
                   {attributes
-                    .filter((attribute: any) => attribute.name !== "image")
+                    .filter(
+                      (attribute: any) =>
+                        attribute.name !== "image" && attribute.name !== "owned"
+                    )
+                    .slice(2)
                     .map((attribute: any) => (
                       <p key={attribute.name}>
                         {attribute.name}: {attribute.value || "N/A"}

@@ -271,9 +271,9 @@ export default function HomePage() {
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-    var collectionUID = localStorage.getItem("collectionUniverseId") ?? '';
-          console.log("collectionUID ", collectionUID);
-          setUniverseCollectionId(collectionUID);
+    var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
+    console.log("collectionUID ", collectionUID);
+    setUniverseCollectionId(collectionUID);
   }, []);
 
   useEffect(() => {
@@ -281,17 +281,20 @@ export default function HomePage() {
       const startTime = Date.now();
       try {
         if (collectionId) {
-            console.log("universeCollectionId right before call ", universeCollectionId);
-            if (universeCollectionId) {
-              const collectables = await fetchUniverseCollectables(
-                universeCollectionId
-              );
-              setUniverseCollectables(collectables);
-            }          
+          console.log(
+            "universeCollectionId right before call ",
+            universeCollectionId
+          );
+          if (universeCollectionId) {
+            const collectables = await fetchUniverseCollectables(
+              universeCollectionId
+            );
+            setUniverseCollectables(collectables);
+            console.log(collectables);
+          }
+        } else {
+          console.error("universeCollectionId is null");
         }
-        else {
-              console.error("universeCollectionId is null");
-            }
       } catch (e) {
         setError("Error fetching universe collection ID");
         console.error(e);
@@ -299,7 +302,6 @@ export default function HomePage() {
     };
 
     getUniverseCollectionId();
-    
   }, [collectionId, universeCollectionId]);
 
   // Get items for the current page
@@ -646,10 +648,15 @@ export default function HomePage() {
 
                       <div className="flex-1">
                         {item.attributes
+                          .filter(
+                            (attribute: any) =>
+                              attribute.name !== "image" &&
+                              attribute.name !== "owned"
+                          )
                           .slice(0, 3)
                           .map((attribute: any, index: number) => (
                             <p
-                              key={attribute.name}
+                              key={attribute.slug || attribute.name}
                               className={
                                 index === 0
                                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -720,10 +727,15 @@ export default function HomePage() {
 
                       <div className="space-y-1 p-4">
                         {item.attributes
+                          .filter(
+                            (attribute: any) =>
+                              attribute.name !== "image" &&
+                              attribute.name !== "owned"
+                          )
                           .slice(0, 3)
                           .map((attribute: any, index: number) => (
                             <p
-                              key={attribute.slug}
+                              key={attribute.slug || attribute.name}
                               className={
                                 index === 0
                                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
