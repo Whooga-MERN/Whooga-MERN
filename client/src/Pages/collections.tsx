@@ -110,6 +110,7 @@ export default function Collections() {
             return {
               name: col.name,
               id: col.collection_id,
+              collectionUniverseId: col.collection_universe_id,
               image_url: col.collection_pic,
               description: "",
               newListing: false,
@@ -143,6 +144,8 @@ export default function Collections() {
         "hiddenAttributes",
         JSON.stringify(collection.hiddenAttributes)
       );
+      console.log("sending UCID: ", collection.collectionUniverseId);
+      localStorage.setItem("collectionUniverseId", collection.collectionUniverseId);
       navigate(`/items/${collectionId}`);
       console.log("clicked collection");
     } else {

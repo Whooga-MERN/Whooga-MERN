@@ -275,17 +275,21 @@ export default function HomePage() {
       const startTime = Date.now();
       try {
         if (collectionId) {
-          const universeCollecitonId = await fetchUniverseCollectionId(
-            collectionId
-          );
-          setUniverseCollectionId(universeCollecitonId);
+          var collectionUID = localStorage.getItem("collectionUniverseId") ?? '';
+          console.log("collectionUID ", collectionUID);
+          setUniverseCollectionId(collectionUID);
 
-          if (universeCollecitonId) {
-            const collectables = await fetchUniverseCollectables(
-              universeCollecitonId
-            );
-            setUniverseCollectables(collectables);
+          if (collectionUID) {
+            if (universeCollectionId) {
+              const collectables = await fetchUniverseCollectables(
+                universeCollectionId
+              );
+              setUniverseCollectables(collectables);
+            } 
           }
+          else {
+              console.error("universeCollectionId is null");
+            }
         }
       } catch (e) {
         setError("Error fetching universe collection ID");
@@ -294,6 +298,7 @@ export default function HomePage() {
     };
 
     getUniverseCollectionId();
+    
   }, [collectionId]);
 
   // Get items for the current page

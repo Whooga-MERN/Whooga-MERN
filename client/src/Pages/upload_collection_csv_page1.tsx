@@ -21,25 +21,15 @@ function UploadCollection() {
     const navigate = useNavigate();
 
     const onClickDownload = () => {
-        const blob = new Blob([featureTags], { type: 'text/csv' });
+        var allTags = ["owned,", "image,"];
+        allTags.push(featureTags);
+        const blob = new Blob(allTags, { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         console.log("helo" + collectionName);
         a.download = collectionName + '_collection_template.csv';
         a.click();
-    };
-
-    const CSVToJSON = (csv: string) => { 
-        const lines = csv.split('\n'); 
-        const keys = lines[0].split(','); 
-        return lines.slice(1).map(line => { 
-            return line.split(',').reduce((acc, cur, i) => { 
-                const toAdd: { [key: string]: string } = {}; 
-                toAdd[keys[i]] = cur; 
-                return { ...acc, ...toAdd }; 
-            }, {}); 
-        }); 
     };
 
     const handleContinue = () => {
