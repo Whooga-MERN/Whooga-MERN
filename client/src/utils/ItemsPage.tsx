@@ -55,14 +55,21 @@ export const fetchUniverseCollectables = async (
     }
 
     const jsonResponse = await response.json();
-    const collectables = jsonResponse.map((item: any) => ({
-      universeCollectableId: item.universe_collectable_id,
-      attributes: item.attributes.map((attr: any) => ({
-        name: attr.name,
-        value: attr.value,
-        image: attr.slug === "image" ? attr.value : null,
-      })),
-    }));
+    const collectables = jsonResponse
+      .map((item: any) => ({
+        universeCollectableId: item.universe_collectable_id,
+        attributes: item.attributes.map((attr: any) => ({
+          name: attr.name,
+          value: attr.value,
+          image: attr.slug === "image" ? attr.value : null,
+        })),
+      }))
+      .filter((collectable: any) => {
+        const nameAttr = collectable.attributes.find(
+          (attr: any) => attr.name.toLowerCase() === "name"
+        );
+        return nameAttr && nameAttr.value && nameAttr.value.trim() !== "";
+      });
 
     return collectables;
   } catch (e) {
