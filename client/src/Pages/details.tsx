@@ -32,28 +32,32 @@ export default function Details() {
 
       <div className="">
         <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-x-8 lg:px-8">
-          {/* Product details */}
           <div className="lg:max-w-lg lg:self-end">
             <div className="mt-16 ml-20">
-              {/* First attribute */}
-              {attributes[0] && (
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50 sm:text-4xl">
-                  {attributes[0].value.toUpperCase()}
-                </h1>
-              )}
-
-              {/* Second attribute */}
-              {attributes[1] && (
-                <p className="pt-2 text-2xl font-bold">{attributes[1].value}</p>
-              )}
+              {attributes
+                .filter(
+                  (attribute: any) =>
+                    attribute.name !== "image" && attribute.name !== "owned"
+                )
+                .slice(0, 2)
+                .map((attribute: any) => (
+                  <p
+                    key={attribute.name}
+                    className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50 sm:text-4xl"
+                  >
+                    {attribute.value.toUpperCase() || "N/A"}
+                  </p>
+                ))}
             </div>
 
             <section aria-labelledby="information-heading" className="mt-4">
-              {/* Remaining attributes */}
               <div className="mt-10 space-y-2 text-xl font-bold text-gray-500 dark:text-gray-400 ml-20">
                 {attributes
                   .slice(2)
-                  .filter((attribute) => attribute.name !== "image")
+                  .filter(
+                    (attribute) =>
+                      attribute.name !== "image" && attribute.name !== "owned"
+                  )
                   .map((attribute) => (
                     <p key={attribute.name}>
                       {attribute.name === "createAt"
@@ -69,7 +73,12 @@ export default function Details() {
           {/* Display Image */}
           <div className="mt-10 lg:col-start-2 lg:row-span-2 lg:mt-0 lg:self-center sm:pt-10">
             <div className="aspect-h-1 aspect-w-1 overflow-hidden rounded-lg">
-              <img alt={attributes[0]?.value} src={imageUrl} />
+              <img
+                alt={attributes[0]?.value}
+                src={imageUrl}
+                width={400}
+                height={400}
+              />
             </div>
           </div>
         </div>
