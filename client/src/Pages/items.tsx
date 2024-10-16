@@ -53,27 +53,7 @@ const color = [
   "green",
 ];
 
-const attributes = ["title", "tagNum", "createAt", "createdBy", "image"];
-
 export default function HomePage() {
-  // handle attributes dynamically
-  const [specificTag, setSelectedTag] = useState<Record<string, string> | null>(
-    null
-  );
-
-  const handleOpenModal = (tag: Record<string, any>) => {
-    const selectedTag = attributes.reduce((acc, attribute) => {
-      acc[attribute] = tag[attribute];
-      return acc;
-    }, {} as Record<string, string>);
-
-    setSelectedTag(selectedTag);
-    setShowModal(true);
-  };
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
-
   // add collectible form modal open handler
   const openModal = () => {
     setIsModalOpen(true);
@@ -94,7 +74,6 @@ export default function HomePage() {
   };
 
   const [isOwned, setIsOwned] = useState(true);
-  const [showModal, setShowModal] = useState(false); // card component
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
   const [selectedSort, setSelectedSort] = useState<string>("");
@@ -362,6 +341,22 @@ export default function HomePage() {
   function handleClearSearch(): void {
     setSearchResults([]);
   }
+
+  // ------------------------ open card for details -----------------------------------
+  const [showModal, setShowModal] = useState(false);
+  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
+    null
+  );
+
+  const handleOpenModal = (item: Record<string, any>) => {
+    setSpecificTag(item);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSpecificTag(null);
+  };
 
   return (
     <>
@@ -685,7 +680,7 @@ export default function HomePage() {
                       <div className="h-22 w-30">
                         <div className="absolute top-2 right-2 flex space-x-2">
                           <button
-                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                            className="text-2xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                             onClick={() =>
                               handleHeartClick(item.universeCollectableId)
                             }
@@ -712,7 +707,7 @@ export default function HomePage() {
                           }
                           width={400}
                           height={400}
-                          className="rounded-md shadow-sm object-cover"
+                          className="rounded-md shadow-sm object-cover pt-3"
                           onClick={() => handleOpenModal(item)}
                         />
                       </div>
@@ -753,8 +748,7 @@ export default function HomePage() {
             {/* send data to modal */}
             {showModal && specificTag && (
               <Modal
-                attributes={attributes}
-                tagData={specificTag}
+                itemData={specificTag}
                 onClose={handleCloseModal}
                 isVisible={showModal}
               />
@@ -767,7 +761,7 @@ export default function HomePage() {
                   </h2>
 
                   <form onSubmit={handleSubmit}>
-                    {attributes.map((attribute, index) => (
+                    {favoriteAttributes.map((attribute, index) => (
                       <div key={index} className="mb-4 lg:max-w-lg">
                         {attribute !== "image" ? (
                           <>
