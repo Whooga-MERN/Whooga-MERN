@@ -167,9 +167,9 @@ export const fetchUniverseSearchResults = async (
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Error fetching collectables.");
+    if (response.status === 404) {
+      console.log("No matching collectables found.");
+      return [];
     }
 
     const jsonResponse = await response.json();
@@ -221,13 +221,7 @@ export const fetchOwnedSearchResults = async (
     });
 
     if (response.status === 404) {
-      console.log("No matching collectables found.");
       return [];
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Error fetching collectables.");
     }
 
     const jsonResponse = await response.json();
