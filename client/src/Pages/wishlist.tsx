@@ -10,7 +10,8 @@ import { Collection } from '../Types/Collection';
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import fetchUserLoginDetails from "../fetchUserLoginDetails";
+import fetchJWT from "../fetchJWT";
 
 const tags = [
   {
@@ -422,9 +423,118 @@ const collections: Collection[] = [
 
 
 function Wishlist () {
-
+  const [user, setUser] = useState<any>(null);
+  const [JWT, setJWT] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [isUserFetched, setIsUserFetched] = useState(false);
+  const [isTokenFetched, setIsTokenFetched] = useState(false);
+  const [isUserIdFetched, setIsUserIdFetched] = useState(false);
+  const [collections, setCollections] = useState<any[]>([]);
   const [filledHeartIds, setFilledHeartIds] = useState<number[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>(["name", "Color", "Plated"]);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const user = await fetchUserLoginDetails();
+        setUser(user || "");
+        setIsUserFetched(true);
+      } catch (error) {
+        console.error("Error Fetching User");
+      }
+    };
+    fetchUserDetails();
+
+    const fetchToken = async () => {
+      try {
+        const token = await fetchJWT();
+        setJWT(token || "");
+        setIsTokenFetched(true);
+      } catch (error) {
+        console.error("Error fetching JWT");
+      }
+    };
+    fetchToken();
+    //console.log(JWT);
+  }, []);
+
+    useEffect(() => {
+    if (isUserFetched && isTokenFetched && user && JWT) {
+      const getUserId = async () => {
+        const params = {
+          user_email: user.loginId,
+        };
+
+        const response = await fetch(
+          "http://localhost:3000/user/?user_email=" + user.loginId,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error);
+        }
+        const data = await response.json();
+        console.log("setting user id: ", data[0].user_id);
+        setUserId(data[0].user_id);
+        setIsUserIdFetched(true);
+      };
+      getUserId();
+    }
+  }, [isUserFetched, isTokenFetched, user, JWT]);
+
+  useEffect(() => {
+    // fetch collections
+    if (isUserIdFetched && userId) {
+      console.log("in fetch collections ", userId);
+      const fetchCollections = async () => {
+        const response = await fetch(
+          "http://localhost:3000/collection/user/" + userId,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error);
+        }
+        const data = await response.json();
+        console.log("collections as data: ", data);
+        console.log("1st collection:", data[0].collection_pic);
+
+        setCollections(
+          data.map((col: any) => {
+            return {
+              name: col.name,
+              id: col.collection_id,
+              collectionUniverseId: col.collection_universe_id,
+              image_url: col.collection_pic,
+              description: "",
+              newListing: false,
+              customAttributes: col.custom_attributes,
+              favoriteAttributes: col.favorite_attributes,
+              hiddenAttributes: col.hidden_attributes,
+            };
+          })
+        );
+
+        //console.log("Collections as collection:", collections);
+      };
+
+      fetchCollections();
+    }
+  }, [isUserIdFetched, userId, JWT]);
 
   const handleHeartClick = (tagId: number) => {
     setFilledHeartIds((prev) =>
