@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import _, { debounce, get, set } from "lodash";
+import { useParams } from "react-router-dom";
+import _ from "lodash";
+
 import {
   FaListUl,
   FaRegEdit,
@@ -22,11 +23,14 @@ import Header from "../Components/Header";
 import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
+import OwnedToggle from "../Components/ownedToggle";
+
 import { buildPath } from "../utils/utils";
 import {
-  fetchUniverseCollectionId,
   fetchUniverseCollectables,
-  fetchSearchResults,
+  fetchUniverseSearchResults,
+  fetchOwnedCollectables,
+  fetchOwnedSearchResults,
 } from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
@@ -261,37 +265,55 @@ export default function HomePage() {
     return <div>Error: Collection ID is missing!</div>;
   }
 
-  // -------------------------- show universecollectables------------------
+  // -------------------------- show universecollectables and search ------------------
   const [universeCollectionId, setUniverseCollectionId] = useState<
     string | null
   >(null);
+  const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
+  const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [enabled, setEnabled] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [resetDropdown, setResetDropdown] = useState(false);
+  const [noSearchResults, setNoSearchResults] = useState(false);
 
   useEffect(() => {
-    var collectionUID = localStorage.getItem("collectionUniverseId") ?? '';
-          console.log("collectionUID ", collectionUID);
-          setUniverseCollectionId(collectionUID);
+    var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
+    setUniverseCollectionId(collectionUID);
+    const collectionName = localStorage.getItem("collectionName") ?? "";
+    setUniverseCollectionName(collectionName);
   }, []);
+
+  const updateTotalPages = (items: any[]) => {
+    const pageCount = Math.ceil(items.length / ITEMS_PER_PAGE);
+    setTotalPages(pageCount);
+  };
 
   useEffect(() => {
     const getUniverseCollectionId = async () => {
-      const startTime = Date.now();
       try {
         if (collectionId) {
-            console.log("universeCollectionId right before call ", universeCollectionId);
-            if (universeCollectionId) {
-              const collectables = await fetchUniverseCollectables(
-                universeCollectionId
-              );
-              setUniverseCollectables(collectables);
-            }          
-        }
-        else {
-              console.error("universeCollectionId is null");
+          const ownedCollectables = await fetchOwnedCollectables(collectionId);
+          setOwnedCollectables(ownedCollectables);
+          if (enabled) {
+            updateTotalPages(ownedCollectables);
+          }
+
+          if (universeCollectionId) {
+            const collectables = await fetchUniverseCollectables(
+              universeCollectionId
+            );
+            setUniverseCollectables(collectables);
+            if (!enabled) {
+              updateTotalPages(collectables);
             }
+          }
+        } else {
+          console.error("universeCollectionId is null");
+        }
       } catch (e) {
         setError("Error fetching universe collection ID");
         console.error(e);
@@ -299,13 +321,61 @@ export default function HomePage() {
     };
 
     getUniverseCollectionId();
-    
   }, [collectionId, universeCollectionId]);
+
+  const handleSearchResults = (results: any[]) => {
+    if (results.length === 0) {
+      setNoSearchResults(true);
+    } else {
+      setNoSearchResults(false);
+      setSearchResults(results);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchResults([]);
+    setResetDropdown(true);
+    setNoSearchResults(false);
+  };
+
+  const handleToggleChange = async (enabled: boolean) => {
+    setEnabled(enabled);
+    handleClearSearch();
+
+    try {
+      if (enabled) {
+        // Fetch and set owned collectables
+        const ownedCollectables = await fetchOwnedCollectables(collectionId);
+        setOwnedCollectables(ownedCollectables);
+        updateTotalPages(ownedCollectables);
+      } else {
+        // Fetch and set universe collectables
+        if (universeCollectionId) {
+          const collectables = await fetchUniverseCollectables(
+            universeCollectionId
+          );
+          setUniverseCollectables(collectables);
+          updateTotalPages(collectables);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
 
   // Get items for the current page
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
-  const paginatedCollectables = universeCollectables.slice(startIdx, endIdx);
+  // const paginatedCollectables = universeCollectables.slice(startIdx, endIdx);
+  const paginatedCollectables = (
+    enabled ? ownedCollectables : universeCollectables
+  ).slice(startIdx, endIdx);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   // Handle page change
   const handlePageChange = (pageNum: number) => {
@@ -314,39 +384,11 @@ export default function HomePage() {
     }
   };
 
-  // const [currentPage, setCurrentPage] = useState<number>(1);
-  // // calculate total pages
-  // const totalPages: number = Math.ceil(processedTags.length / ITEMS_PER_PAGE);
-
-  // // get items for the current page
-  // const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  // const endIdx = startIdx + ITEMS_PER_PAGE;
-  // const paginatedTags = processedTags.slice(startIdx, endIdx);
-
-  // // handle page change
-  // const handlePageChange = (pageNum: number) => {
-  //   if (pageNum >= 1 && pageNum <= totalPages) {
-  //     setCurrentPage(pageNum);
-  //   }
-  // };
-
-  // ------------------- search ------------------------
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-
   // Error handler for search queries
   const handleError = (error: any) => {
     console.error("Search error:", error);
     alert("An error occurred during the search. Please try again.");
   };
-
-  const handleSearchResults = (results: any[]) => {
-    setSearchResults(results);
-    console.log(searchResults);
-  };
-
-  function handleClearSearch(): void {
-    setSearchResults([]);
-  }
 
   // ------------------------ open card for details -----------------------------------
   const [showModal, setShowModal] = useState(false);
@@ -371,37 +413,33 @@ export default function HomePage() {
         <div className="w-full mx-auto pt-16">
           <div className="mx-auto pl-10">
             {/* collection option */}
-            {isOwned ? (
-              <select className="select select-bordered font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
-                <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
-                  PathTags
-                </option>
-                <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
-                  Baseball card
-                </option>
-                <option className="dropdown-content menu bg-yellow-100 rounded-box z-[1] w-52 p-2 shadow text-lg">
-                  Nutcraker
-                </option>
-              </select>
-            ) : (
-              <h2 className="px-14 font-manrope font-bold text-4xl text-center w-fit">
-                Pathtags
-              </h2>
-            )}
+            <div className="flex items-center gap-4">
+              <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-8 py-3">
+                {universeCollectionName}
+              </p>
+              <OwnedToggle
+                enabled={enabled}
+                setEnabled={setEnabled}
+                onToggle={handleToggleChange}
+              />
+            </div>
 
             <div className="flex md:items-center justify-center gap-8 py-9 max-md:px-4">
               {/* Search bar */}
               {universeCollectionId && (
                 <SearchBar
                   attributes={favoriteAttributes}
-                  fetchSearchResults={(tags) =>
-                    fetchSearchResults(tags, userId, universeCollectionId)
-                  }
+                  fetchOwnedSearchResults={fetchOwnedSearchResults}
+                  fetchUniverseSearchResults={fetchUniverseSearchResults}
                   handleError={handleError}
                   userId={userId}
-                  universeCollectionId={universeCollectionId}
+                  collectionId={collectionId!}
+                  universeCollectionId={universeCollectionId!}
                   onSearchResults={handleSearchResults}
                   onResetSearch={handleClearSearch}
+                  isOwnedEnabled={enabled}
+                  resetDropdown={resetDropdown}
+                  setResetDropdown={setResetDropdown}
                 />
               )}
 
@@ -601,92 +639,26 @@ export default function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* collectibles */}
           <div className="w-full p-2">
-            {/* switch between grid and list */}
-            {view === "list" ? (
-              <div className="flex flex-wrap -mx-4">
-                {(searchResults.length > 0
-                  ? searchResults
-                  : paginatedCollectables
-                ).map((item) => (
-                  <div
-                    key={item.universeCollectableId}
-                    className="w-full md:w-1/2 px-4 mb-6"
-                  >
-                    <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                      <button
-                        className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                        onClick={() =>
-                          handleHeartClick(item.universeCollectableId)
-                        }
-                      >
-                        {filledHeartIds.includes(item.universeCollectableId) ? (
-                          <FaHeart color="red" />
-                        ) : (
-                          <FaRegHeart />
-                        )}
-                      </button>
-                      <div className="h-24 w-24">
-                        <img
-                          src={
-                            item.attributes.find(
-                              (attr: any) => attr.name === "image"
-                            )?.value || "/placeholder.jpg"
-                          }
-                          alt={
-                            item.attributes.find(
-                              (attr: any) => attr.name === "name"
-                            )?.value || "No Name"
-                          }
-                          width={100}
-                          height={100}
-                          className="rounded-md shadow-sm object-cover"
-                          onClick={() => handleOpenModal(item)}
-                        />
-                      </div>
-
-                      <div className="flex-1">
-                        {item.attributes
-                          .slice(0, 3)
-                          .map((attribute: any, index: number) => (
-                            <p
-                              key={attribute.name}
-                              className={
-                                index === 0
-                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                  : "text-md font-semibold pl-4 capitalize truncate"
-                              }
-                            >
-                              {`${attribute.value}`}
-                            </p>
-                          ))}
-                      </div>
-                      <div className="flex space-x-4">
-                        <button
-                          className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                          onClick={openEdit}
-                        >
-                          <FaRegEdit />
-                        </button>
-                        <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
-                          <FaRegTrashCan />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            {noSearchResults ? (
+              <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
+                No match found :(
               </div>
             ) : (
-              <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                {(searchResults.length > 0
-                  ? searchResults
-                  : paginatedCollectables
-                ).map((item) => (
-                  <div key={item.universeCollectableId}>
-                    <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                      <div className="h-22 w-30">
-                        <div className="absolute top-2 right-2 flex space-x-2">
+              <div className="w-full p-2">
+                {/* switch between grid and list */}
+                {view === "list" ? (
+                  <div className="flex flex-wrap -mx-4">
+                    {(searchResults.length > 0
+                      ? searchResults
+                      : paginatedCollectables
+                    ).map((item) => (
+                      <div
+                        key={item.universeCollectableId}
+                        className="w-full md:w-1/2 px-4 mb-6"
+                      >
+                        <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                           <button
-                            className="text-2xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                             onClick={() =>
                               handleHeartClick(item.universeCollectableId)
                             }
@@ -699,56 +671,142 @@ export default function HomePage() {
                               <FaRegHeart />
                             )}
                           </button>
-                        </div>
-                        <img
-                          src={
-                            item.attributes.find(
-                              (attr: any) => attr.name === "image"
-                            )?.value || "/placeholder.jpg"
-                          }
-                          alt={
-                            item.attributes.find(
-                              (attr: any) => attr.name === "name"
-                            )?.value || "No Name"
-                          }
-                          width={400}
-                          height={400}
-                          className="rounded-md shadow-sm object-cover pt-3"
-                          onClick={() => handleOpenModal(item)}
-                        />
-                      </div>
-
-                      <div className="space-y-1 p-4">
-                        {item.attributes
-                          .slice(0, 3)
-                          .map((attribute: any, index: number) => (
-                            <p
-                              key={attribute.slug}
-                              className={
-                                index === 0
-                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                  : "text-md font-semibold pl-4 capitalize truncate"
+                          <div className="h-24 w-24">
+                            <img
+                              src={
+                                item.attributes.find(
+                                  (attr: any) => attr.name === "image"
+                                )?.value || "/placeholder.jpg"
                               }
-                            >
-                              {`${attribute.value}`}
-                            </p>
-                          ))}
+                              alt={
+                                item.attributes.find(
+                                  (attr: any) => attr.name === "name"
+                                )?.value || "No Name"
+                              }
+                              width={100}
+                              height={100}
+                              className="rounded-md shadow-sm object-cover"
+                              onClick={() => handleOpenModal(item)}
+                            />
+                          </div>
 
-                        <div className="pt-3 pb-2 text-center">
-                          <button
-                            className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                            onClick={openEdit}
-                          >
-                            <FaRegEdit />
-                          </button>
-                          <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
-                            <FaRegTrashCan />
-                          </button>
+                          <div className="flex-1">
+                            {item.attributes
+                              .filter(
+                                (attribute: any) =>
+                                  attribute.name !== "image" &&
+                                  attribute.name !== "owned"
+                              )
+                              .slice(0, 3)
+                              .map((attribute: any, index: number) => (
+                                <p
+                                  key={attribute.slug || attribute.name}
+                                  className={
+                                    index === 0
+                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                      : "text-md font-semibold pl-4 capitalize truncate"
+                                  }
+                                >
+                                  {`${attribute.value}`}
+                                </p>
+                              ))}
+                          </div>
+                          <div className="flex space-x-4">
+                            <button
+                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                              onClick={openEdit}
+                            >
+                              <FaRegEdit />
+                            </button>
+                            <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                              <FaRegTrashCan />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                    {(searchResults.length > 0
+                      ? searchResults
+                      : paginatedCollectables
+                    ).map((item) => (
+                      <div key={item.universeCollectableId}>
+                        <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                          <div className="h-22 w-30">
+                            <div className="absolute top-2 right-2 flex space-x-2">
+                              <button
+                                className="text-2xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                onClick={() =>
+                                  handleHeartClick(item.universeCollectableId)
+                                }
+                              >
+                                {filledHeartIds.includes(
+                                  item.universeCollectableId
+                                ) ? (
+                                  <FaHeart color="red" />
+                                ) : (
+                                  <FaRegHeart />
+                                )}
+                              </button>
+                            </div>
+                            <img
+                              src={
+                                item.attributes.find(
+                                  (attr: any) => attr.name === "image"
+                                )?.value || "/placeholder.jpg"
+                              }
+                              alt={
+                                item.attributes.find(
+                                  (attr: any) => attr.name === "name"
+                                )?.value || "No Name"
+                              }
+                              width={400}
+                              height={400}
+                              className="rounded-md shadow-sm object-cover pt-3"
+                              onClick={() => handleOpenModal(item)}
+                            />
+                          </div>
+
+                          <div className="space-y-1 p-4">
+                            {item.attributes
+                              .filter(
+                                (attribute: any) =>
+                                  attribute.name !== "image" &&
+                                  attribute.name !== "owned"
+                              )
+                              .slice(0, 3)
+                              .map((attribute: any, index: number) => (
+                                <p
+                                  key={attribute.slug || attribute.name}
+                                  className={
+                                    index === 0
+                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                      : "text-md font-semibold pl-4 capitalize truncate"
+                                  }
+                                >
+                                  {`${attribute.value}`}
+                                </p>
+                              ))}
+
+                            <div className="pt-3 pb-2 text-center">
+                              <button
+                                className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                onClick={openEdit}
+                              >
+                                <FaRegEdit />
+                              </button>
+                              <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                                <FaRegTrashCan />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {/* send data to modal */}
@@ -847,7 +905,7 @@ export default function HomePage() {
         </div>
 
         {/* Pagination */}
-        <nav className="flex items-center justify-between px-4 sm:px-0 mt-8">
+        <nav className="flex items-center justify-between px-4 sm:px-0 mt-28">
           {/* Left Arrow */}
           <div className="flex-1 flex justify-start ml-20">
             <button
