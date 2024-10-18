@@ -286,17 +286,29 @@ export default function HomePage() {
     setUniverseCollectionName(collectionName);
   }, []);
 
+  const updateTotalPages = (items: any[]) => {
+    const pageCount = Math.ceil(items.length / ITEMS_PER_PAGE);
+    setTotalPages(pageCount);
+  };
+
   useEffect(() => {
     const getUniverseCollectionId = async () => {
       try {
         if (collectionId) {
           const ownedCollectables = await fetchOwnedCollectables(collectionId);
           setOwnedCollectables(ownedCollectables);
+          if (enabled) {
+            updateTotalPages(ownedCollectables);
+          }
+
           if (universeCollectionId) {
             const collectables = await fetchUniverseCollectables(
               universeCollectionId
             );
             setUniverseCollectables(collectables);
+            if (!enabled) {
+              updateTotalPages(collectables);
+            }
           }
         } else {
           console.error("universeCollectionId is null");
@@ -328,6 +340,7 @@ export default function HomePage() {
         // Fetch and set owned collectables
         const ownedCollectables = await fetchOwnedCollectables(collectionId);
         setOwnedCollectables(ownedCollectables);
+        updateTotalPages(ownedCollectables);
       } else {
         // Fetch and set universe collectables
         if (universeCollectionId) {
@@ -335,6 +348,7 @@ export default function HomePage() {
             universeCollectionId
           );
           setUniverseCollectables(collectables);
+          updateTotalPages(collectables);
         }
       }
     } catch (error) {
@@ -349,6 +363,12 @@ export default function HomePage() {
   const paginatedCollectables = (
     enabled ? ownedCollectables : universeCollectables
   ).slice(startIdx, endIdx);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   // Handle page change
   const handlePageChange = (pageNum: number) => {
