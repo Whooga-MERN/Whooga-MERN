@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
-import Slider from 'react-slick';
-import { Link } from 'react-router-dom';
+import {
+  FaHeart,
+  FaRegHeart,
+} from "react-icons/fa";
 
 import Header from '../Components/Header';
 import Footer from '../Components/Footer';
@@ -418,86 +420,20 @@ const collections: Collection[] = [
   },
 ];
 
-const NextArrow = (props: any) => {
-  const { className, style, onClick } = props;
-  return (
-    <div
-      className={className}
-      style={{ ...style, display: 'block', borderRadius: '50%', padding: '10px', zIndex: 1 }}
-      onClick={onClick}
-    >
-      <FaChevronRight color="black" size={30} /> {/* Use a black icon with size 20 */}
-    </div>
-  );
-};
-
-const PrevArrow = (props: any) => {
-  const { className, style, onClick } = props;
-  return (
-    <div
-      className={className}
-      style={{ ...style, display: 'block', borderRadius: '50%', padding: '10px', zIndex: 1, marginLeft: '-25px', marginTop: '-30px' }}
-      onClick={onClick}
-    >
-      <FaChevronLeft color="black" size={30} /> {/* Use a black icon with size 20 */}
-    </div>
-  );
-};
 
 function Wishlist () {
-    const [isDarkMode, setIsDarkMode] = useState(false);
 
-  useEffect(() => {
-    const theme = document.documentElement.getAttribute('data-theme');
-    if (theme === 'dark') {
-      setIsDarkMode(true);
-    } else {
-      setIsDarkMode(false);
-    }
-  }, []);
+  const [filledHeartIds, setFilledHeartIds] = useState<number[]>([]);
+  const [customAttributes, setCustomAttributes] = useState<string[]>(["name", "Color", "Plated"]);
 
-    const settings: any = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 7,
-    slidesToScroll: 6,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 3,
-          infinite: true,
-          dots: false
-        }
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 2,
-          initialSlide: 2,
-          dots: false
-        }
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          dots: false
-        }
-      }
-    ],
+  const handleHeartClick = (tagId: number) => {
+    setFilledHeartIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
   };
-
-    // Check if the app is in dark mode
-  if (!isDarkMode) {
-    settings.nextArrow = <NextArrow />;
-    settings.prevArrow = <PrevArrow />;
-  }
-
+    
     return (
         <>
         <Header/> 
@@ -506,43 +442,65 @@ function Wishlist () {
         </h2>
         
             <div className="w-full px-16"> 
-                {collections.map((collection: Collection) => (
-                    <div key={collection.id}>
-                        <h1 className='pt-12 pb-5 font-manrope font-bold text-3xl text-left'>{collection.name}</h1>
-                        <div className='py-8 bg-gray-200 dark:bg-gray-600 rounded-xl'>
-                        <Slider {...settings}>
-                            {tags.map((tag) => (
-                            <div key={tag.id}>
-                            <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                <div className="h-22 w-30">
-                                <img
-                                    src={tag.image}
-                                    alt={tag.title}
-                                    width={400}
-                                    height={400}
-                                    className="rounded-md shadow-sm object-cover object-top"
-                                    // onClick={() => handleOpenModal(tag)}
-                                />
-                                </div>
-                                <div className="space-y-1">
-                                <p className="mt-4 font-semibold pl-4 uppercase truncate">
-                                    {tag.tagNum}
-                                </p>
-                                <p className="font-bold pl-4 uppercase truncate">
-                                    {tag.title}
-                                </p>
-                                <div className="pt-3 pb-2 text-center">
-                                </div>
-                                </div>
-                            </div>
-                            </div>
-                        ))}
-                        </Slider>
+                <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                {(tags).map((item) => (
+                  <div key={item.id}>
+                    <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                      <div className="h-22 w-30">
+                        <div className="absolute top-2 right-2 flex space-x-2">
+                          <button
+                            className="text-2xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                            onClick={() =>
+                              handleHeartClick(item.id)
+                            }
+                          >
+                            {filledHeartIds.includes(
+                              item.id
+                            ) ? (
+                              <FaHeart color="red" />
+                            ) : (
+                              <FaRegHeart />
+                            )}
+                          </button>
                         </div>
+                        {/* <img
+                          src={
+                            tags.find(
+                              (attr: any) => attr.name === "image"
+                            )?.value || "/placeholder.jpg"
+                          }
+                          alt={
+                            item.attributes.find(
+                              (attr: any) => attr.name === "name"
+                            )?.value || "No Name"
+                          }
+                          width={400}
+                          height={400}
+                          className="rounded-md shadow-sm object-cover pt-3"
+                          onClick={() => handleOpenModal(item)}
+                        /> */}
+                      </div>
+
+                      <div className="space-y-1 p-4">
+                        {customAttributes
+                          .slice(0, 3)
+                          .map((attribute: any, index: number) => (
+                            <p
+                              key={attribute.slug}
+                              className={
+                                index === 0
+                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                  : "text-md font-semibold pl-4 capitalize truncate"
+                              }
+                            >
+                              {`${attribute.value}`}
+                            </p>
+                          ))}
+                      </div>
                     </div>
+                  </div>
                 ))}
-                
-            
+              </div>            
             </div>
             <Footer />
         </>
