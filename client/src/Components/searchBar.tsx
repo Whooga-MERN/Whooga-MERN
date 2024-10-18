@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 
@@ -20,7 +20,9 @@ interface SearchBarProps {
   universeCollectionId: string;
   onSearchResults: (results: any[]) => void;
   onResetSearch: () => void;
-  isOwnedEnabled: boolean; // Toggle state to decide which search function to call
+  resetDropdown: boolean;
+  setResetDropdown: (value: boolean) => void;
+  isOwnedEnabled: boolean;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -34,6 +36,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onSearchResults,
   onResetSearch,
   isOwnedEnabled,
+  resetDropdown,
+  setResetDropdown,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>("Options");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -41,6 +45,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchTags, setSearchTags] = useState<
     { attribute: string; term: string }[]
   >([]);
+
+  useEffect(() => {
+    setSearchTags([]);
+  }, [onResetSearch]);
+
+  useEffect(() => {
+    if (resetDropdown) {
+      setSelectedOption("Options");
+      setSearchTags([]);
+      setResetDropdown(false);
+    }
+  }, [resetDropdown, setResetDropdown]);
 
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
@@ -99,6 +115,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           universeCollectionId
         );
       }
+      onSearchResults(searchResults);
     } catch (error) {
       handleError(error);
     }
