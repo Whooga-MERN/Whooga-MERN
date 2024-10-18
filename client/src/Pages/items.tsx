@@ -278,6 +278,7 @@ export default function HomePage() {
   const [enabled, setEnabled] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [resetDropdown, setResetDropdown] = useState(false);
+  const [noSearchResults, setNoSearchResults] = useState(false);
 
   useEffect(() => {
     var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
@@ -323,12 +324,18 @@ export default function HomePage() {
   }, [collectionId, universeCollectionId]);
 
   const handleSearchResults = (results: any[]) => {
-    setSearchResults(results);
+    if (results.length === 0) {
+      setNoSearchResults(true);
+    } else {
+      setNoSearchResults(false);
+      setSearchResults(results);
+    }
   };
 
   const handleClearSearch = () => {
     setSearchResults([]);
     setResetDropdown(true);
+    setNoSearchResults(false);
   };
 
   const handleToggleChange = async (enabled: boolean) => {
@@ -632,10 +639,9 @@ export default function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* collectibles */}
           <div className="w-full p-2">
-            {searchResults.length === 0 &&
-            paginatedCollectables.length === 0 ? (
-              <div className="text-center w-full text-xl font-semibold text-gray-600">
-                No match found.
+            {noSearchResults ? (
+              <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
+                No match found :(
               </div>
             ) : (
               <div className="w-full p-2">
@@ -899,7 +905,7 @@ export default function HomePage() {
         </div>
 
         {/* Pagination */}
-        <nav className="flex items-center justify-between px-4 sm:px-0 mt-8">
+        <nav className="flex items-center justify-between px-4 sm:px-0 mt-28">
           {/* Left Arrow */}
           <div className="flex-1 flex justify-start ml-20">
             <button
