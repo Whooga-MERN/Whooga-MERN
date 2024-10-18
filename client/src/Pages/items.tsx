@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import _ from "lodash";
+
 import {
   FaListUl,
   FaRegEdit,
@@ -33,7 +34,6 @@ import {
 } from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
-import { Switch } from "@headlessui/react";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -277,6 +277,7 @@ export default function HomePage() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [enabled, setEnabled] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [resetDropdown, setResetDropdown] = useState(false);
 
   useEffect(() => {
     var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
@@ -316,6 +317,30 @@ export default function HomePage() {
 
   const handleClearSearch = () => {
     setSearchResults([]);
+    setResetDropdown(true);
+  };
+
+  const handleToggleChange = async (enabled: boolean) => {
+    setEnabled(enabled);
+    handleClearSearch();
+
+    try {
+      if (enabled) {
+        // Fetch and set owned collectables
+        const ownedCollectables = await fetchOwnedCollectables(collectionId);
+        setOwnedCollectables(ownedCollectables);
+      } else {
+        // Fetch and set universe collectables
+        if (universeCollectionId) {
+          const collectables = await fetchUniverseCollectables(
+            universeCollectionId
+          );
+          setUniverseCollectables(collectables);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
   };
 
   // Get items for the current page
@@ -363,10 +388,14 @@ export default function HomePage() {
           <div className="mx-auto pl-10">
             {/* collection option */}
             <div className="flex items-center gap-4">
-              <p className="font-bold text-xl text-black bg-yellow-300 rounded-full px-5 pt-2 pb-3 w-fit">
+              <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-8 py-3">
                 {universeCollectionName}
               </p>
-              <OwnedToggle enabled={enabled} setEnabled={setEnabled} />
+              <OwnedToggle
+                enabled={enabled}
+                setEnabled={setEnabled}
+                onToggle={handleToggleChange}
+              />
             </div>
 
             <div className="flex md:items-center justify-center gap-8 py-9 max-md:px-4">
@@ -382,7 +411,9 @@ export default function HomePage() {
                   universeCollectionId={universeCollectionId!}
                   onSearchResults={handleSearchResults}
                   onResetSearch={handleClearSearch}
-                  isOwnedEnabled={enabled} // Toggle state passed here
+                  isOwnedEnabled={enabled}
+                  resetDropdown={resetDropdown}
+                  setResetDropdown={setResetDropdown}
                 />
               )}
 
@@ -588,7 +619,6 @@ export default function HomePage() {
                 No match found.
               </div>
             ) : (
-              // Wrap the following collectibles rendering properly
               <div className="w-full p-2">
                 {/* switch between grid and list */}
                 {view === "list" ? (
