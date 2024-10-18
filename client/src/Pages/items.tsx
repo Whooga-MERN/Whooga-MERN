@@ -312,7 +312,6 @@ export default function HomePage() {
 
   const handleSearchResults = (results: any[]) => {
     setSearchResults(results);
-    console.log(searchResults);
   };
 
   const handleClearSearch = () => {

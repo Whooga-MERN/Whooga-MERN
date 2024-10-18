@@ -47,10 +47,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   >([]);
 
   useEffect(() => {
-    setSearchTags([]);
-  }, [onResetSearch]);
-
-  useEffect(() => {
     if (resetDropdown) {
       setSelectedOption("Options");
       setSearchTags([]);
