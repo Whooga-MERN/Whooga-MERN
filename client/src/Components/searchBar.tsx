@@ -4,26 +4,36 @@ import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 
 interface SearchBarProps {
   attributes: string[];
-  fetchSearchResults: (
+  fetchOwnedSearchResults: (
+    tags: { attribute: string; term: string }[],
+    userId: string,
+    collectionId: string
+  ) => Promise<any>;
+  fetchUniverseSearchResults: (
     tags: { attribute: string; term: string }[],
     userId: string,
     universeCollectionId: string
   ) => Promise<any>;
   handleError: (error: any) => void;
   userId: string;
+  collectionId: string;
   universeCollectionId: string;
   onSearchResults: (results: any[]) => void;
   onResetSearch: () => void;
+  isOwnedEnabled: boolean; // Toggle state to decide which search function to call
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   attributes,
   userId,
+  collectionId,
   universeCollectionId,
-  fetchSearchResults,
+  fetchOwnedSearchResults,
+  fetchUniverseSearchResults,
   handleError,
   onSearchResults,
   onResetSearch,
+  isOwnedEnabled,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>("Options");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -73,12 +83,22 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
 
     try {
-      const searchResults = await fetchSearchResults(
-        searchTags,
-        userId,
-        universeCollectionId
-      );
-      onSearchResults(searchResults);
+      let searchResults;
+      if (isOwnedEnabled) {
+        // Fetch results for owned collectables
+        searchResults = await fetchOwnedSearchResults(
+          searchTags,
+          userId,
+          collectionId
+        );
+      } else {
+        // Fetch results for universe collectables
+        searchResults = await fetchUniverseSearchResults(
+          searchTags,
+          userId,
+          universeCollectionId
+        );
+      }
     } catch (error) {
       handleError(error);
     }
