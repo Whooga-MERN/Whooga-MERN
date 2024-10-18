@@ -18,6 +18,9 @@ import {
   ArrowLongLeftIcon,
   ArrowLongRightIcon,
 } from "@heroicons/react/20/solid";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar as faSolidStar } from "@fortawesome/free-solid-svg-icons";
+import { faStar as faRegularStar } from "@fortawesome/free-regular-svg-icons";
 
 import Header from "../Components/Header";
 import Modal from "../Components/Modal";
@@ -658,7 +661,7 @@ export default function HomePage() {
                       >
                         <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                           <button
-                            className="text-xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                            className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                             onClick={() =>
                               handleHeartClick(item.universeCollectableId)
                             }
@@ -666,9 +669,15 @@ export default function HomePage() {
                             {filledHeartIds.includes(
                               item.universeCollectableId
                             ) ? (
-                              <FaHeart color="red" />
+                              <FontAwesomeIcon
+                                icon={faSolidStar}
+                                style={{ color: "#EDC307" }}
+                              />
                             ) : (
-                              <FaRegHeart />
+                              <FontAwesomeIcon
+                                icon={faRegularStar}
+                                style={{ color: "#EDC307" }}
+                              />
                             )}
                           </button>
                           <div className="h-24 w-24">
@@ -737,7 +746,7 @@ export default function HomePage() {
                           <div className="h-22 w-30">
                             <div className="absolute top-2 right-2 flex space-x-2">
                               <button
-                                className="text-2xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                 onClick={() =>
                                   handleHeartClick(item.universeCollectableId)
                                 }
@@ -745,9 +754,15 @@ export default function HomePage() {
                                 {filledHeartIds.includes(
                                   item.universeCollectableId
                                 ) ? (
-                                  <FaHeart color="red" />
+                                  <FontAwesomeIcon
+                                    icon={faSolidStar}
+                                    style={{ color: "#EDC307" }}
+                                  />
                                 ) : (
-                                  <FaRegHeart />
+                                  <FontAwesomeIcon
+                                    icon={faRegularStar}
+                                    style={{ color: "#EDC307" }}
+                                  />
                                 )}
                               </button>
                             </div>
