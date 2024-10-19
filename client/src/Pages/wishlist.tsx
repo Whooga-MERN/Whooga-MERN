@@ -555,9 +555,9 @@ function Wishlist() {
     console.log("Collection IDs:", collectionIds);
   }, []);
 
-  const [wishlistedItems, setWishlistedItems] = useState<any[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
 
-  const fetchWishlistedItems = async (collectionIds: number[]) => {
+  const fetchWishlistItems = async (collectionIds: number[]) => {
     try {
       // fetch items for each collections
       const promises = collectionIds.map(async (id) => {
@@ -575,8 +575,7 @@ function Wishlist() {
       });
 
       const results = await Promise.all(promises);
-      setWishlistedItems(results);
-      console.log("Wishlisted Items:", results);
+      setWishlistItems(results);
     } catch (error) {
       console.error("Error fetching wishlisted items:", error);
     }
@@ -589,9 +588,13 @@ function Wishlist() {
 
     // when there is collection, try fetch wishlist
     if (collectionIds.length > 0) {
-      fetchWishlistedItems(collectionIds);
+      fetchWishlistItems(collectionIds);
     }
   }, []);
+
+  useEffect(() => {
+    console.log("Wishlist Items:", wishlistItems);
+  }, [wishlistItems]);
 
   return (
     <>
