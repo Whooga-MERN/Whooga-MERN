@@ -1,12 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react';
-import {
-  FaHeart,
-  FaRegHeart,
-} from "react-icons/fa";
+import React, { useContext, useEffect, useState } from "react";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 
-import Header from '../Components/Header';
-import Footer from '../Components/Footer';
-import { Collection } from '../Types/Collection';
+import Header from "../Components/Header";
+import Footer from "../Components/Footer";
+import { Collection } from "../Types/Collection";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -381,14 +378,16 @@ const collections: Collection[] = [
     name: "Pathtags",
     id: 1,
     image_url: "/bear.jpg",
-    description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
+    description:
+      "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
     newListing: true,
   },
   {
     name: "Shoes",
     id: 2,
     image_url: "/shoes.jpg",
-    description: "Shoes are a type of footwear that are typically worn on the feet.",
+    description:
+      "Shoes are a type of footwear that are typically worn on the feet.",
     newListing: false,
   },
   {
@@ -409,7 +408,8 @@ const collections: Collection[] = [
     name: "Snowglobes",
     id: 3,
     image_url: "/snowglobe.jpg",
-    description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
+    description:
+      "Snowglobes are a type of souvenir that are often sold in gift shops.",
     newListing: true,
   },
   {
@@ -421,8 +421,7 @@ const collections: Collection[] = [
   },
 ];
 
-
-function Wishlist () {
+function Wishlist() {
   const [user, setUser] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
@@ -431,7 +430,11 @@ function Wishlist () {
   const [isUserIdFetched, setIsUserIdFetched] = useState(false);
   const [collections, setCollections] = useState<any[]>([]);
   const [filledHeartIds, setFilledHeartIds] = useState<number[]>([]);
-  const [customAttributes, setCustomAttributes] = useState<string[]>(["name", "Color", "Plated"]);
+  const [customAttributes, setCustomAttributes] = useState<string[]>([
+    "name",
+    "Color",
+    "Plated",
+  ]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -458,7 +461,7 @@ function Wishlist () {
     //console.log(JWT);
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     if (isUserFetched && isTokenFetched && user && JWT) {
       const getUserId = async () => {
         const params = {
@@ -481,7 +484,6 @@ function Wishlist () {
           throw new Error(errorData.error);
         }
         const data = await response.json();
-        console.log("setting user id: ", data[0].user_id);
         setUserId(data[0].user_id);
         setIsUserIdFetched(true);
       };
@@ -492,7 +494,7 @@ function Wishlist () {
   useEffect(() => {
     // fetch collections
     if (isUserIdFetched && userId) {
-      console.log("in fetch collections ", userId);
+      // console.log("in fetch collections ", userId);
       const fetchCollections = async () => {
         const response = await fetch(
           "http://localhost:3000/collection/user/" + userId,
@@ -510,8 +512,8 @@ function Wishlist () {
           throw new Error(errorData.error);
         }
         const data = await response.json();
-        console.log("collections as data: ", data);
-        console.log("1st collection:", data[0].collection_pic);
+        // console.log("collections as data: ", data);
+        // console.log("1st collection:", data[0].collection_pic);
 
         setCollections(
           data.map((col: any) => {
@@ -543,37 +545,80 @@ function Wishlist () {
         : [...prev, tagId]
     );
   };
-    
-    return (
-        <>
-        <Header/> 
-        <h2 className="px-20 pt-14 font-manrope font-bold text-4xl text-center">
-              New Items For You:
-        </h2>
-        
-            <div className="w-full px-16"> 
-                <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                {(tags).map((item) => (
-                  <div key={item.id}>
-                    <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                      <div className="h-22 w-30">
-                        <div className="absolute top-2 right-2 flex space-x-2">
-                          <button
-                            className="text-2xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                            onClick={() =>
-                              handleHeartClick(item.id)
-                            }
-                          >
-                            {filledHeartIds.includes(
-                              item.id
-                            ) ? (
-                              <FaHeart color="red" />
-                            ) : (
-                              <FaRegHeart />
-                            )}
-                          </button>
-                        </div>
-                        {/* <img
+
+  // ------------------ fetch wishlist items ----------------------
+  useEffect(() => {
+    // collection id that get passed in wishlist
+    const collectionIds = JSON.parse(
+      localStorage.getItem("collectionIds") || "[]"
+    );
+    console.log("Collection IDs:", collectionIds);
+  }, []);
+
+  const [wishlistedItems, setWishlistedItems] = useState<any[]>([]);
+
+  const fetchWishlistedItems = async (collectionIds: number[]) => {
+    try {
+      // fetch items for each collections
+      const promises = collectionIds.map(async (id) => {
+        const response = await fetch(
+          `http://localhost:3000/wishlist/wishlisted-collectables/${id}`
+        );
+
+        // if no wishlist items, return empty array
+        if (!response.ok) {
+          return { collectionId: id, items: [] };
+        }
+
+        const data = await response.json();
+        return { collectionId: id, items: data.length > 0 ? data : [] };
+      });
+
+      const results = await Promise.all(promises);
+      setWishlistedItems(results);
+      console.log("Wishlisted Items:", results);
+    } catch (error) {
+      console.error("Error fetching wishlisted items:", error);
+    }
+  };
+
+  useEffect(() => {
+    const collectionIds = JSON.parse(
+      localStorage.getItem("collectionIds") || "[]"
+    );
+
+    // when there is collection, try fetch wishlist
+    if (collectionIds.length > 0) {
+      fetchWishlistedItems(collectionIds);
+    }
+  }, []);
+
+  return (
+    <>
+      <Header />
+      <h2 className="px-20 pt-14 font-manrope font-bold text-4xl text-center">
+        New Items For You:
+      </h2>
+
+      <div className="w-full px-16">
+        <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+          {tags.map((item) => (
+            <div key={item.id}>
+              <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                <div className="h-22 w-30">
+                  <div className="absolute top-2 right-2 flex space-x-2">
+                    <button
+                      className="text-2xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                      onClick={() => handleHeartClick(item.id)}
+                    >
+                      {filledHeartIds.includes(item.id) ? (
+                        <FaHeart color="red" />
+                      ) : (
+                        <FaRegHeart />
+                      )}
+                    </button>
+                  </div>
+                  {/* <img
                           src={
                             tags.find(
                               (attr: any) => attr.name === "image"
@@ -589,32 +634,32 @@ function Wishlist () {
                           className="rounded-md shadow-sm object-cover pt-3"
                           onClick={() => handleOpenModal(item)}
                         /> */}
-                      </div>
+                </div>
 
-                      <div className="space-y-1 p-4">
-                        {customAttributes
-                          .slice(0, 3)
-                          .map((attribute: any, index: number) => (
-                            <p
-                              key={attribute.slug}
-                              className={
-                                index === 0
-                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                  : "text-md font-semibold pl-4 capitalize truncate"
-                              }
-                            >
-                              {`${attribute.value}`}
-                            </p>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>            
+                <div className="space-y-1 p-4">
+                  {customAttributes
+                    .slice(0, 3)
+                    .map((attribute: any, index: number) => (
+                      <p
+                        key={attribute.slug}
+                        className={
+                          index === 0
+                            ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                            : "text-md font-semibold pl-4 capitalize truncate"
+                        }
+                      >
+                        {`${attribute.value}`}
+                      </p>
+                    ))}
+                </div>
+              </div>
             </div>
-            <Footer />
-        </>
-    );
-};
+          ))}
+        </div>
+      </div>
+      <Footer />
+    </>
+  );
+}
 
 export default Wishlist;
