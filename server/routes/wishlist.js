@@ -1,6 +1,6 @@
-const { collections, wishlist, collectableAttributes } = require('../config/schema');
+const { collections, wishlist, collectableAttributes, scraped } = require('../config/schema');
 const express = require('express');
-const { eq, and, or, isNull, inArray } = require('drizzle-orm');
+const { eq, and, not, or, isNull, inArray } = require('drizzle-orm');
 const { db } = require('../config/db');
 
 const router = express.Router();
@@ -77,7 +77,11 @@ router.delete('/remove-wishlist', async (req, res) => {
 
 router.get('/wishlisted-collectables/:collection_id', async (req, res) => {
     const { collection_id } = req.params;
+    if(!collection_id || isNaN(collection_id)) {
+        return res.status(400).json({ message: 'Invalid input for collection_id'} );
+    }
     console.log("collection_id: ", collection_id);
+
 
     // I need to grab all universe collectables and then their attributes
 
@@ -120,6 +124,80 @@ router.get('/wishlisted-collectables/:collection_id', async (req, res) => {
     }
 });
 
+router.get('/whooga-alert/my-wishlisted/:collection_id', async (req, res) => {
+    const { collection_id } = req.params;
 
+    if(!collection_id || isNaN(collection_id)) {
+        return res.status(400).json({ message: 'Invalid input for collection_id'} );
+    }
+    console.log("collection_id: ", collection_id);
+    try{
+        const whoogaResults = await db
+        .select({
+            title: scraped.title,
+            price: scraped.price,
+            link: scraped.link,
+            image_url: scraped.image_url
+        })
+        .from(scraped)
+        .where(eq(collection_id, scraped.collection_id))
+        .execute();
+    
+        console.log(whoogaResults);
+        
+        res.status(400).json(whoogaResults);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Grabbing whooga wishlist results failed");
+    }
+});
+
+router.get('/whooga-alert/related-wishlist/:collection_id', async (req, res) => {
+    const { collection_id } = req.params;
+
+    if(!collection_id || isNaN(collection_id)) {
+        return res.status(400).json({ message: 'Invalid input for collection_id'} );
+    }
+    console.log("collection_id: ", collection_id);
+
+    try{
+        console.log("Fetching collection universe id\n");
+        const fetchCollectionUniverseId = await db
+        .select({ collection_universe_id: collections.collection_universe_id})
+        .from(collections)
+        .where(eq(collection_id, collections.collection_id))
+        .execute();
+
+        if(!fetchCollectionUniverseId[0].collection_universe_id || isNaN(fetchCollectionUniverseId[0].collection_universe_id)) {
+            return res.status(400).json({ message: 'Invalid input for collection_id'} );
+        }
+        const collection_universe_id = fetchCollectionUniverseId[0].collection_universe_id;
+        console.log("collection_universe_id:", collection_universe_id)
+
+        console.log("Fetching Related results");
+        const whoogaResults = await db
+        .select({
+            title: scraped.title,
+            price: scraped.price,
+            link: scraped.link,
+            image_url: scraped.image_url
+        })
+        .from(scraped)
+        .where(
+            and(
+                eq(collection_universe_id, scraped.collection_universe_id),
+                not(eq(scraped.collection_id, collection_id))
+            )
+        )
+        .execute();
+    
+        console.log(whoogaResults);
+        
+        res.status(400).json(whoogaResults);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Grabbing whooga wishlist results failed");
+    }
+});
 
 module.exports = router;
