@@ -7,8 +7,6 @@ import {
   FaRegEdit,
   FaSortAmountDown,
   FaFilter,
-  FaHeart,
-  FaRegHeart,
 } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -34,6 +32,8 @@ import {
   fetchUniverseSearchResults,
   fetchOwnedCollectables,
   fetchOwnedSearchResults,
+  addToWishlist,
+  removeFromWishlist,
 } from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
@@ -133,15 +133,37 @@ export default function HomePage() {
   //     }
   //   });
 
-  // -------------- handle heart click-------------------
-  const [filledHeartIds, setFilledHeartIds] = useState<number[]>([]);
+  // -------------- handle star click-------------------
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
 
-  const handleHeartClick = (tagId: number) => {
-    setFilledHeartIds((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
-    );
+  useEffect(() => {
+    const savedWishlist = localStorage.getItem("wishlistIds");
+    if (savedWishlist) {
+      setWishlistIds(JSON.parse(savedWishlist));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
+  }, [wishlistIds]);
+
+  const handleStarClick = (
+    universeCollectableId: number,
+    collectionId?: string
+  ) => {
+    if (!collectionId) return;
+    // check if in wishlist
+    if (wishlistIds.includes(universeCollectableId)) {
+      // Remove the item from the wishlist and change the star to regular
+      setWishlistIds((prev) =>
+        prev.filter((id) => id !== universeCollectableId)
+      );
+      removeFromWishlist(collectionId, universeCollectableId);
+    } else {
+      // Add the item to the wishlist and make the star solid
+      setWishlistIds((prev) => [...prev, universeCollectableId]);
+      addToWishlist(collectionId, universeCollectableId);
+    }
   };
 
   //--------------------- handle form field ------------------------
@@ -663,10 +685,13 @@ export default function HomePage() {
                           <button
                             className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                             onClick={() =>
-                              handleHeartClick(item.universeCollectableId)
+                              handleStarClick(
+                                item.universeCollectableId,
+                                collectionId
+                              )
                             }
                           >
-                            {filledHeartIds.includes(
+                            {wishlistIds.includes(
                               item.universeCollectableId
                             ) ? (
                               <FontAwesomeIcon
@@ -748,10 +773,13 @@ export default function HomePage() {
                               <button
                                 className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                 onClick={() =>
-                                  handleHeartClick(item.universeCollectableId)
+                                  handleStarClick(
+                                    item.universeCollectableId,
+                                    collectionId
+                                  )
                                 }
                               >
-                                {filledHeartIds.includes(
+                                {wishlistIds.includes(
                                   item.universeCollectableId
                                 ) ? (
                                   <FontAwesomeIcon

@@ -120,6 +120,11 @@ export default function Collections() {
           })
         );
 
+        const collectionIds = data.map(
+          (col: { collection_id: string }) => col.collection_id
+        );
+        localStorage.setItem("collectionIds", JSON.stringify(collectionIds));
+
         //console.log("Collections as collection:", collections);
       };
 
@@ -144,7 +149,10 @@ export default function Collections() {
         JSON.stringify(collection.hiddenAttributes)
       );
       console.log("sending UCID: ", collection.collectionUniverseId);
-      localStorage.setItem("collectionUniverseId", collection.collectionUniverseId);
+      localStorage.setItem(
+        "collectionUniverseId",
+        collection.collectionUniverseId
+      );
       localStorage.setItem("collectionName", collection.name);
       navigate(`/items/${collectionId}`);
       console.log("clicked collection");
