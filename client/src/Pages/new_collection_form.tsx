@@ -84,11 +84,8 @@ function NewCollectionForm(){
         }
 
         localStorage.setItem('collectionName', collectionObject?.name ?? '');
-        //localStorage.setItem('collectionImageURL', imageURL);
-        //console.log("set collection image url: ", imageURL);
         localStorage.setItem('collectionDescription', collectionObject?.description ?? '');
         localStorage.setItem('featureTags', featureTags.join(','));
-        //console.log(collectionObject);
 
         navigate('/upload_collection_csv_page1');
     };

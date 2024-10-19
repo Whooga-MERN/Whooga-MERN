@@ -1,25 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 
 interface SearchBarProps {
   attributes: string[];
-  fetchSearchResults: (
+  fetchOwnedSearchResults: (
     tags: { attribute: string; term: string }[],
     userId: string,
     collectionId: string
   ) => Promise<any>;
+  fetchUniverseSearchResults: (
+    tags: { attribute: string; term: string }[],
+    userId: string,
+    universeCollectionId: string
+  ) => Promise<any>;
   handleError: (error: any) => void;
   userId: string;
   collectionId: string;
+  universeCollectionId: string;
+  onSearchResults: (results: any[]) => void;
+  onResetSearch: () => void;
+  resetDropdown: boolean;
+  setResetDropdown: (value: boolean) => void;
+  isOwnedEnabled: boolean;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   attributes,
   userId,
   collectionId,
-  fetchSearchResults,
+  universeCollectionId,
+  fetchOwnedSearchResults,
+  fetchUniverseSearchResults,
   handleError,
+  onSearchResults,
+  onResetSearch,
+  isOwnedEnabled,
+  resetDropdown,
+  setResetDropdown,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>("Options");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -27,6 +45,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchTags, setSearchTags] = useState<
     { attribute: string; term: string }[]
   >([]);
+
+  useEffect(() => {
+    if (resetDropdown) {
+      setSelectedOption("Options");
+      setSearchTags([]);
+      setResetDropdown(false);
+    }
+  }, [resetDropdown, setResetDropdown]);
 
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
@@ -59,6 +85,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // clear all tags
   const handleResetTags = () => {
     setSearchTags([]);
+    onResetSearch();
   };
 
   const handleSearch = async () => {
@@ -67,13 +94,24 @@ const SearchBar: React.FC<SearchBarProps> = ({
       return;
     }
 
-    // Log all attributes and corresponding search terms
-    searchTags.forEach((tag) => {
-      console.log(`Attribute: ${tag.attribute}, Search Term: ${tag.term}`);
-    });
-
     try {
-      await fetchSearchResults(searchTags, userId, collectionId);
+      let searchResults;
+      if (isOwnedEnabled) {
+        // Fetch results for owned collectables
+        searchResults = await fetchOwnedSearchResults(
+          searchTags,
+          userId,
+          collectionId
+        );
+      } else {
+        // Fetch results for universe collectables
+        searchResults = await fetchUniverseSearchResults(
+          searchTags,
+          userId,
+          universeCollectionId
+        );
+      }
+      onSearchResults(searchResults);
     } catch (error) {
       handleError(error);
     }

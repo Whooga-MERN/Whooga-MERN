@@ -11,59 +11,14 @@ import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 import { fetchCollectionSearchResults } from "../utils/collectionsPage";
 
-// const collections: any[] = [
-//   // {
-//   //   name: "Pathtags",
-//   //   id: 1,
-//   //   image_url: "/bear.jpg",
-//   //   description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
-//   //   newListing: true,
-//   // },
-//   // {
-//   //   name: "Shoes",
-//   //   id: 2,
-//   //   image_url: "/shoes.jpg",
-//   //   description: "Shoes are a type of footwear that are typically worn on the feet.",
-//   //   newListing: false,
-//   // },
-//   // {
-//   //   name: "Cat Mugs",
-//   //   id: 5,
-//   //   image_url: "/catmug.jpg",
-//   //   description: "ur mom",
-//   //   newListing: false,
-//   // },
-//   // {
-//   //   name: "Pokemon Cards",
-//   //   id: 4,
-//   //   image_url: "/pokemon.jpg",
-//   //   description: "ur mom",
-//   //   newListing: true,
-//   // },
-//   // {
-//   //   name: "Snowglobes",
-//   //   id: 3,
-//   //   image_url: "/snowglobe.jpg",
-//   //   description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
-//   //   newListing: true,
-//   // },
-//   // {
-//   //   name: "ur mom",
-//   //   id: 6,
-//   //   image_url: "/psycho.jpg",
-//   //   description: "ur mom",
-//   //   newListing: false,
-//   // },
-// ];
-
 export default function Collections() {
   const [user, setUser] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const [collections, setCollections] = useState<any[]>([]);
-  const [customAttributes, setCustomAttributes] = useState<string>('');
-  const [favoriteAttributes, setFavoriteAttributes] = useState<string>('');
-  const [hiddenAttributes, setHiddenAttributes] = useState<string>('');
+  const [customAttributes, setCustomAttributes] = useState<string>("");
+  const [favoriteAttributes, setFavoriteAttributes] = useState<string>("");
+  const [hiddenAttributes, setHiddenAttributes] = useState<string>("");
   const [isUserFetched, setIsUserFetched] = useState(false);
   const [isTokenFetched, setIsTokenFetched] = useState(false);
   const [isUserIdFetched, setIsUserIdFetched] = useState(false);
@@ -154,6 +109,7 @@ export default function Collections() {
             return {
               name: col.name,
               id: col.collection_id,
+              collectionUniverseId: col.collection_universe_id,
               image_url: col.collection_pic,
               description: "",
               newListing: false,
@@ -172,16 +128,28 @@ export default function Collections() {
   }, [isUserIdFetched, userId, JWT]);
 
   function handleClick(collectionId: number) {
-    const collection = collections.find(col => col.id === collectionId);
+    const collection = collections.find((col) => col.id === collectionId);
     console.log("collection upon being clicked: ", collection);
     if (collection) {
-        localStorage.setItem("customAttributes", JSON.stringify(collection.customAttributes));
-        localStorage.setItem("favoriteAttributes", JSON.stringify(collection.favoriteAttributes));
-        localStorage.setItem("hiddenAttributes", JSON.stringify(collection.hiddenAttributes));
-        navigate(`/items/${collectionId}`);
-        console.log("clicked collection");
+      localStorage.setItem(
+        "customAttributes",
+        JSON.stringify(collection.customAttributes)
+      );
+      localStorage.setItem(
+        "favoriteAttributes",
+        JSON.stringify(collection.favoriteAttributes)
+      );
+      localStorage.setItem(
+        "hiddenAttributes",
+        JSON.stringify(collection.hiddenAttributes)
+      );
+      console.log("sending UCID: ", collection.collectionUniverseId);
+      localStorage.setItem("collectionUniverseId", collection.collectionUniverseId);
+      localStorage.setItem("collectionName", collection.name);
+      navigate(`/items/${collectionId}`);
+      console.log("clicked collection");
     } else {
-        console.error("Collection not found");
+      console.error("Collection not found");
     }
   }
 
@@ -189,12 +157,6 @@ export default function Collections() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] =
     useState<string>(searchTerm);
-
-  // Error handler for search queries
-  const handleError = (error: any) => {
-    console.error("Search error:", error);
-    alert("An error occurred during the search. Please try again.");
-  };
 
   useEffect(() => {
     const debounced = debounce(() => {
@@ -219,7 +181,6 @@ export default function Collections() {
     () => fetchCollectionSearchResults(debouncedSearchTerm, userId),
     {
       enabled: debouncedSearchTerm.length > 0,
-      onError: handleError,
     }
   );
 
@@ -272,7 +233,57 @@ export default function Collections() {
       {/* collections */}
       <div className="w-full px-32">
         <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
-          {collections.length > 0 ? (
+          {debouncedSearchTerm.length > 0 ? (
+            searchResults && searchResults.length > 0 ? (
+              searchResults.map((result: any) => {
+                const { collections, collectionUniverses } = result;
+
+                return (
+                  <div key={collections.collection_id}>
+                    <div
+                      className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
+                      onClick={() => handleClick(collections.collection_id)}
+                    >
+                      <div
+                        style={{
+                          right: "3%",
+                          bottom: "97%",
+                          position: "absolute",
+                        }}
+                      >
+                        {collections.newListing ? (
+                          <div className="badge h-8 text-lg font-bold badge-primary">
+                            WHOOGA!
+                          </div>
+                        ) : (
+                          ""
+                        )}
+                      </div>
+                      <figure style={{ aspectRatio: "1 / 1" }}>
+                        <img
+                          className="object-cover w-full h-full rounded-t-lg border-b-2"
+                          style={{
+                            height: "95%",
+                            width: "95%",
+                            aspectRatio: "1 / 1",
+                          }}
+                          src={collections.collection_pic}
+                          alt={collections.collection_id}
+                        />
+                      </figure>
+                      <div className="card-body">
+                        <h2 className="card-title">
+                          {collectionUniverses.name}
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center">No collections found</div>
+            )
+          ) : collections.length > 0 ? (
             collections.map((collection: any) => (
               <div key={collection.id}>
                 <div
@@ -317,6 +328,7 @@ export default function Collections() {
           )}
         </div>
       </div>
+
       <Footer />
     </>
   );

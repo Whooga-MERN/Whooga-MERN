@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 //const trx = require('../config/trx');
 const {collectables, collectionUniverses, universeCollectables, collectableAttributes, collections} = require('../config/schema');
 const express = require('express');
-const {eq} = require('drizzle-orm');
+const {eq, inArray} = require('drizzle-orm');
 const fs = require('fs');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const multer = require('multer');
@@ -283,7 +283,7 @@ router.post('', async (req, res) => {
     }
 
     try {
-        const newItem = await trx.insert(collectables).values({
+        const newItem = await db.insert(collectables).values({
             collection_id: collectionId,
             universe_collectable_id: universeCollectableId,
             collectablePic: collectablePic
@@ -300,7 +300,7 @@ router.post('', async (req, res) => {
 // READ (All items)
 router.get('', async (req, res) => {
   try {
-    const allItems = await trx.select().from(collectables).execute();
+    const allItems = await db.select().from(collectables).execute();
     res.json(allItems);
   } catch (error) {
     console.error(error);
@@ -313,7 +313,7 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const item = await trx.select()
+    const item = await db.select()
       .from(collectables)
       .where(eq(id, collectables.collectable_id))
       .execute();
@@ -333,7 +333,7 @@ router.get('/universe_collection/:universe_collection_id', async (req, res) => {
   const { universe_collection_id } = req.params;
 
   try {
-    const allItems = await trx.select()
+    const allItems = await db.select()
       .from(collectables)
       .where(eq(universe_collection_id, collectables.universe_collection_id))
       .execute();
@@ -348,30 +348,64 @@ router.get('/universe_collection/:universe_collection_id', async (req, res) => {
   }
 });
 
-// READ (All items from a collection)
 router.get('/collection/:collection_id', async (req, res) => {
   const { collection_id } = req.params;
 
   try {
-    const allItems = await trx.select()
-      .from(collectables)
-      .where(eq(collection_id, collectables.collection_id))
-      .execute();
+    // Fetch collectables based on the given collection_id
+    const collectedItems = await db
+      .select()
+      .from(collectables) // Ensure this matches your pgTable definition
+      .where(eq(collectables.collection_id, collection_id));
 
+    // Check if any collectables were found
+    if (collectedItems.length === 0) {
+      return res.status(404).send({ error: 'No collectables found in this collection' });
+    }
 
-    res.json(allItems);
+    // Extract universe_collectable_ids from the found collectables
+    const collectableIds = collectedItems.map(c => c.universe_collectable_id);
+
+    // Fetch attributes for the collectables using their universe_collectable_ids
+    const attributes = await db
+      .select()
+      .from(collectableAttributes)
+      .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
+
+    // Combine collectables with their corresponding attributes
+    const collectablesWithAttributes = collectedItems.map(collectable => {
+      const relatedAttributes = attributes.filter(
+        attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
+      );
+
+      return {
+        ...collectable,
+        attributes: relatedAttributes.map(attr => ({
+          collectable_attribute_id: attr.collectable_attribute_id,
+          name: attr.name,
+          slug: attr.slug,
+          value: attr.value,
+          is_custom: attr.is_custom
+        }))
+      };
+    });
+
+    
+    res.json(collectablesWithAttributes);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ error: 'Error fetching item' });
+    res.status(500).send({ error: 'Error fetching collectables and attributes' });
   }
-})
+});
+
+
 
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { collectablePic } = req.body;
   try {
-    const result = await trx.update(collectables)
+    const result = await db.update(collectables)
       .set({collectablePic: collectablePic})
       .where(eq(collectables.collectable_id, id)).execute();
     if (result.changes === 0)
@@ -391,7 +425,7 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedItem = await trx.delete(collectables)
+    const deletedItem = await db.delete(collectables)
       .where(eq(id, collectables.collectable_id))
       .returning(); // Fetch the deleted item
 
