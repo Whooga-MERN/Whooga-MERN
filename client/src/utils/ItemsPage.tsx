@@ -1,3 +1,5 @@
+import { buildPath } from "../utils/utils";
+
 export const fetchUniverseCollectionId = async (collectionId: string) => {
   if (!collectionId) {
     console.error("Missing collectionId", { collectionId });
@@ -232,6 +234,84 @@ export const fetchOwnedSearchResults = async (
     console.error(
       `Error thrown when fetching collectable search results: ${e}`
     );
+    throw e;
+  }
+};
+
+export const addToWishlist = async (
+  collectionId: string,
+  universeCollectableId: number
+) => {
+  if (!collectionId || !universeCollectableId) {
+    console.error("Missing collectionId or universeCollectableId", {
+      collectionId,
+      universeCollectableId,
+    });
+    throw new Error("Missing a request parameter");
+  }
+
+  const url = buildPath("wishlist/add-wishlist");
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        collection_id: collectionId,
+        universe_collectable_id: universeCollectableId,
+      }),
+    });
+
+    if (response.status === 404) {
+      console.error("Failed :(");
+      return null;
+    }
+
+    const jsonResponse = await response.json();
+    return jsonResponse;
+  } catch (e) {
+    console.error(`Error thrown when adding item to wishlist: ${e}`);
+    throw e;
+  }
+};
+
+export const removeFromWishlist = async (
+  collectionId: string,
+  universeCollectableId: number
+) => {
+  if (!collectionId || !universeCollectableId) {
+    console.error("Missing collectionId or universeCollectableId", {
+      collectionId,
+      universeCollectableId,
+    });
+    throw new Error("Missing a request parameter");
+  }
+
+  const url = buildPath("wishlist/remove-wishlist");
+
+  try {
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        collection_id: collectionId,
+        universe_collectable_id: universeCollectableId,
+      }),
+    });
+
+    if (response.status === 404) {
+      console.error("Failed to remove item from wishlist :(");
+      return null;
+    }
+
+    const responseText = await response.text();
+    return responseText;
+  } catch (e) {
+    console.error(`Error thrown when removing item from wishlist: ${e}`);
     throw e;
   }
 };
