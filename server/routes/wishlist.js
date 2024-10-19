@@ -1,6 +1,6 @@
-const { collections, wishlist } = require('../config/schema');
+const { collections, wishlist, collectableAttributes } = require('../config/schema');
 const express = require('express');
-const { eq, and } = require('drizzle-orm');
+const { eq, and, or, isNull, inArray } = require('drizzle-orm');
 const { db } = require('../config/db');
 
 const router = express.Router();
@@ -74,5 +74,52 @@ router.delete('/remove-wishlist', async (req, res) => {
         return res.status(500).send({ error: "Failed to delete from wishlist:\n"});
     }
 });
+
+router.get('/wishlisted-collectables/:collection_id', async (req, res) => {
+    const { collection_id } = req.params;
+    console.log("collection_id: ", collection_id);
+
+    // I need to grab all universe collectables and then their attributes
+
+    try {
+
+        console.log("Searching for wishlisted Collectables...\n");
+        const wishlistedCollectables = await db
+        .select({ universe_collectable_id: wishlist.universe_collectable_id})
+        .from(wishlist)
+        .where(eq(collection_id, wishlist.collection_id))
+        .execute();
+
+        const universeCollectableIds = wishlistedCollectables.map(item => item.universe_collectable_id);
+
+        if(universeCollectableIds.length === 0) {
+            return res.status(404).send({ error: 'No wishlsited collectables found' });
+        }
+        console.log(universeCollectableIds);
+
+        const collectableAttributesResult = await db
+            .select()
+            .from(collectableAttributes)
+            .where(
+                and(
+                    or(eq(collectableAttributes.collection_id, collection_id), isNull(collectableAttributes.collection_id)),
+                    inArray(collectableAttributes.universe_collectable_id, universeCollectableIds)
+                )
+            )
+            .execute();
+        
+        console.log(collectableAttributesResult);
+
+        res.status(400).json({
+            universeCollectableIds,
+            collectableAttributesResult
+        });
+    } catch (error) {
+        console.error("Error fetching wishlisted collectables:", error);
+        res.status(500).send({ error: 'Internal server error' });
+    }
+});
+
+
 
 module.exports = router;
