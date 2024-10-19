@@ -108,12 +108,12 @@ router.get('/wishlisted-collectables/:collection_id', async (req, res) => {
             )
             .execute();
         
-        console.log(collectableAttributesResult);
+        const groupedResult = universeCollectableIds.map(id => ({
+            universe_collectable_id: id,
+            attributes: collectableAttributesResult.filter(attr => attr.universe_collectable_id === id)
+        }));
 
-        res.status(400).json({
-            universeCollectableIds,
-            collectableAttributesResult
-        });
+        res.status(200).json(groupedResult);
     } catch (error) {
         console.error("Error fetching wishlisted collectables:", error);
         res.status(500).send({ error: 'Internal server error' });
