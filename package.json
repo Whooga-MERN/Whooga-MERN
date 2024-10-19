@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@aws-amplify/auth": "^6.4.2",
-    "aws-amplify": "^6.6.0",
+    "aws-amplify": "^6.6.5",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.33.0",
     "jsonwebtoken": "^9.0.2",

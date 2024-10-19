@@ -5,7 +5,6 @@ import Footer from "../Components/Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
 import debounce from "lodash.debounce";
-
 import { Collection } from "../Types/Collection";
 import { useEffect, useState } from "react";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
