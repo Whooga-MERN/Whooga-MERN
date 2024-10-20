@@ -7,7 +7,8 @@
 // }
 
 export function buildPath(route: string): string {
-  if (!process && !process.env && process.env.NODE_ENV === "production") {
+  // if (!process && !process.env && process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production") {
     return (
       "http://whooga-env-1.eba-xvanh3td.us-east-1.elasticbeanstalk.com/" + route
     );
