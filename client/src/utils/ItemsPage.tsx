@@ -44,6 +44,7 @@ export const fetchUniverseCollectables = async (
     const url = buildPath(
       `universe-collectable/universe-collection/${universeCollectionId}`
     );
+    console.log(url);
 
     const response = await fetch(url, {
       method: "GET",
