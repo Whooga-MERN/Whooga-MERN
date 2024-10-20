@@ -124,7 +124,7 @@ function WishlistItems() {
     try {
       // fetch items for collection
       const response = await fetch(
-        `http://localhost:3000/wishlist/whooga-alert/my-wishlisted/${collectionId}`
+        `http://localhost:3000/wishlist/whooga-alert/related-wishlisted/${collectionId}`
         //`http://localhost:3000/wishlist/whooga-alert/related-wishlisted/113`
       );
 
