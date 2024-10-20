@@ -7,7 +7,8 @@ export const fetchUniverseCollectionId = async (collectionId: string) => {
   }
 
   try {
-    const url = `http://localhost:3000/collection/${collectionId}`;
+    // const url = `http://localhost:3000/collection/${collectionId}`;
+    const url = buildPath(`collection/${collectionId}`);
 
     const response = await fetch(url, {
       method: "GET",
@@ -91,7 +92,9 @@ export const fetchOwnedCollectables = async (collectionId: string) => {
   }
 
   try {
-    const url = `http://localhost:3000/collectable/collection/${collectionId}`;
+    // const url = `http://localhost:3000/collectable/collection/${collectionId}`;
+    const url = buildPath(`collectable/collection/${collectionId}`);
+    console.log(url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -161,7 +164,10 @@ export const fetchUniverseSearchResults = async (
     queryParams
   );
 
-  const url = `http://localhost:3000/universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}`;
+  // const url = `http://localhost:3000/universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}`;
+  const url = buildPath(
+    `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}`
+  );
 
   console.log("Request URL:", url);
 
@@ -214,7 +220,10 @@ export const fetchOwnedSearchResults = async (
 
   console.log("collection search: ", collectionId, queryParams);
 
-  const url = `http://localhost:3000/universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}`;
+  // const url = `http://localhost:3000/universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}`;
+  const url = buildPath(
+    `universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}`
+  );
 
   console.log("Request URL:", url);
 

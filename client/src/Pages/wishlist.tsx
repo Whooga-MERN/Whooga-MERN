@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 import { fetchCollectionSearchResults } from "../utils/collectionsPage";
+import { buildPath } from "../utils/utils";
 
 export default function Collections() {
   const [user, setUser] = useState<any>(null);
@@ -57,7 +58,8 @@ export default function Collections() {
         };
 
         const response = await fetch(
-          "http://localhost:3000/user/?user_email=" + user.loginId,
+          // "http://localhost:3000/user/?user_email=" + user.loginId,
+          buildPath(`user/?user_email=${user.loginId}`),
           {
             method: "GET",
             headers: {
@@ -86,7 +88,8 @@ export default function Collections() {
       console.log("in fetch collections ", userId);
       const fetchCollections = async () => {
         const response = await fetch(
-          "http://localhost:3000/collection/user/" + userId,
+          // "http://localhost:3000/collection/user/" + userId,
+          buildPath(`collection/user/${userId}`),
           {
             method: "GET",
             headers: {
@@ -135,14 +138,14 @@ export default function Collections() {
   function handleClick(collectionId: number) {
     const collection = collections.find((col) => col.id === collectionId);
     console.log("sending UCID: ", collection.collectionUniverseId);
-      localStorage.setItem(
-        "collectionUniverseId",
-        collection.collectionUniverseId
-      );
-      localStorage.setItem("collectionName", collection.name);
+    localStorage.setItem(
+      "collectionUniverseId",
+      collection.collectionUniverseId
+    );
+    localStorage.setItem("collectionName", collection.name);
     console.log("collection upon being clicked: ", collection);
-      navigate(`/wishlist/${collectionId}`);
-      console.log("clicked collection");
+    navigate(`/wishlist/${collectionId}`);
+    console.log("clicked collection");
   }
 
   // ------------------------- search --------------------------
@@ -310,7 +313,9 @@ export default function Collections() {
                     />
                   </figure>
                   <div className="card-body">
-                    <h2 className="card-title">{collection.name + " Wishlist"}</h2>
+                    <h2 className="card-title">
+                      {collection.name + " Wishlist"}
+                    </h2>
                   </div>
                 </div>
               </div>

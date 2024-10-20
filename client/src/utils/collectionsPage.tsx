@@ -1,3 +1,5 @@
+import { buildPath } from "./utils";
+
 export const fetchCollectionSearchResults = async (
   searchTerm: string,
   userId: string
@@ -13,7 +15,10 @@ export const fetchCollectionSearchResults = async (
   }
 
   try {
-    const url = `http://localhost:3000/collection-search?userId=${userId}&searchTerm=${lowerCasedSearchTerm}`;
+    // const url = `http://localhost:3000/collection-search?userId=${userId}&searchTerm=${lowerCasedSearchTerm}`;
+    const url = buildPath(
+      `collection-search?userId=${userId}&searchTerm=${lowerCasedSearchTerm}`
+    );
     console.log("Request URL:", url);
 
     const response = await fetch(url, {

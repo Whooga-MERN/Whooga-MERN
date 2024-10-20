@@ -208,7 +208,8 @@ export default function HomePage() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/collectable/newCollectable",
+        buildPath(`collectable/newCollectable`),
+        // "http://localhost:3000/collectable/newCollectable",
         {
           method: "POST",
           body: request,
@@ -592,7 +593,7 @@ export default function HomePage() {
                   </div>
                 )}
 
-                <div className="dropdown">
+                {/* <div className="dropdown">
                   <div
                     tabIndex={0}
                     role="button"
@@ -622,9 +623,9 @@ export default function HomePage() {
                       ))}
                     </div>
                   </ul>
-                </div>
+                </div> */}
 
-                <div className="dropdown">
+                {/* <div className="dropdown">
                   <div
                     tabIndex={0}
                     role="button"
@@ -637,7 +638,7 @@ export default function HomePage() {
                     tabIndex={0}
                     className="dropdown-content menu bg-white dark:bg-gray-600 z-[1] w-60 pt-2 shadow"
                   >
-                    {/* Color Filter */}
+                    Color Filter
                     <div className="space-y-4">
                       <span>Select Colors:</span>
                       <div className="flex flex-wrap gap-4">
@@ -656,7 +657,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </ul>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
