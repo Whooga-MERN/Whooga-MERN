@@ -20,6 +20,7 @@ import UploadCollection2 from "./Pages/upload_collection_csv_page2.tsx";
 import Profile from "./Pages/profile.tsx";
 import MessageSignup from "./Pages/message_signup.tsx";
 import Wishlist from "./Pages/wishlist.tsx";
+import WishlistItems from "./Pages/wishlist_items.tsx";
 import PrivacyPolicy from "./Pages/privacypolicy.tsx";
 import ContactUs from "./Pages/contactus.tsx";
 
@@ -142,6 +143,14 @@ createRoot(document.getElementById("root")!).render(
             element={
               <ProtectedRoute>
                 <Wishlist />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wishlist/:collectionId"
+            element={
+              <ProtectedRoute>
+                <WishlistItems />
               </ProtectedRoute>
             }
           />
