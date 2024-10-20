@@ -40,7 +40,10 @@ export const fetchUniverseCollectables = async (
   }
 
   try {
-    const url = `http://localhost:3000/universe-collectable/universe-collection/${universeCollectionId}`;
+    // const url = `http://localhost:3000/universe-collectable/universe-collection/${universeCollectionId}`;
+    const url = buildPath(
+      `universe-collectable/universe-collection/${universeCollectionId}`
+    );
 
     const response = await fetch(url, {
       method: "GET",
