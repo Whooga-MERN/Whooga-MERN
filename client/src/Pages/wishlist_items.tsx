@@ -124,8 +124,8 @@ function WishlistItems() {
     try {
       // fetch items for collection
       const response = await fetch(
-        //`http://localhost:3000/wishlist/whooga-alert/my-wishlisted/${collectionId}`
-        `http://localhost:3000/wishlist/whooga-alert/related-wishlisted/113`
+        `http://localhost:3000/wishlist/whooga-alert/my-wishlisted/${collectionId}`
+        //`http://localhost:3000/wishlist/whooga-alert/related-wishlisted/113`
       );
 
       // if no wishlist items, return empty array
@@ -151,11 +151,11 @@ function WishlistItems() {
   }, [collectionId]);
 
   // useEffect(() => {
-  //   console.log("Wishlist Items:", wishlistItems);
-  //   wishlistItems.items.forEach((item) => {
-  //     //console.log("Item:", item);
+  //   console.log("Wishlist Related Items:", relatedWishlistItems);
+  //   relatedWishlistItems.items.forEach((item) => {
+  //     console.log("Item:", item);
   //   });
-  // }, [wishlistItems]);
+  // }, [relatedWishlistItems]);
 
   return (
     <>
