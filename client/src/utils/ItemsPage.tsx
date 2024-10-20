@@ -251,6 +251,7 @@ export const addToWishlist = async (
   }
 
   const url = buildPath("wishlist/add-wishlist");
+  console.log(url);
 
   try {
     const response = await fetch(url, {
@@ -290,6 +291,7 @@ export const removeFromWishlist = async (
   }
 
   const url = buildPath("wishlist/remove-wishlist");
+  console.log(url);
 
   try {
     const response = await fetch(url, {

@@ -8,7 +8,9 @@
 
 export function buildPath(route: string): string {
   if (!process && !process.env && process.env.NODE_ENV === "production") {
-    return "https://main.d201kh2abos6az.amplifyapp.com/" + route;
+    return (
+      "http://whooga-env-1.eba-xvanh3td.us-east-1.elasticbeanstalk.com/" + route
+    );
   } else {
     return "http://localhost:3000/" + route;
   }
