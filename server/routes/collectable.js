@@ -76,17 +76,19 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
     await db.transaction(async (trx) => {
       console.log("Fetching Universe Collection Id\n");
       const fetchUniverseCollectionId = await trx
-      .select({universe_collection_id: collectionUniverses.collection_universe_id})
-      .from(collectionUniverses)
-      .where(collectionUniverses.collection_id, collection_id)
+      .select({collection_universe_id: collections.collection_universe_id})
+      .from(collections)
+      .where(eq(collections.collection_id, collection_id))
       .execute();
 
+  
       if(!fetchUniverseCollectionId) {
         console.log("Could not find Universe Collection associated with collection");
         return res.status(404).send({ error: "Could not find Universe Collection associated with collection"});
       }
 
-      const collection_universe_id = fetchUniverseCollectionId[0].universe_collection_id;
+      const collection_universe_id = fetchUniverseCollectionId[0].collection_universe_id;
+      console.log("collection universe id: \n", collection_universe_id);
 
       // Fetches both custom and default attributes.
       console.log("collection id: ", collection_id);
@@ -101,7 +103,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .where(eq(collections.collection_id, collection_id))
         .execute();
 
-
+      console.log("Finished fetching custom attributes and default attributes\n");
       let customAttributes = [];
       let defaultAttributes = [];
       if(attributesQuery.length > 0) {
@@ -128,6 +130,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
 
       const universe_collectable_id = newUniverseCollectable[0].universe_collectable_id;
       const row = parsedAttributeValues;
+      console.log("Universe Collectable id:\n ", universe_collectable_id);
       console.log("row\n", row);
 
       let customAttributeInsert = [];
@@ -136,7 +139,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       // Create Attributes
       console.log("Creating attributes\n");
       if (row.owned === 'T') {
-
         console.log("user owns collectable... First creating collectable");
         const newCollectable = await trx
         .insert(collectables)
@@ -188,14 +190,14 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             else
               insertValue = value;
             if(defaultAttributes.includes(key)) {
-              customAttributeInsert.push({
+              defaultAttributeInsert.push({
                 collection_id: collection_id,
                 collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
                 value: insertValue,
-                is_custom: true
+                is_custom: false
               });
             }
             else {
