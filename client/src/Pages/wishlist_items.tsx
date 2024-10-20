@@ -8,7 +8,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 function WishlistItems() {
   const [user, setUser] = useState<any>(null);
@@ -206,9 +206,14 @@ function WishlistItems() {
                                 {`${item.price}`}
                             </p>
                             <div className="flex justify-center mt-2">
-                            <button className="btn btn-primary mt-2 text-lg hover:btn-primary just">
+                            <a
+                              className="btn btn-primary mt-2 text-lg hover:btn-primary"
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               See Item
-                              </button>
+                            </a>
                               </div>
 
                         </div>
