@@ -1,22 +1,28 @@
-import { useEffect, useState } from "react";
-
+import { IoMdAddCircleOutline } from "react-icons/io";
+import { IconContext } from "react-icons";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "react-query";
+import debounce from "lodash.debounce";
 import { Collection } from "../Types/Collection";
-
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import { useEffect, useState } from "react";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
+import { fetchCollectionSearchResults } from "../utils/collectionsPage";
 
-function Wishlist() {
+export default function Collections() {
   const [user, setUser] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [collections, setCollections] = useState<any[]>([]);
+  const [customAttributes, setCustomAttributes] = useState<string>("");
+  const [favoriteAttributes, setFavoriteAttributes] = useState<string>("");
+  const [hiddenAttributes, setHiddenAttributes] = useState<string>("");
   const [isUserFetched, setIsUserFetched] = useState(false);
   const [isTokenFetched, setIsTokenFetched] = useState(false);
   const [isUserIdFetched, setIsUserIdFetched] = useState(false);
-  const [collections, setCollections] = useState<any[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -66,6 +72,7 @@ function Wishlist() {
           throw new Error(errorData.error);
         }
         const data = await response.json();
+        console.log("setting user id: ", data[0].user_id);
         setUserId(data[0].user_id);
         setIsUserIdFetched(true);
       };
@@ -76,7 +83,7 @@ function Wishlist() {
   useEffect(() => {
     // fetch collections
     if (isUserIdFetched && userId) {
-      // console.log("in fetch collections ", userId);
+      console.log("in fetch collections ", userId);
       const fetchCollections = async () => {
         const response = await fetch(
           "http://localhost:3000/collection/user/" + userId,
@@ -94,8 +101,8 @@ function Wishlist() {
           throw new Error(errorData.error);
         }
         const data = await response.json();
-        // console.log("collections as data: ", data);
-        // console.log("1st collection:", data[0].collection_pic);
+        console.log("collections as data: ", data);
+        console.log("1st collection:", data[0].collection_pic);
 
         setCollections(
           data.map((col: any) => {
@@ -113,6 +120,11 @@ function Wishlist() {
           })
         );
 
+        const collectionIds = data.map(
+          (col: { collection_id: string }) => col.collection_id
+        );
+        localStorage.setItem("collectionIds", JSON.stringify(collectionIds));
+
         //console.log("Collections as collection:", collections);
       };
 
@@ -120,133 +132,196 @@ function Wishlist() {
     }
   }, [isUserIdFetched, userId, JWT]);
 
-  // ------------------ fetch wishlist items ----------------------
+  function handleClick(collectionId: number) {
+    const collection = collections.find((col) => col.id === collectionId);
+    console.log("sending UCID: ", collection.collectionUniverseId);
+      localStorage.setItem(
+        "collectionUniverseId",
+        collection.collectionUniverseId
+      );
+      localStorage.setItem("collectionName", collection.name);
+    console.log("collection upon being clicked: ", collection);
+      navigate(`/wishlist/${collectionId}`);
+      console.log("clicked collection");
+  }
+
+  // ------------------------- search --------------------------
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] =
+    useState<string>(searchTerm);
+
   useEffect(() => {
-    // collection id that get passed in wishlist
-    const collectionIds = JSON.parse(
-      localStorage.getItem("collectionIds") || "[]"
-    );
-    console.log("Collection IDs:", collectionIds);
-  }, []);
+    const debounced = debounce(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
 
-  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+    debounced();
 
-  const fetchWishlistItems = async (collectionIds: number[]) => {
-    try {
-      // fetch items for each collections
-      const promises = collectionIds.map(async (id) => {
-        const response = await fetch(
-          `http://localhost:3000/wishlist/wishlisted-collectables/${id}`
-        );
+    return () => {
+      debounced.cancel();
+    };
+  }, [searchTerm]);
 
-        // if no wishlist items, return empty array
-        if (!response.ok) {
-          return { collectionId: id, items: [] };
-        }
-
-        const data = await response.json();
-        return { collectionId: id, items: data.length > 0 ? data : [] };
-      });
-
-      const results = await Promise.all(promises);
-      setWishlistItems(results);
-    } catch (error) {
-      console.error("Error fetching wishlisted items:", error);
+  const {
+    data: searchResults,
+    isLoading: isLoadingSearch,
+    isFetching: isFetchingSearch,
+    isError: searchIsError,
+    error: searchError,
+  } = useQuery(
+    ["search", debouncedSearchTerm],
+    () => fetchCollectionSearchResults(debouncedSearchTerm, userId),
+    {
+      enabled: debouncedSearchTerm.length > 0,
     }
-  };
-
-  useEffect(() => {
-    const collectionIds = JSON.parse(
-      localStorage.getItem("collectionIds") || "[]"
-    );
-
-    // when there is collection, try fetch wishlist
-    if (collectionIds.length > 0) {
-      fetchWishlistItems(collectionIds);
-    }
-  }, []);
-
-  useEffect(() => {
-    console.log("Wishlist Items:", wishlistItems);
-  }, [wishlistItems]);
+  );
 
   return (
     <>
       <Header />
-      <h2 className="px-20 pt-14 font-manrope font-bold text-4xl text-center">
-        New Items For You:
-      </h2>
+      <div className="w-full">
+        <div className="flex items-center justify-between">
+          <h2 className="px-20 font-manrope font-bold text-4xl text-center">
+            My Wishlist Collections
+          </h2>
+          <div className="flex flex-col md:flex-row md:items-center justify-right py-9">
+            <label className="input input-bordered flex items-center gap-2">
+              <input
+                type="search"
+                className="grow w-60"
+                placeholder='Search "My Collections"'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="h-4 w-4 opacity-70"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </label>
+            {/* New Button */}
+            <div className="pl-20 relative sm: w-[400px] border-none ml-auto">
+              <IconContext.Provider value={{ color: "#554141", size: "35px" }}>
+                <Link
+                  to="/new_collection_start"
+                  className="btn btn-primary text-2xl w-250 "
+                >
+                  New Collection
+                  <IoMdAddCircleOutline />
+                </Link>
+              </IconContext.Provider>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <div className="w-full px-16">
-        {wishlistItems.map(({ collectionId, items }) => {
-          const collection = collections.find((col) => col.id === collectionId);
+      {/* collections */}
+      <div className="w-full px-32">
+        <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
+          {debouncedSearchTerm.length > 0 ? (
+            searchResults && searchResults.length > 0 ? (
+              searchResults.map((result: any) => {
+                const { collections, collectionUniverses } = result;
 
-          return (
-            <div key={collectionId} className="my-8">
-              <h3 className="font-semibold text-2xl w-fit text-black bg-yellow-300 rounded-full px-5 py-2">
-                {collection?.name}
-              </h3>
-
-              {items.length > 0 ? (
-                <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                  {items.map((item: any) => (
-                    <div key={item.universeCollectableId}>
-                      <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                        <div className="h-22 w-30">
-                          <img
-                            src={
-                              item.attributes.find(
-                                (attr: any) => attr.name === "image"
-                              )?.value || "/placeholder.jpg"
-                            }
-                            alt={
-                              item.attributes.find(
-                                (attr: any) => attr.name === "name"
-                              )?.value || "No Name"
-                            }
-                            width={400}
-                            height={400}
-                            className="rounded-md shadow-sm object-cover pt-3"
-                          />
-                        </div>
-
-                        <div className="space-y-1 p-4">
-                          {item.attributes
-                            .filter(
-                              (attribute: any) =>
-                                attribute.name !== "image" &&
-                                attribute.name !== "owned"
-                            )
-                            .slice(0, 3)
-                            .map((attribute: any, index: number) => (
-                              <p
-                                key={attribute.slug || attribute.name}
-                                className={
-                                  index === 0
-                                    ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                    : "text-md font-semibold pl-4 capitalize truncate"
-                                }
-                              >
-                                {`${attribute.value}`}
-                              </p>
-                            ))}
-                        </div>
+                return (
+                  <div key={collections.collection_id}>
+                    <div
+                      className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
+                      onClick={() => handleClick(collections.collection_id)}
+                    >
+                      <div
+                        style={{
+                          right: "3%",
+                          bottom: "97%",
+                          position: "absolute",
+                        }}
+                      >
+                        {collections.newListing ? (
+                          <div className="badge h-8 text-lg font-bold badge-primary">
+                            WHOOGA!
+                          </div>
+                        ) : (
+                          ""
+                        )}
+                      </div>
+                      <figure style={{ aspectRatio: "1 / 1" }}>
+                        <img
+                          className="object-cover w-full h-full rounded-t-lg border-b-2"
+                          style={{
+                            height: "95%",
+                            width: "95%",
+                            aspectRatio: "1 / 1",
+                          }}
+                          src={collections.collection_pic}
+                          alt={collections.collection_id}
+                        />
+                      </figure>
+                      <div className="card-body">
+                        <h2 className="card-title">
+                          {collectionUniverses.name + " Wishlist"}
+                        </h2>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center">No collections found</div>
+            )
+          ) : collections.length > 0 ? (
+            collections.map((collection: any) => (
+              <div key={collection.id}>
+                <div
+                  className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
+                  onClick={() => handleClick(collection.id)}
+                >
+                  <div
+                    style={{
+                      right: "3%",
+                      bottom: "97%",
+                      position: "absolute",
+                    }}
+                  >
+                    {collection.newListing ? (
+                      <div className="badge h-8 text-lg font-bold badge-primary">
+                        WHOOGA!
+                      </div>
+                    ) : (
+                      ""
+                    )}
+                  </div>
+                  <figure style={{ aspectRatio: "1 / 1" }}>
+                    <img
+                      className="object-cover w-full h-full rounded-t-lg border-b-2"
+                      style={{
+                        height: "95%",
+                        width: "95%",
+                        aspectRatio: "1 / 1",
+                      }}
+                      src={collection.image_url}
+                      alt={collection.name}
+                    />
+                  </figure>
+                  <div className="card-body">
+                    <h2 className="card-title">{collection.name + " Wishlist"}</h2>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-center text-lg mt-6">
-                  No wishlist items for this collection.
-                </p>
-              )}
-            </div>
-          );
-        })}
+              </div>
+            ))
+          ) : (
+            <div className="text-center">No collections found</div>
+          )}
+        </div>
       </div>
+
       <Footer />
     </>
   );
 }
-
-export default Wishlist;
