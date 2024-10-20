@@ -1,7 +1,27 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaRegUserCircle, FaRegEye } from "react-icons/fa";
+import { signIn } from 'aws-amplify/auth';  // Import signIn directly
 
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
+
+  // Sign-in handler
+  const handleSignIn = async () => {
+    try {
+      await signIn({
+        username,
+        password,
+      });
+      navigate("/home");  // Navigate to the home page after a successful sign-in
+    } catch (error) {
+      setErrorMessage("Failed to sign in. Please check your credentials.");
+    }
+  };
+
   return (
     <>
       <div className=" gap-4 max-lg bg-[#fcc050] px-8 pt-4 pb-8">
@@ -21,15 +41,18 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* <div className="bg-white rounded-3xl sm:px-6 px-8 py-10 max-w-md w-full h-max shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] max-lg:mx-auto"></div> */}
         <div className="bg-white rounded-3xl sm:px-6 px-8 py-10 max-w-md w-full h-max shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] max-lg:mx-auto">
-          <form>
+          <form onSubmit={(e) => { e.preventDefault(); handleSignIn(); }}>
             <div className="mb-8">
               <h2 className="text-md font-semibold text-black">
                 Welcome to <span className="font-extrabold">WHOOGA!</span>
               </h2>
               <h3 className="text-4xl font-semibold text-gray-800">Sign in</h3>
             </div>
+
+            {errorMessage && (
+              <p className="text-red-500">{errorMessage}</p>
+            )}
 
             <div className="pt-10">
               <label className="text-gray-800 text-sm mb-2 block">
@@ -39,6 +62,8 @@ export default function LoginPage() {
                 <input
                   name="username"
                   type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   className="w-full text-sm text-gray-800 border border-gray-300 px-4 py-3 rounded-md outline-yellow-400"
                   placeholder="Username"
@@ -55,6 +80,8 @@ export default function LoginPage() {
                 <input
                   name="password"
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full text-sm text-gray-800 border border-gray-300 px-4 py-3 rounded-md outline-yellow-400"
                   placeholder="Password"
@@ -65,7 +92,7 @@ export default function LoginPage() {
 
             <div className="mt-4 text-right">
               <Link
-                to="/login"
+                to="/forgotpassword"
                 className="text-yellow-700 text-sm font-semibold hover:underline"
               >
                 Forgot password?
@@ -74,7 +101,7 @@ export default function LoginPage() {
 
             <div className="mt-8">
               <button
-                type="button"
+                type="submit"
                 className="w-full shadow-xl py-3 px-6 text-sm font-semibold rounded-md text-white bg-yellow-400 hover:bg-yellow-500 focus:outline-none"
               >
                 Sign in
