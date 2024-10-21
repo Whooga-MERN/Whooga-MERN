@@ -39,9 +39,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   resetDropdown,
   setResetDropdown,
 }) => {
-  const [selectedOption, setSelectedOption] = useState<string>(
-    `${attributes[0]}`
-  );
+  const [selectedOption, setSelectedOption] = useState<string>(attributes[0]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [searchTags, setSearchTags] = useState<
@@ -50,7 +48,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     if (resetDropdown) {
-      setSelectedOption("Options");
+      setSelectedOption(attributes[0]);
       setSearchTags([]);
       setResetDropdown(false);
     }
