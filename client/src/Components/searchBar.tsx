@@ -39,7 +39,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   resetDropdown,
   setResetDropdown,
 }) => {
-  const [selectedOption, setSelectedOption] = useState<string>("Options");
+  const [selectedOption, setSelectedOption] = useState<string>(
+    `${attributes[0]}`
+  );
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [searchTags, setSearchTags] = useState<
