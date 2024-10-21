@@ -51,49 +51,7 @@ function NewCollectionStart(){
             image_url: "/snowglobe.jpg",
             description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
             newListing: true,
-          },
-          {
-            name: "ur mom Pathtags",
-            id: 4,
-            image_url: "/psycho.jpg",
-            description: "ur mom",
-            newListing: false,
-          },
-          {
-            name: "ur mom Pathtags",
-            id: 5,
-            image_url: "/scan.jpg",
-            description: "ur mom",
-            newListing: true,
-          },
-          {
-            name: "ur mom Pathtags",
-            id: 6,
-            image_url: "/psycho.jpg",
-            description: "ur mom",
-            newListing: false,
-          },
-          {
-            name: "ur mom Pathtags",
-            id: 7,
-            image_url: "/psycho.jpg",
-            description: "ur mom",
-            newListing: false,
-          },
-          {
-            name: "ur mom Pathtags",
-            id: 8,
-            image_url: "/scan.jpg",
-            description: "ur mom",
-            newListing: true,
-          },
-          {
-            name: "ur mom Pathtags",
-            id: 9,
-            image_url: "/psycho.jpg",
-            description: "ur mom",
-            newListing: false,
-          },
+          }
           ];
 
           if (data.length === 0) {

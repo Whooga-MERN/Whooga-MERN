@@ -87,7 +87,7 @@ export default function Settings() {
                       Text
                     </label>
                     <p id="comments-description" className="text-gray-500">
-                      Notification sent through text massage.
+                      Notification sent through text message.
                     </p>
                   </div>
                   <div className="ml-3 flex h-6 items-center">
