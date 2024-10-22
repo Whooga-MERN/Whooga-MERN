@@ -1,6 +1,6 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {collections, collectionUniverses} = require('../config/schema');
+const {collections, collectionUniverses, collectableAttributes} = require('../config/schema');
 const express = require('express');
 const {eq} = require('drizzle-orm');
 //const { authenticateJWTToken } = require("../middleware/verifyJWT");
@@ -161,5 +161,31 @@ router.get('/attributes-with-hidden/:collectionId', async (req, res) => {
   }
 
 });
+
+router.put('/update-favorite-attributes', async (req, res) => {
+  const { collectionId, favoriteAttributes } = req.body;
+ 
+  if(!favoriteAttributes && favoriteAttributes.length < 1)
+    return res.status(404).send("No favoriteAttributes given");
+  if(!collectionId || isNaN(collectionId))
+    return res.status(400).json({ message: "Invalid input for collectionId"});
+
+  try {
+    console.log("Updating attributes\n");
+    const updatedAttributes = await db
+    .update(collections)
+    .set({
+      favorite_attributes: favoriteAttributes
+    })
+    .where(eq(collections.collection_id, collectionId))
+    .execute();
+
+    console.log("Attributes updated\n");
+
+    res.status(400).send("Favorite Attributes Succesfully updated");
+  } catch (error) {
+    res.status(500).send("FAILED to update favorite attributes");
+  }
+}); 
 
 module.exports = router;
