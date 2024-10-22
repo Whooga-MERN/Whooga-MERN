@@ -109,57 +109,71 @@ router.get('/custom-attributes/:collectionId', async (req, res) => {
   return res.status(200).json(custom_attributes);
 });
 
-router.get('/attributes-with-hidden/:collectionId', async (req, res) => {
+router.get('/masked-attributes/:collectionId', async (req, res) => {
   const { collectionId } = req.params;
 
   if(!collectionId || isNaN(collectionId))
     return res.status(400).json({ message: "Invalid input for collectionId"});
 
-  console.log("collectionId: ", collectionId);
-  console.log("Searching for, custom, hidden and default attributes...");
-  const attributesQuery = await db
-  .select({
-    custom_attributes: collections.custom_attributes,
-    hidden_attributes: collections.hidden_attributes,
-    default_attributes: collectionUniverses.default_attributes
-  })
-  .from(collections)
-  .innerJoin(collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id))
-  .where(eq(collectionId, collections.collection_id));
+  try {
+    console.log("collectionId: ", collectionId);
+    console.log("Searching for, custom, hidden and default attributes...");
+    const attributesQuery = await db
+    .select({
+      custom_attributes: collections.custom_attributes,
+      hidden_attributes: collections.hidden_attributes,
+      default_attributes: collectionUniverses.default_attributes
+    })
+    .from(collections)
+    .innerJoin(collectionUniverses, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id))
+    .where(eq(collectionId, collections.collection_id))
+    .execute();
+  
+    console.log("Finished searching for all attribute types");  
+    let customAttributes = [];
+    let hiddenAttributes = [];
+    let defaultAttributes = [];
+    let combinedAttributes = [];
+    if(attributesQuery.length > 0) {
+      customAttributes = attributesQuery[0].custom_attributes;
+      hiddenAttributes = attributesQuery[0].hidden_attributes;
+      defaultAttributes = attributesQuery[0].default_attributes;
+    }
+    console.log(customAttributes);
+    console.log(hiddenAttributes);
+    console.log(defaultAttributes);
+  
+    if(!customAttributes && !hiddenAttributes) {
+      console.log("CustomAttributes and Hidden attributes are null\n");
+      console.log("Combined Attributes: ", defaultAttributes);
+      return res.status(200).json(defaultAttributes);
+    }
+  
+    if(!hiddenAttributes) {
+      console.log("Hidden attributes are null\n");
+      combinedAttributes = [...defaultAttributes, ...customAttributes];
+      console.log("Combined Atributes: ", combinedAttributes);
+      return res.status(200).json(combinedAttributes);
+    }
+  
+    if(!customAttributes) {
+      combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
+      console.log("Combined Attributes: ", combinedAttributes);
+      return res.status(200).json(combinedAttributes);
+    }
 
-  console.log("Query Finished");  
-  let customAttributes = [];
-  let hiddenAttributes = [];
-  let defaultAttributes = [];
-  let combinedAttributes = [];
-  if(attributesQuery.length > 0) {
-    customAttributes = attributesQuery.custom_attributes;
-    hiddenAttributes = attributesQuery.hidden_attributes;
-    default_attributes = attributesQuery.defaultAttributes;
+    if(customAttributes.length > 0 && hiddenAttributes.length > 0) {
+      combinedAttributes = [...defaultAttributes, ...customAttributes];
+      maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
+      console.log("Combined Attributes: ", maskedAttributes);
+      return res.status(200).json(maskedAttributes);
+    }
+  
+    return res.status(500).send("FAILED: NO IF STATEMENT WAS TRIGGERED");
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("ERROR FAILED");
   }
-  console.log(customAttributes);
-  console.log(hiddenAttributes);
-  console.log(defaultAttributes);
-
-  if(!customAttributes && !hiddenAttributes) {
-    console.log("CustomAttributes and Hidden attributes are null\n");
-    console.log("Combined Attributes: ", defaultAttributes);
-    return res.status(200).json(defaultAttributes);
-  }
-
-  if(!hiddenAttributes) {
-    console.log("Hidden attributes are null\n");
-    combinedAttributes = [...defaultAttributes, ...customAttributes];
-    console.log("Combined Atributes: ", combinedAttributes);
-    return res.status(200).json(combinedAttributes);
-  }
-
-  if(!customAttributes) {
-    combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
-    console.log("Combined Attributes: ", combinedAttributes);
-    return res.status(200).json(combinedAttributes);
-  }
-
 });
 
 router.put('/update-favorite-attributes', async (req, res) => {

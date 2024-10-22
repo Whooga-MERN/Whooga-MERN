@@ -400,8 +400,6 @@ router.get('/collection/:collection_id', async (req, res) => {
   }
 });
 
-
-
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
@@ -423,7 +421,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE
-router.delete('/:id', async (req, res) => {
+router.delete('/delete-collectable/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -434,11 +432,23 @@ router.delete('/:id', async (req, res) => {
     if (deletedItem.length === 0) {
       return res.status(404).send({ error: 'Item not found' });
     }
-    res.status(204).send(); // No content on successful delete
+
+    const deleteItemAttributes = await db
+    .delete(collectableAttributes)
+    .where(eq(id, collectableAttributes.collectable_id))
+    .returning();
+
+    if(deleteItemAttributes === 0) {
+      return res.status(404).send({ error: 'Item Attributes not found for deletion' });
+    }
+
+    res.status(200).send("Collectable Deleted"); // No content on successful delete
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error deleting item' });
   }
 });
+
+router.delete('')
 
 module.exports = router;
