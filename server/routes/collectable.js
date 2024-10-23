@@ -406,7 +406,7 @@ router.put('/:id', async (req, res) => {
   const { collectablePic } = req.body;
   try {
     const result = await db.update(collectables)
-      .set({collectablePic: collectablePic})
+      .set({collectable_pic: collectablePic})
       .where(eq(collectables.collectable_id, id)).execute();
     if (result.changes === 0)
     {
@@ -424,29 +424,33 @@ router.put('/:id', async (req, res) => {
 router.delete('/delete-collectable/:id', async (req, res) => {
   const { id } = req.params;
 
-  try {
-    const deletedItem = await db.delete(collectables)
-      .where(eq(id, collectables.collectable_id))
-      .returning(); // Fetch the deleted item
+  await db.transaction(async (trx) => {
+    try {
 
-    if (deletedItem.length === 0) {
-      return res.status(404).send({ error: 'Item not found' });
+      const deletedItem = await trx.delete(collectables)
+        .where(eq(id, collectables.collectable_id))
+        .returning(); // Fetch the deleted item
+  
+      if (deletedItem.length === 0) {
+        return res.status(404).send({ error: 'Item not found' });
+      }
+      
+      const updatedItemAttributes = await trx
+      .update(collectableAttributes)
+      .set({collectable_id: null})
+      .where(eq(collectableAttributes.collectable_id, id))
+      .execute();
+  
+      if(updatedItemAttributes === 0) {
+        return res.status(404).send({ error: 'Item Attributes not found for deletion' });
+      }
+  
+      res.status(200).send("Collectable Deleted"); // No content on successful delete
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: 'Error deleting item' });
     }
-
-    const deleteItemAttributes = await db
-    .delete(collectableAttributes)
-    .where(eq(id, collectableAttributes.collectable_id))
-    .returning();
-
-    if(deleteItemAttributes === 0) {
-      return res.status(404).send({ error: 'Item Attributes not found for deletion' });
-    }
-
-    res.status(200).send("Collectable Deleted"); // No content on successful delete
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: 'Error deleting item' });
-  }
+  });
 });
 
 router.delete('')
