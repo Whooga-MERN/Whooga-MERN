@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 //const trx = require('../config/trx');
 const {collectables, collectionUniverses, universeCollectables, collectableAttributes, collections} = require('../config/schema');
 const express = require('express');
-const {eq, inArray} = require('drizzle-orm');
+const {eq, and, or, inArray, isNull} = require('drizzle-orm');
 const fs = require('fs');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const multer = require('multer');
@@ -35,7 +35,7 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 // Collectable CRUD APIs
 
 router.post('/newCollectable', upload.single('collectableImage'), async(req, res) => {
-  const {collection_id, attributes_values_json, isWishlist} = req.body;
+  const {collection_id, attributes_values_json} = req.body;
 
   let image = null;
   if(req.file)
@@ -56,8 +56,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
   console.log("attribute_values_json\n", attributes_values_json);
   const parsedAttributeValues = JSON.parse(attributes_values_json);
   console.log("parsedAttributeValue\n", parsedAttributeValues);
-
-  const isWishlistBool = isWishlist === 'true';
 
   try {
 
@@ -136,7 +134,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       let customAttributeInsert = [];
       let defaultAttributeInsert = [];
       let insertValue = null;
-      // Create Attributes
+
       console.log("Creating attributes\n");
       if (row.owned === 'T') {
         console.log("user owns collectable... First creating collectable");
@@ -145,7 +143,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .values({
           collection_id: collection_id,
           universe_collectable_id: universe_collectable_id,
-          isWishlist: isWishlistBool
         })
         .returning({ collectable_id: collectables.collectable_id });
         
@@ -400,14 +397,177 @@ router.get('/collection/:collection_id', async (req, res) => {
   }
 });
 
+router.put('/edit-collectable', upload.single('collectableImage'), async (req, res) => {
+  const { collectionId, universeCollectableId, attributeValuesJson, owned} = req.body;
+
+  let image = null;
+  if(req.file)
+    image = req.file;
+  else
+    console.log("No Image Provided");
+
+  if(!universeCollectableId || isNaN(universeCollectableId))
+    return res.status(500).json({ message: "Invalid input for universeCollectableId" });
+  if(!collectionId || isNaN(collectionId))
+    return res.status(500).json({ message: "Invalid input for collectionId" });
+  if(!attributeValuesJson)
+    return res.status(500).json({ message: "Invalid input for parsedAttributeValuesJson" });
+  if(!owned)
+    return res.status(500).json({ message: "owned parameter not given"});
+
+  const parsedAttributeValuesJson = JSON.parse(attributeValuesJson);
+  console.log(parsedAttributeValuesJson);
+  await db.transaction(async (trx) => {
+    try {
+      console.log("Querying for collectableId");
+      const collectableIdQuery = await trx
+      .select({ collectable_id: collectables.collectable_id })
+      .from(collectables)
+      .where(eq(universeCollectableId, collectables.universe_collectable_id))
+      .execute();
+      console.log("Finished querying for collectableId");
+      
+
+      if(collectableIdQuery.length < 1) {
+        console.log("Before update, not owned");
+        if(owned === 'T') { 
+          console.log("Changing to owned");
+          const newCollectableQuery = trx
+          .insert(collectables)
+          .values({
+            collection_id: collectionId,
+            universe_collectable_id: universeCollectableId
+          })
+          .execute();
+          console.log("finished changing to owned");
+        }
+
+        console.log("Updating Attributes");
+        const updateAttributes = Object.entries(parsedAttributeValuesJson).map(async ([key, value]) => {
+          console.log("key: ", key, " value: ", value);
+          const query = await trx
+            .update(collectableAttributes)
+            .set({ value: value })
+            .where(
+              and(
+                eq(collectableAttributes.slug, key),
+                eq(collectableAttributes.universe_collectable_id, universeCollectableId),
+                or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
+              )
+            )
+            .execute();
+        });
+        console.log("Finished Updating Attributes");
+
+        let imageUrl = null;
+        if(image)
+        {
+          console.log("Creating S3 Image File\n");    
+          try {
+            imageUrl = await createS3File(image);
+          } catch (error) {
+            console.log(error);
+            return res.status(500).send({ error: 'Error creating image for S3 Bucket'});
+          }
+
+          console.log("Updating Image");
+          await trx
+            .update(collectableAttributes)
+            .set({ value: imageUrl })
+            .where(
+              and(
+                eq(collectableAttributes.slug, 'image'),
+                eq(collectableAttributes.universe_collectable_id, universeCollectableId),
+                or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
+              )
+            )
+            .execute();
+          console.log("Finished Updating Image");
+        }
+      }
+      else {
+        console.log("Before update, is owned");
+        const collectableId = collectableIdQuery[0].collectable_id;
+        if(owned === 'F')
+        {
+          console.log("Marking Collectable as unowned");
+          const deleteCollectableQuery = await trx
+            .delete(collectables)
+            .where(eq(collectableId, collectables.collectable_id))
+            .returning();
+            console.log("Finished Marking Collectable as unowned");
+        }
+
+        console.log("Updating Attributes");
+        const updateAttributes = Object.entries(parsedAttributeValuesJson).map(async ([key, value]) => {
+          console.log("key: ", key, " value: ", value);
+          const query = await trx
+            .update(collectableAttributes)
+            .set({ value: value })
+            .where(
+              and(
+                eq(collectableAttributes.slug, key),
+                eq(collectableAttributes.universe_collectable_id, universeCollectableId),
+                or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
+              )
+            )
+            .execute();
+        });
+        console.log("Finished Updating Attributes");
+
+        let imageUrl = null;
+        if(image)
+        {
+          console.log("Creating S3 Image File\n");    
+          try {
+            imageUrl = await createS3File(image);
+          } catch (error) {
+            console.log(error);
+            return res.status(500).send({ error: 'Error creating image for S3 Bucket'});
+          }
+
+          console.log("Updating Image");
+          await trx
+            .update(collectableAttributes)
+            .set({ value: imageUrl })
+            .where(
+              and(
+                eq(collectableAttributes.slug, 'image'),
+                eq(collectableAttributes.universe_collectable_id, universeCollectableId),
+                or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
+              )
+            )
+            .execute();
+          console.log("Finished Updating Image");
+        }
+      }
+
+      console.log("Succesfully updated attributes");
+      res.status(200).send("Succesfully updated attributes");
+    } catch (error) {
+      console.log(error);
+      try {
+        if(imageUrl)
+          await deleteS3File(imageUrl);
+      } catch (error) {
+        return res.status(500).send({ error: 'Failed to update collectable... Failed to delete new S3 Image'});
+      }
+
+      res.status(500).send("ERROR failed to update attributes of collectable");
+    }
+  });
+});
+
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { collectablePic } = req.body;
   try {
-    const result = await db.update(collectables)
+    const result = await db
+      .update(collectables)
       .set({collectable_pic: collectablePic})
-      .where(eq(collectables.collectable_id, id)).execute();
+      .where(eq(collectables.collectable_id, id))
+      .execute();
     if (result.changes === 0)
     {
       res.status(404).send('User not found');
@@ -421,7 +581,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE
-router.delete('/delete-collectable/:id', async (req, res) => {
+router.delete('/mark-unowned/:id', async (req, res) => {
   const { id } = req.params;
 
   await db.transaction(async (trx) => {
@@ -447,12 +607,11 @@ router.delete('/delete-collectable/:id', async (req, res) => {
   
       res.status(200).send("Collectable Deleted"); // No content on successful delete
     } catch (error) {
+      
       console.error(error);
       res.status(500).send({ error: 'Error deleting item' });
     }
   });
 });
-
-router.delete('')
 
 module.exports = router;

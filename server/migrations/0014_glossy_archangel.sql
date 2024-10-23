@@ -1,0 +1,1 @@
+ALTER TABLE "collectables" DROP COLUMN IF EXISTS "isWishlist";

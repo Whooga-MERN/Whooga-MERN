@@ -34,7 +34,6 @@ const collectables = pgTable('collectables', {
   collectable_id: serial('collectable_id').primaryKey().notNull(),
   collection_id: serial('collection_id').notNull(),
   universe_collectable_id: serial('universe_collectable_id').notNull(),
-  isWishlist: boolean('isWishlist').default(false).notNull(),
 });
 
 const universeCollectables = pgTable('universeCollectables', {
