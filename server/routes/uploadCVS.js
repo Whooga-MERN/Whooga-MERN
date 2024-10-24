@@ -87,12 +87,12 @@ router.post('', cpUpload, async (req, res) => {
                 });
             });
 
-        await Promise.all(uploadPromises);
-        
-        urlCollectableImages.forEach(image => {
-            console.log("URL", image.url);
-            console.log("Original Name:", image.originalName);
-        });
+            await Promise.all(uploadPromises);
+            
+            urlCollectableImages.forEach(image => {
+                console.log("URL", image.url);
+                console.log("Original Name:", image.originalName);
+            });
         }
 
 
@@ -224,5 +224,165 @@ router.post('', cpUpload, async (req, res) => {
             res.status(500).send({ error: 'File upload or database operation failed' });
         }
 });
+
+router.post('/existing-universe', cpUpload, async (req, res) => {
+    const {
+        collectionId,
+        collectionUniverseId,
+        csvJsonData
+    } = req.body;
+
+    if(!csvJsonData)
+        return res.status(404).send('No csvJsonData given');
+    if(!collectionUniverseId || isNaN(collectionUniverseId))
+        return res.status(404).send("No or Invalid universeCollectionId given");
+    console.log("collectionUniverseId: ", collectionUniverseId);
+    if(!collectionId || isNaN(collectionId))
+        return res.status(404).send("No or Invalid universeCollectionId given");
+    console.log("collectionId: ", collectionId);
+
+    let collectableImages = [];
+    if(req.files['collectableImages'])
+        collectableImages = req.files['collectableImages'];
+
+    const parsedCsvJsonData = JSON.parse(csvJsonData);
+    const urlCollectableImages = [];
+
+try {
+
+    // Upload collectableImages to S3 if they exist
+    if (collectableImages && collectableImages.length > 0) {
+        console.log("uploading images");
+        const uploadPromises = collectableImages.map(file => {
+            const fileContent = fs.readFileSync(file.path);
+            const uniqueFilename = `${uuidv4()}-${file.originalname}`;
+            const params = {
+                Bucket: process.env.S3_BUCKET_NAME, // Use the bucket name directly
+                Key: uniqueFilename, // Use the unique filename
+                Body: fileContent,
+                ContentType: file.mimetype
+            };
+            return s3Client.send(new PutObjectCommand(params)).then(() => {
+                // Delete the file from the server after uploading to S3
+                const originalName = file.originalname;
+                if(fs.existsSync(file.path))
+                    fs.unlinkSync(file.path);
+
+                const objectUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${uniqueFilename}`;
+                urlCollectableImages.push({ url: objectUrl, originalName: originalName });
+            }).catch(error => {
+                console.error(`Error uploading ${file.filename} to S3:`, error);
+                throw new Error(`Failed to upload ${file.filename}`);
+            });
+        });
+
+        await Promise.all(uploadPromises);
+        
+        urlCollectableImages.forEach(image => {
+            console.log("URL", image.url);
+            console.log("Original Name:", image.originalName);
+        });
+    }
+
+
+    await db.transaction(async (trx) => {
+         
+        console.log("Creating Universe Collectables...");
+        const universeCollectablesData = [];
+        const collectableAttributesData = [];
+        const ownedCollectable = [];
+        const mappedCollectableImage = [];
+
+        let imageUrl = null
+        for (const row of parsedCsvJsonData) {
+            const imageObject = urlCollectableImages.find(image => image.originalName === row.image);
+            imageUrl = null
+            if(imageObject)
+                imageUrl = imageObject.url;
+            
+            console.log("\nimageUrl: ", imageUrl);
+            mappedCollectableImage.push(imageUrl);
+
+            universeCollectablesData.push({
+                collection_universe_id: collectionUniverseId,
+            });
+        }
+
+        // After data is packaged insert data into universeCollectables table
+    
+        const newUniverseCollectables = await trx
+            .insert(universeCollectables)
+            .values(universeCollectablesData)
+            .returning({ universe_collectable_id: universeCollectables.universe_collectable_id });
+        console.log("Finished creating universe collectables");
+
+        console.log("Creating attributes");
+        // Packages attributes information and then inserts into collectableAttributes
+        newUniverseCollectables.forEach((collectable, index) => {
+            const universeCollectableID = collectable.universe_collectable_id;
+            const row = parsedCsvJsonData[index];
+            console.log("universeCollectableId: ", universeCollectableID);
+            //collectable_pic: ownedCollectableImage[j]
+            // The owned should only be used for the collectables table. 
+            for (const [key, value] of Object.entries(row)) {
+                if (key !== 'owned' && key !== 'image') {
+                    collectableAttributesData.push({
+                        universe_collectable_id: universeCollectableID,
+                        name: key,
+                        slug: key.toLowerCase().replace(/\s+/g, '_'),
+                        value: value,
+                        is_custom: false,
+                    });
+                }
+                else if (key == 'owned' && value == 'T') {
+                    ownedCollectable.push({
+                        collection_id: collectionId,
+                        universe_collectable_id: universeCollectableID,
+                    });
+                }
+                else if (key == 'image') {
+                    collectableAttributesData.push({
+                        universe_collectable_id: universeCollectableID,
+                        name: key,
+                        slug: key.toLowerCase().replace(/\s+/g, '_'),
+                        value: mappedCollectableImage[index] || 'empty',
+                        is_custom: false,
+                    });
+                }
+            }
+        });
+
+        await trx.insert(collectableAttributes).values(collectableAttributesData);
+
+        await trx.insert(collectables).values(ownedCollectable);
+        console.log("Finished Creating attributes");
+        console.log("All data inserted succesfully");
+        res.status(200).send({ message: 'Data inserted successfully' });
+
+    }) } catch (error) {
+        console.error(error);
+
+        // Cleanup: Delete uploaded files from S3
+        const deletePromises = [...urlCollectableImages.map(image => image.url)].map(url => {
+            const filename = url.split('/').pop();
+            const params = {
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: filename
+            };
+            return s3Client.send(new DeleteObjectCommand(params));
+        });
+
+        try {
+            await Promise.all(deletePromises);
+            console.log('Uploaded files deleted from S3 due to error');
+        } catch (deleteError) {
+            console.error('Error deleting files from S3:', deleteError);
+        }
+
+        res.status(500).send({ error: 'File upload or database operation failed' });
+    }
+
+});
+
 
 module.exports = router;

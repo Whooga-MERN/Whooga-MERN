@@ -106,7 +106,6 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
   }
 });
 
-
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
