@@ -665,6 +665,15 @@ export default function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* collectibles */}
           <div className="w-full p-2">
+            <div className="text-xl py-4 text-right pr-10">
+              Total items in the collection:{" "}
+              {searchResults.length > 0
+                ? searchResults.length
+                : enabled
+                ? ownedCollectables.length
+                : universeCollectables.length}
+            </div>
+
             {noSearchResults ? (
               <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
                 No match found :(
