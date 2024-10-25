@@ -384,5 +384,8 @@ try {
 
 });
 
+router.put('/bulk-update-images', cpUpload, async (req, res) => {
+const { csvJson } = req.body;
+});
 
 module.exports = router;

@@ -450,7 +450,7 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
             .set({ value: value })
             .where(
               and(
-                eq(collectableAttributes.slug, key),
+                eq(collectableAttributes.slug, key.toLowerCase().replace(/\s+/g, '_')),
                 eq(collectableAttributes.universe_collectable_id, universeCollectableId),
                 or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
               )
