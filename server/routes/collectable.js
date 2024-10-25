@@ -21,6 +21,7 @@ if (!fs.existsSync(uploadsDir)) {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+        console.log(file);
         cb(null, uploadsDir);
     },
     filename: function (req, file, cb) {
@@ -399,7 +400,6 @@ router.get('/collection/:collection_id', async (req, res) => {
 
 router.put('/edit-collectable', upload.single('collectableImage'), async (req, res) => {
   const { collectionId, universeCollectableId, attributeValuesJson, owned} = req.body;
-
   let image = null;
   if(req.file)
     image = req.file;
@@ -444,7 +444,7 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
 
         console.log("Updating Attributes");
         const updateAttributes = Object.entries(parsedAttributeValuesJson).map(async ([key, value]) => {
-          console.log("key: ", key, " value: ", value);
+          console.log("key: ", key.toLowerCase().replace(/\s+/g, '_'), " value: ", value);
           const query = await trx
             .update(collectableAttributes)
             .set({ value: value })

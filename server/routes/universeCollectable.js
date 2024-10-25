@@ -126,6 +126,13 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.delete('/delete-universe-collectable', async (req, res) => {
+  const { universeCollectable } = req.body;
+
+  
+
+});
+
 // DELETE
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
