@@ -72,12 +72,18 @@ export default function HomePage() {
   };
 
   // edit collectible
-  const openEdit = () => {
+  const openEdit = (item: Record<string, any>) => {
+    setSpecificTag(item);
     setShowEdit(true);
   };
 
   const closeEdit = () => {
     setShowEdit(false);
+    setSpecificTag(null);
+  };
+
+  const handleDelete= () => {
+    console.log("Delete button clicked");
   };
 
   const [isOwned, setIsOwned] = useState(true);
@@ -167,7 +173,7 @@ export default function HomePage() {
   };
 
   //--------------------- handle form field ------------------------
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, any>>({owned: "F"});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isNewCollectableWishlist, setIsNewCollectableWishlist] =
     useState<boolean>(false);
@@ -229,6 +235,59 @@ export default function HomePage() {
     }
 
     closeModal();
+    window.location.reload();
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const request = new FormData();
+
+    if (collectionId) {
+      request.append("collectionId", collectionId);
+    } else {
+      console.error("Collection ID is undefined");
+      return;
+    }
+    if (specificTag?.universeCollectableId)
+    {
+      request.append("universeCollectableId", specificTag.universeCollectableId);
+    }
+    const { owned, image, ...restFormData } = formData;
+    console.log("owned", owned);
+    request.append("attributeValuesJson", JSON.stringify(restFormData));
+    if (owned !== undefined) {
+      request.append("owned", owned);
+    }
+    if (imageFile) {
+      request.append("collectableImage", imageFile);
+    }
+ 
+    logFormData(request);
+
+    try {
+      const response = await fetch(
+        buildPath(`collectable/edit-collectable`),
+        // "http://localhost:3000/collectable/edit-collectable",
+        {
+          method: "PUT",
+          body: request,
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        console.log("Form submitted successfully");
+      } else {
+        console.error("Error submitting form:", response);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+
+    closeEdit();
+    window.location.reload();
   };
 
   const logFormData = (formData: FormData) => {
@@ -431,6 +490,17 @@ export default function HomePage() {
     setShowModal(false);
     setSpecificTag(null);
   };
+
+    useEffect(() => {
+    // Initialize formData with specificTag attributes
+    if (specificTag) {
+      const initialFormData = specificTag.attributes.reduce((acc: { [x: string]: any; }, attr: { name: string | number; value: any; }) => {
+        acc[attr.name] = attr.value;
+        return acc;
+      }, {} as Record<string, string>);
+      setFormData(initialFormData);
+    }
+  }, [specificTag]);
 
   return (
     <>
@@ -758,11 +828,12 @@ export default function HomePage() {
                           <div className="flex space-x-4">
                             <button
                               className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={openEdit}
+                              onClick={() => openEdit(item)}
                             >
                               <FaRegEdit />
                             </button>
-                            <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                            <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                              onClick={handleDelete}>
                               <FaRegTrashCan />
                             </button>
                           </div>
@@ -846,7 +917,7 @@ export default function HomePage() {
                             <div className="pt-3 pb-2 text-center">
                               <button
                                 className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={openEdit}
+                                onClick={() => openEdit(item)}
                               >
                                 <FaRegEdit />
                               </button>
@@ -872,13 +943,17 @@ export default function HomePage() {
             )}
             {showEdit && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
+                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
                   <h2 className="text-xl font-bold mb-4">
                     Edit your Collectible
                   </h2>
 
-                  <form onSubmit={handleSubmit}>
-                    {favoriteAttributes.map((attribute, index) => (
+                  <form onSubmit={handleEditSubmit}>
+                    {favoriteAttributes
+                          .concat(customAttributes)
+                          .concat("owned", "image")
+                          .filter((attr) => attr !== null)
+                          .map((attribute, index) => (
                       <div key={index} className="mb-4 lg:max-w-lg">
                         {attribute !== "image" ? (
                           <>
@@ -893,6 +968,7 @@ export default function HomePage() {
                               value={formData[attribute] || ""}
                               onChange={handleChange}
                               className="border rounded w-full py-2 px-3 text-gray-700"
+                              required={attribute === "owned"}
                             />
                           </>
                         ) : (
@@ -901,7 +977,7 @@ export default function HomePage() {
                               htmlFor="cover-photo"
                               className="block text-sm font-bold leading-6 text-gray-900 dark:text-gray-300"
                             >
-                              Upload Photo
+                              Change Photo
                             </label>
                             <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
                               <div className="text-center">
@@ -923,7 +999,7 @@ export default function HomePage() {
                                       onChange={handleFileChange}
                                     />
                                   </label>
-                                  <p className="pl-1">or drag and drop</p>
+                                  <p className="pl-1">or leave blank to keep original photo</p>
                                 </div>
                                 <p className="text-xs leading-5 text-gray-600">
                                   PNG, JPG
