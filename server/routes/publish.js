@@ -38,4 +38,58 @@ router.put('/publish-collectables', async (req, res) => {
     }
 });
 
+router.put('/publish-universe', async (req, res) => {
+    const { collectionUniverseId, isPublished } = req.body;
+
+    if(!collectionUniverseId || isNaN(collectionUniverseId)) {
+        console.log("collectionUniverseId not or improperly provided");
+        res.status(404).send("collectionUniverseId not or improperly provided");
+    }
+    console.log("collectionUniverseId: ", collectionUniverseId);
+    const isPublishedBool = isPublished === "true";
+
+    try {
+        let publishedUniverseCollectable;
+        if(isPublishedBool)
+        {
+            publishedUniverseCollectable = await db
+                .select({ universe_collectable_id: universeCollectables.universe_collectable_id })
+                .from(universeCollectables)
+                .where(eq(universeCollectables.collection_universe_id, collectionUniverseId))
+                .limit(1)
+                .execute();            
+        }
+
+
+        if(isPublishedBool) {
+            if(publishedUniverseCollectable.length > 0) {
+                await db
+                    .update(collectionUniverses)
+                    .set({ is_published: isPublishedBool })
+                    .where(eq(collectionUniverses.collection_universe_id, collectionUniverseId))
+                    .execute();
+
+                    console.log("Successfully published collection universe")
+                    return res.status(200).send("Succesfully published collection universe");
+            }
+            else {
+                res.status(404).send("No published universe collectables in the universe");
+            }
+        }
+
+        await db
+        .update(collectionUniverses)
+        .set({ is_published: isPublishedBool })
+        .where(eq(collectionUniverses.collection_universe_id, collectionUniverseId))
+        .execute();
+
+        console.log("Successfully published collection universe")
+        res.status(200).send("Succesfully published collection universe");
+
+    } catch (error) {
+        console.log(error)
+        res.status(400).send("FAILED to publish collection universe");
+    }
+})
+
 module.exports = router;
