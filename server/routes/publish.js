@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const { db, pool } = require('../config/db');
 const {collectables, collectionUniverses, universeCollectables, collectableAttributes, collections} = require('../config/schema');
 const express = require('express');
-const { eq, inArray } = require('drizzle-orm');
+const { eq, inArray, and } = require('drizzle-orm');
 // const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
@@ -55,13 +55,17 @@ router.put('/publish-universe', async (req, res) => {
             publishedUniverseCollectable = await db
                 .select({ universe_collectable_id: universeCollectables.universe_collectable_id })
                 .from(universeCollectables)
-                .where(eq(universeCollectables.collection_universe_id, collectionUniverseId))
+                .where(and(
+                    eq(universeCollectables.is_published, isPublishedBool),
+                    eq(universeCollectables.collection_universe_id, collectionUniverseId)
+                ))
                 .limit(1)
                 .execute();            
         }
 
 
         if(isPublishedBool) {
+            console.log("publishedUniverseCollectable.length: ", publishedUniverseCollectable.length);
             if(publishedUniverseCollectable.length > 0) {
                 await db
                     .update(collectionUniverses)
@@ -69,11 +73,11 @@ router.put('/publish-universe', async (req, res) => {
                     .where(eq(collectionUniverses.collection_universe_id, collectionUniverseId))
                     .execute();
 
-                    console.log("Successfully published collection universe")
-                    return res.status(200).send("Succesfully published collection universe");
+                    console.log("Successfully changed is_published for collection universe")
+                    return res.status(200).send("Succesfully changed is_published for collection universe");
             }
             else {
-                res.status(404).send("No published universe collectables in the universe");
+                return res.status(404).send("FAILED to publish, No published universe collectables in the universe");
             }
         }
 
