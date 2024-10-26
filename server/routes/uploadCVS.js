@@ -43,7 +43,8 @@ router.post('', cpUpload, async (req, res) => {
         urlUniverseThumbnailImage,
         defaultAttributes,
         csvJsonData,
-        email
+        email,
+        isPublished
     } = req.body;
 
     if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email)
@@ -95,10 +96,17 @@ router.post('', cpUpload, async (req, res) => {
             });
         }
 
-
+        // Start inserting into tables, now that we have read in the images
         await db.transaction(async (trx) => {
             console.log("\nSearching for user");
-            const user = await trx.select({ user_id: users.user_id, userName: users.name }).from(users).where(eq(users.email, email)).execute();
+            const user = await trx.select(
+                {
+                    user_id: users.user_id,
+                    userName: users.name 
+                })
+                .from(users)
+                .where(eq(users.email, email))
+                .execute();
 
             if (!user || user.length === 0)
                 res.status(400).send({ error: "FAILED to find user" });
@@ -113,12 +121,21 @@ router.post('', cpUpload, async (req, res) => {
                 universe_collection_pic: urlUniverseThumbnailImage,
                 user_id: user_id,
                 description: universeCollectionDescription,
+                is_published: isPublished
             }).returning({ collection_universe_id: collectionUniverses.collection_universe_id });
             console.log("New Universe Collection Created");
 
             const collectionUniverseID = newUniverseCollection[0].collection_universe_id;
             const favoriteAttributes = parsedDefaultAttributes.slice(0,4);
 
+            console.log("updating source_universe value");
+            await trx
+                .update(collectionUniverses)
+                .set({ source_universe: collectionUniverseID })
+                .where(eq(collectionUniverseID, collectionUniverses.collection_universe_id))
+                .execute();
+
+            console.log("Finished udating source_universe value\n");
             console.log("Creating Collection");
     
             const newCollection = await trx.insert(collections).values({
@@ -152,6 +169,7 @@ router.post('', cpUpload, async (req, res) => {
 
                 universeCollectablesData.push({
                     collection_universe_id: collectionUniverseID,
+                    is_published: isPublished
                 });
             }
 
@@ -183,13 +201,25 @@ router.post('', cpUpload, async (req, res) => {
                         });
                     }
                     else if (key == 'image') {
-                        collectableAttributesData.push({
-                            universe_collectable_id: universeCollectableID,
-                            name: key,
-                            slug: key.toLowerCase().replace(/\s+/g, '_'),
-                            value: mappedCollectableImage[index],
-                            is_custom: false,
-                        });
+                        console.log("Value: ", value);
+                        if(value) {
+                            collectableAttributesData.push({
+                                universe_collectable_id: universeCollectableID,
+                                name: key,
+                                slug: key.toLowerCase().replace(/\s+/g, '_'),
+                                value: mappedCollectableImage[index],
+                                is_custom: false,
+                            });
+                        }
+                        else {
+                            collectableAttributesData.push({
+                                universe_collectable_id: universeCollectableID,
+                                name: key,
+                                slug: key.toLowerCase().replace(/\s+/g, '_'),
+                                value: '',
+                                is_custom: false,
+                            });
+                        }
                     }
                 }
             });
@@ -205,8 +235,9 @@ router.post('', cpUpload, async (req, res) => {
             console.error(error);
 
             // Cleanup: Delete uploaded files from S3
-            const deletePromises = [...urlCollectableImages.map(image => image.url), ...urlUniverseThumbnailImage].map(url => {
+            const deletePromises = [...urlCollectableImages.map(image => image.url), urlUniverseThumbnailImage].map(url => {
                 const filename = url.split('/').pop();
+                console.log(filename);
                 const params = {
                     Bucket: process.env.S3_BUCKET_NAME,
                     Key: filename
@@ -345,7 +376,7 @@ try {
                         universe_collectable_id: universeCollectableID,
                         name: key,
                         slug: key.toLowerCase().replace(/\s+/g, '_'),
-                        value: mappedCollectableImage[index] || 'empty',
+                        value: mappedCollectableImage[index] || '',
                         is_custom: false,
                     });
                 }

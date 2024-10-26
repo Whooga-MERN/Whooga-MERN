@@ -127,10 +127,24 @@ router.put('/:id', async (req, res) => {
 });
 
 router.delete('/delete-universe-collectable', async (req, res) => {
-  const { universeCollectable } = req.body;
+  const { universeCollectableId } = req.body;
 
-  
+  if(!universeCollectableId || isNaN(universeCollectableId))
+    return res.status(404).send('No or improper universeCollectableId given');
+  console.log("universeCollectableId: ", universeCollectableId);
 
+  console.log("\nStarting Deletion of universeCollecatble");
+  const deletedUniverseCollectable = await db
+    .delete(universeCollectables)
+    .where(eq(universeCollectableId, universeCollectables.universe_collectable_id))
+    .returning();
+
+  if(deletedUniverseCollectable.length < 0) {
+    console.log("No Collecatble found to delete")
+    return res.status(404).send("No Collectable found to delete");
+  }
+
+  return res.status(200).send("Successfully deleted universeCollectable");
 });
 
 // DELETE

@@ -28,7 +28,7 @@ const collectionUniverses = pgTable('collectionUniverses', {
   default_attributes: jsonb('default_attributes').notNull(),
   universe_collection_pic: varchar('universe_collection_pic', { length: 2048 }),
   description: varchar('description', { length: 255 }),
-  source_universe: integer('source_universe').notNull(),
+  source_universe: integer('source_universe'),
   is_published: boolean('is_published').notNull()
 });
 
@@ -56,8 +56,8 @@ const collectableAttributes = pgTable('collectableAttributes', {
 
 const scraped = pgTable('scraped', {
   id: serial('id').primaryKey().notNull(),
-  source_universe: integer('source_universe').notNull(),
   collection_universe_id: integer('collection_universe_id').notNull().references(() => collectionUniverses.collection_universe_id, { onDelete: 'CASCADE' }),
+  source_universe: integer('source_universe').notNull(),
   title: varchar('title', { length: 255 }),
   price: varchar('price', { length: 255 }),
   link: text('link'),

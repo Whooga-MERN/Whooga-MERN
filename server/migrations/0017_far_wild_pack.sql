@@ -1,0 +1,1 @@
+ALTER TABLE "scraped" ALTER COLUMN "source_universe" DROP NOT NULL;

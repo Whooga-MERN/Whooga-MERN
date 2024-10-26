@@ -120,6 +120,20 @@
       "when": 1729895305745,
       "tag": "0016_clear_praxagora",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1729902054883,
+      "tag": "0017_far_wild_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1729902111321,
+      "tag": "0018_red_plazm",
+      "breakpoints": true
     }
   ]
 }
