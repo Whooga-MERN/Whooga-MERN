@@ -119,13 +119,13 @@ router.get('/wishlisted-collectables/:collection_universe_id', async (req, res) 
     }
 });
 
-router.get('/whooga-alert/my-wishlisted/:collection_id', async (req, res) => {
-    const { collection_id } = req.params;
+router.get('/whooga-alert/my-wishlisted/:collection_universe_id', async (req, res) => {
+    const { collection_universe_id } = req.params;
 
-    if(!collection_id || isNaN(collection_id)) {
+    if(!collection_universe_id || isNaN(collection_universe_id)) {
         return res.status(400).json({ message: 'Invalid input for collection_id'} );
     }
-    console.log("collection_id: ", collection_id);
+    console.log("collection_universe_id: ", collection_universe_id);
     try{
         const whoogaResults = await db
         .select({
@@ -135,10 +135,10 @@ router.get('/whooga-alert/my-wishlisted/:collection_id', async (req, res) => {
             image_url: scraped.image_url
         })
         .from(scraped)
-        .where(eq(collection_id, scraped.collection_id))
+        .where(eq(scraped.collection_universe_id, collection_universe_id))
         .execute();
     
-        console.log(whoogaResults);
+        console.log("whoogaResults: ", whoogaResults);
         
         res.status(400).json(whoogaResults);
     } catch (error) {
@@ -147,27 +147,29 @@ router.get('/whooga-alert/my-wishlisted/:collection_id', async (req, res) => {
     }
 });
 
-router.get('/whooga-alert/related-wishlist/:collection_id', async (req, res) => {
-    const { collection_id } = req.params;
+router.get('/whooga-alert/related-wishlist/:collection_universe_id', async (req, res) => {
+    const { collection_universe_id } = req.params;
 
-    if(!collection_id || isNaN(collection_id)) {
-        return res.status(400).json({ message: 'Invalid input for collection_id'} );
+    if(!collection_universe_id || isNaN(collection_universe_id)) {
+        return res.status(400).json({ message: 'Invalid input for collection_universe_id'} );
     }
-    console.log("collection_id: ", collection_id);
+    console.log("collection_universe_id: ", collection_universe_id);
 
     try{
-        console.log("Fetching collection universe id\n");
-        const fetchCollectionUniverseId = await db
-        .select({ collection_universe_id: collections.collection_universe_id})
-        .from(collections)
-        .where(eq(collection_id, collections.collection_id))
+        console.log("Fetching source universe\n");
+
+        const fetchSourceUniverse = await db
+        .select({ source_universe: collectionUniverses.source_universe})
+        .from(collectionUniverses)
+        .where(eq(collection_universe_id, collectionUniverses.collection_universe_id))
         .execute();
 
-        if(!fetchCollectionUniverseId[0].collection_universe_id || isNaN(fetchCollectionUniverseId[0].collection_universe_id)) {
-            return res.status(400).json({ message: 'Invalid input for collection_id'} );
+        if(!fetchSourceUniverse[0].source_universe || isNaN(fetchSourceUniverse[0].source_universe)) {
+            return res.status(404).json({ message: 'Failed to find source universe'} );
         }
-        const collection_universe_id = fetchCollectionUniverseId[0].collection_universe_id;
-        console.log("collection_universe_id:", collection_universe_id)
+
+        const sourceUniverse = fetchSourceUniverse[0].source_universe;
+        console.log("Source Universe:", sourceUniverse);
 
         console.log("Fetching Related results");
         const whoogaResults = await db
@@ -180,13 +182,13 @@ router.get('/whooga-alert/related-wishlist/:collection_id', async (req, res) => 
         .from(scraped)
         .where(
             and(
-                eq(collection_universe_id, scraped.collection_universe_id),
-                not(eq(scraped.collection_id, collection_id))
+                eq(sourceUniverse, scraped.source_universe),
+                not(eq(collection_universe_id, scraped.collection_universe_id))
             )
         )
         .execute();
     
-        console.log(whoogaResults);
+        console.log("whoogaResults: ", whoogaResults);
         
         res.status(400).json(whoogaResults);
     } catch (error) {
