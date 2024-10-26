@@ -36,8 +36,8 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 // Collectable CRUD APIs
 
 router.post('/newCollectable', upload.single('collectableImage'), async(req, res) => {
-  const {collection_id, attributes_values_json} = req.body;
-
+  const {collection_id, attributes_values_json, isPublished} = req.body;
+  
   let image = null;
   if(req.file)
     image = req.file;
@@ -54,6 +54,13 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
     return res.status(404).send({ error: "Missing attributes_values_json"});
   }
 
+  if(!isPublished) {
+    console.log("Missing isPublished");
+    return res.status(404).send({ error: "Missing isPublished"});
+  }
+  const isPublishedBool = isPublished === 'true';
+
+  console.log("isPublished: ", isPublished);
   console.log("attribute_values_json\n", attributes_values_json);
   const parsedAttributeValues = JSON.parse(attributes_values_json);
   console.log("parsedAttributeValue\n", parsedAttributeValues);
@@ -71,6 +78,8 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         return res.status(500).send({ error: 'Error creating image for S3 Bucket'});
       }
     }
+
+    console.log("imageUrl: ", imageUrl);
 
     await db.transaction(async (trx) => {
       console.log("Fetching Universe Collection Id\n");
@@ -103,7 +112,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .execute();
 
       console.log("Finished fetching custom attributes and default attributes\n");
-      let customAttributes = [];
+      let customAttributes = []; // currently not used
       let defaultAttributes = [];
       if(attributesQuery.length > 0) {
         customAttributes = attributesQuery[0].custom_attributes;
@@ -121,6 +130,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       .insert(universeCollectables)
       .values({
         collection_universe_id: collection_universe_id,
+        is_published: isPublishedBool
       })
       .returning({
         universe_collectable_id: universeCollectables.universe_collectable_id
@@ -158,7 +168,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             if(defaultAttributes.includes(key)) {
               defaultAttributeInsert.push({
                 collection_id: null,
-                collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -169,7 +178,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             else {
               customAttributeInsert.push({
                 collection_id: collection_id,
-                collectable_id: newCollectable[0].collectable_id,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -190,7 +198,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             if(defaultAttributes.includes(key)) {
               defaultAttributeInsert.push({
                 collection_id: collection_id,
-                collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -201,7 +208,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             else {
               customAttributeInsert.push({
                 collection_id: collection_id,
-                collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -227,7 +233,6 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .execute();
       }
 
-
       //Insert the image row
       if(imageUrl) {
         await trx
@@ -252,7 +257,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
           universe_collectable_id: universe_collectable_id,
           name: "image",
           slug: "image",
-          value: "empty",
+          value: "",
           is_custom: false
         })
         .execute();
@@ -263,8 +268,15 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
     console.log(error);
     
     try {
-      if(imageUrl)
-        await deleteS3File(imageUrl);
+      if(imageUrl) {
+        const filename = imageUrl.split('/').pop();
+        console.log(filename);
+        const params = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: filename
+        };
+        return s3Client.send(new DeleteObjectCommand(params));
+      }
     } catch (error) {
       return res.status(500).send({ error: 'Failed to create new collectable... Failed to delete new S3 Image'});
     }

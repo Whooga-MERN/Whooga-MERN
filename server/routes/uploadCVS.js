@@ -47,10 +47,12 @@ router.post('', cpUpload, async (req, res) => {
         isPublished
     } = req.body;
 
-    if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email)
+    if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email || isPublished)
         return res.status(400).send({
-            error: `Request body is missing a either universeCollectionName, defaultAttributes, or csvJsonData` });
+            error: `Request body is missing a either universeCollectionName, defaultAttributes, isPublished, email or csvJsonData` });
 
+        const isPublishedBool = isPublished === 'true';
+        
         let collectableImages = [];
         if(req.files['collectableImages'])
             collectableImages = req.files['collectableImages'];
@@ -121,7 +123,7 @@ router.post('', cpUpload, async (req, res) => {
                 universe_collection_pic: urlUniverseThumbnailImage,
                 user_id: user_id,
                 description: universeCollectionDescription,
-                is_published: isPublished
+                is_published: isPublishedBool
             }).returning({ collection_universe_id: collectionUniverses.collection_universe_id });
             console.log("New Universe Collection Created");
 
@@ -169,7 +171,7 @@ router.post('', cpUpload, async (req, res) => {
 
                 universeCollectablesData.push({
                     collection_universe_id: collectionUniverseID,
-                    is_published: isPublished
+                    is_published: isPublishedBool
                 });
             }
 
