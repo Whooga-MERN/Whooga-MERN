@@ -50,26 +50,23 @@ router.post('/add-wishlist', async (req, res) => {
 });
 
 router.delete('/remove-wishlist', async (req, res) => {
-    const {collection_id, universe_collectable_id} = req.body;
+    const {universe_collectable_id} = req.body;
 
-    if(!collection_id, !universe_collectable_id){
-        console.log("collection_id: ", collection_id );
+    if(!universe_collectable_id){
         console.log("universe_collectable_id: ", universe_collectable_id);
         return res.status(404).send({ error: 'Not Given either collection_id or universe_collectable_id'});
     }
 
     try {
-
         console.log("deleting from wishlist...");
         await db
         .delete(wishlist)
-        .where(and(
-            eq(wishlist.collection_id, collection_id),
+        .where(
             eq(wishlist.universe_collectable_id, universe_collectable_id)
-        ))
+        )
         .execute();
-
         console.log("Deleted from wishlist");
+
         return res.status(200).send('Successfully deleted from wishlist');
     } catch (error) {
         console.log(error);
