@@ -74,24 +74,23 @@ router.delete('/remove-wishlist', async (req, res) => {
     }
 });
 
-router.get('/wishlisted-collectables/:collection_id', async (req, res) => {
-    const { collection_id } = req.params;
-    if(!collection_id || isNaN(collection_id)) {
+router.get('/wishlisted-collectables/:collection_universe_id', async (req, res) => {
+    const { collection_universe_id } = req.params;
+    if(!collection_universe_id || isNaN(collection_universe_id)) {
         return res.status(400).json({ message: 'Invalid input for collection_id'} );
     }
-    console.log("collection_id: ", collection_id);
+    console.log("collection_universe_id: ", collection_universe_id);
 
 
     // I need to grab all universe collectables and then their attributes
 
     try {
-
         console.log("Searching for wishlisted Collectables...\n");
         const wishlistedCollectables = await db
-        .select({ universe_collectable_id: wishlist.universe_collectable_id})
-        .from(wishlist)
-        .where(eq(collection_id, wishlist.collection_id))
-        .execute();
+            .select({ universe_collectable_id: wishlist.universe_collectable_id})
+            .from(wishlist)
+            .where(eq(collection_universe_id, wishlist.collection_universe_id))
+            .execute();
 
         const universeCollectableIds = wishlistedCollectables.map(item => item.universe_collectable_id);
 
@@ -104,10 +103,7 @@ router.get('/wishlisted-collectables/:collection_id', async (req, res) => {
             .select()
             .from(collectableAttributes)
             .where(
-                and(
-                    or(eq(collectableAttributes.collection_id, collection_id), isNull(collectableAttributes.collection_id)),
                     inArray(collectableAttributes.universe_collectable_id, universeCollectableIds)
-                )
             )
             .execute();
         
