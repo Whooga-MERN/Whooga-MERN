@@ -1,4 +1,4 @@
-const { collections, wishlist, collectableAttributes, scraped } = require('../config/schema');
+const { collections, wishlist, collectableAttributes, scraped, collectionUniverses } = require('../config/schema');
 const express = require('express');
 const { eq, and, not, or, isNull, inArray } = require('drizzle-orm');
 const { db } = require('../config/db');
@@ -6,41 +6,43 @@ const { db } = require('../config/db');
 const router = express.Router();
 
 router.post('/add-wishlist', async (req, res) => {
-    const {collection_id, universe_collectable_id} = req.body;
+    const {collection_universe_id, universe_collectable_id} = req.body;
 
-    if(!collection_id, !universe_collectable_id){
-        console.log("collection_id: ", collection_id );
+    if(!collection_universe_id, !universe_collectable_id){
+        console.log("collection_id: ", collection_universe_id );
         console.log("universe_collectable_id: ", universe_collectable_id);
         return res.status(404).send({ error: 'Not Given either collection_id or universe_collectable_id'});
     }
 
     try {
-        console.log("query for collection_universe_id");
-        const fetchCollectionUniverseId = await db.
-        select({collection_universe_id: collections.collection_universe_id})
-        .from(collections)
-        .where(eq(collections.collection_id, collection_id))
-        .execute();
+        console.log("Starting query for sourceUniverse");
+        const fetchSourceUniverse = await db
+            .select({ source_universe: collectionUniverses.source_universe })
+            .from(collectionUniverses)
+            .where(eq(collectionUniverses.collection_universe_id, collection_universe_id))
+            .execute();
+        console.log("Finished query for sourceUniverse");
     
-        const collection_universe_id = fetchCollectionUniverseId[0].collection_universe_id;
+        let sourceUniverse;
+        try {
+            sourceUniverse = fetchSourceUniverse[0].source_universe;
+        } catch (error) {
+            console.log(error);
+            return res.status(404).send("Error finding sourceUniverse");
+        }
     
-        console.log(collection_universe_id);
-        console.log("Starting insert into wishlist table");
+        console.log("sourceUniverse: ", sourceUniverse);
+        console.log("\nStarting insert into wishlist table");
         const postWishlist = await db
-        .insert(wishlist)
-        .values({
-            collection_id: collection_id,
-            collection_universe_id: collection_universe_id,
-            universe_collectable_id: universe_collectable_id
-        })
-        .execute();
+            .insert(wishlist)
+            .values({
+                source_universe: sourceUniverse,
+                collection_universe_id: collection_universe_id,
+                universe_collectable_id: universe_collectable_id
+            })
+            .execute();
         console.log(postWishlist);
         return res.status(200).send({ message: 'wishlist item added successfully' });
-        // if (postWishlist.length > 0) {
-        //     return res.status(200).send({ message: 'wishlist item added successfully' });
-        // } else {
-        //     return res.status(500).send({ error: 'Failed to add to wishlist' });
-        // }
     } catch (error) {
         console.error('Error adding to wishlist:', error);
         return res.status(500).send({ error: 'Internal server error' });
