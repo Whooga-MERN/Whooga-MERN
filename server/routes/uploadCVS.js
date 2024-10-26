@@ -47,7 +47,7 @@ router.post('', cpUpload, async (req, res) => {
         isPublished
     } = req.body;
 
-    if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email || isPublished)
+    if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email || !isPublished)
         return res.status(400).send({
             error: `Request body is missing a either universeCollectionName, defaultAttributes, isPublished, email or csvJsonData` });
 
