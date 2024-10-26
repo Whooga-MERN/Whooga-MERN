@@ -52,7 +52,7 @@ router.post('', cpUpload, async (req, res) => {
             error: `Request body is missing a either universeCollectionName, defaultAttributes, isPublished, email or csvJsonData` });
 
         const isPublishedBool = isPublished === 'true';
-        
+
         let collectableImages = [];
         if(req.files['collectableImages'])
             collectableImages = req.files['collectableImages'];
@@ -262,7 +262,8 @@ router.post('/existing-universe', cpUpload, async (req, res) => {
     const {
         collectionId,
         collectionUniverseId,
-        csvJsonData
+        csvJsonData,
+        isPublished
     } = req.body;
 
     if(!csvJsonData)
@@ -272,7 +273,12 @@ router.post('/existing-universe', cpUpload, async (req, res) => {
     console.log("collectionUniverseId: ", collectionUniverseId);
     if(!collectionId || isNaN(collectionId))
         return res.status(404).send("No or Invalid universeCollectionId given");
+    if(!isPublished)
+        return res.status(404).send('No isPublished given');
+
+    console.log("isPublished: ", isPublished);
     console.log("collectionId: ", collectionId);
+    const isPublishedBool = isPublished === 'true';
 
     let collectableImages = [];
     if(req.files['collectableImages'])
@@ -346,7 +352,10 @@ try {
         const newUniverseCollectables = await trx
             .insert(universeCollectables)
             .values(universeCollectablesData)
-            .returning({ universe_collectable_id: universeCollectables.universe_collectable_id });
+            .returning({
+                universe_collectable_id: universeCollectables.universe_collectable_id,
+                isPublished: isPublishedBool
+            });
         console.log("Finished creating universe collectables");
 
         console.log("Creating attributes");
