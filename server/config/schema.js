@@ -47,6 +47,7 @@ const universeCollectables = pgTable('universeCollectables', {
 const collectableAttributes = pgTable('collectableAttributes', {
   collectable_attribute_id: serial('collectable_attribute_id').primaryKey().notNull(),
   collection_id: integer('collection_id').references(() => collections.collection_id), // Optional foreign key
+  collection_universe_id: integer('collection_universe_id').notNull().references(() => collectionUniverses.collection_universe_id, { onDelete: 'CASCADE' }),
   universe_collectable_id: integer('universe_collectable_id').notNull().references(() => universeCollectables.universe_collectable_id, { onDelete: 'CASCADE' }),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull(),

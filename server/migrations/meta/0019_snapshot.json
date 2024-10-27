@@ -1,0 +1,547 @@
+{
+  "id": "fea969da-57e5-4b62-b984-2362a7c9a882",
+  "prevId": "12ce4eb4-e219-4ec3-9ef0-80705bb776f1",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "cognito_id": {
+          "name": "cognito_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_date": {
+          "name": "created_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_profile_pic": {
+          "name": "user_profile_pic",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.collections": {
+      "name": "collections",
+      "schema": "",
+      "columns": {
+        "collection_id": {
+          "name": "collection_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "collection_universe_id": {
+          "name": "collection_universe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custom_attributes": {
+          "name": "custom_attributes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "favorite_attributes": {
+          "name": "favorite_attributes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hidden_attributes": {
+          "name": "hidden_attributes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "collection_pic": {
+          "name": "collection_pic",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "collections_user_id_users_user_id_fk": {
+          "name": "collections_user_id_users_user_id_fk",
+          "tableFrom": "collections",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
+          "name": "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk",
+          "tableFrom": "collections",
+          "tableTo": "collectionUniverses",
+          "columnsFrom": [
+            "collection_universe_id"
+          ],
+          "columnsTo": [
+            "collection_universe_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.collectionUniverses": {
+      "name": "collectionUniverses",
+      "schema": "",
+      "columns": {
+        "collection_universe_id": {
+          "name": "collection_universe_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "default_attributes": {
+          "name": "default_attributes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "universe_collection_pic": {
+          "name": "universe_collection_pic",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_universe": {
+          "name": "source_universe",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "collectionUniverses_user_id_users_user_id_fk": {
+          "name": "collectionUniverses_user_id_users_user_id_fk",
+          "tableFrom": "collectionUniverses",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.collectables": {
+      "name": "collectables",
+      "schema": "",
+      "columns": {
+        "collectable_id": {
+          "name": "collectable_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "collection_id": {
+          "name": "collection_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "universe_collectable_id": {
+          "name": "universe_collectable_id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "collectables_collection_id_collections_collection_id_fk": {
+          "name": "collectables_collection_id_collections_collection_id_fk",
+          "tableFrom": "collectables",
+          "tableTo": "collections",
+          "columnsFrom": [
+            "collection_id"
+          ],
+          "columnsTo": [
+            "collection_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        },
+        "collectables_universe_collectable_id_universeCollectables_universe_collectable_id_fk": {
+          "name": "collectables_universe_collectable_id_universeCollectables_universe_collectable_id_fk",
+          "tableFrom": "collectables",
+          "tableTo": "universeCollectables",
+          "columnsFrom": [
+            "universe_collectable_id"
+          ],
+          "columnsTo": [
+            "universe_collectable_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.universeCollectables": {
+      "name": "universeCollectables",
+      "schema": "",
+      "columns": {
+        "universe_collectable_id": {
+          "name": "universe_collectable_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "collection_universe_id": {
+          "name": "collection_universe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "universeCollectables_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
+          "name": "universeCollectables_collection_universe_id_collectionUniverses_collection_universe_id_fk",
+          "tableFrom": "universeCollectables",
+          "tableTo": "collectionUniverses",
+          "columnsFrom": [
+            "collection_universe_id"
+          ],
+          "columnsTo": [
+            "collection_universe_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.collectableAttributes": {
+      "name": "collectableAttributes",
+      "schema": "",
+      "columns": {
+        "collectable_attribute_id": {
+          "name": "collectable_attribute_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "collection_id": {
+          "name": "collection_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "collection_universe_id": {
+          "name": "collection_universe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "universe_collectable_id": {
+          "name": "universe_collectable_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_custom": {
+          "name": "is_custom",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "collectableAttributes_collection_id_collections_collection_id_fk": {
+          "name": "collectableAttributes_collection_id_collections_collection_id_fk",
+          "tableFrom": "collectableAttributes",
+          "tableTo": "collections",
+          "columnsFrom": [
+            "collection_id"
+          ],
+          "columnsTo": [
+            "collection_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "collectableAttributes_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
+          "name": "collectableAttributes_collection_universe_id_collectionUniverses_collection_universe_id_fk",
+          "tableFrom": "collectableAttributes",
+          "tableTo": "collectionUniverses",
+          "columnsFrom": [
+            "collection_universe_id"
+          ],
+          "columnsTo": [
+            "collection_universe_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        },
+        "collectableAttributes_universe_collectable_id_universeCollectables_universe_collectable_id_fk": {
+          "name": "collectableAttributes_universe_collectable_id_universeCollectables_universe_collectable_id_fk",
+          "tableFrom": "collectableAttributes",
+          "tableTo": "universeCollectables",
+          "columnsFrom": [
+            "universe_collectable_id"
+          ],
+          "columnsTo": [
+            "universe_collectable_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.scraped": {
+      "name": "scraped",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "collection_universe_id": {
+          "name": "collection_universe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_universe": {
+          "name": "source_universe",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price": {
+          "name": "price",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "scraped_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
+          "name": "scraped_collection_universe_id_collectionUniverses_collection_universe_id_fk",
+          "tableFrom": "scraped",
+          "tableTo": "collectionUniverses",
+          "columnsFrom": [
+            "collection_universe_id"
+          ],
+          "columnsTo": [
+            "collection_universe_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.wishlist": {
+      "name": "wishlist",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "source_universe": {
+          "name": "source_universe",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "collection_universe_id": {
+          "name": "collection_universe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "universe_collectable_id": {
+          "name": "universe_collectable_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "wishlist_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
+          "name": "wishlist_collection_universe_id_collectionUniverses_collection_universe_id_fk",
+          "tableFrom": "wishlist",
+          "tableTo": "collectionUniverses",
+          "columnsFrom": [
+            "collection_universe_id"
+          ],
+          "columnsTo": [
+            "collection_universe_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        },
+        "wishlist_universe_collectable_id_universeCollectables_universe_collectable_id_fk": {
+          "name": "wishlist_universe_collectable_id_universeCollectables_universe_collectable_id_fk",
+          "tableFrom": "wishlist",
+          "tableTo": "universeCollectables",
+          "columnsFrom": [
+            "universe_collectable_id"
+          ],
+          "columnsTo": [
+            "universe_collectable_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

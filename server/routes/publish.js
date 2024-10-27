@@ -96,4 +96,26 @@ router.put('/publish-universe', async (req, res) => {
     }
 })
 
+router.put('/publish-custom-attributes', async (req, res) => {
+    const { collectionUniverseId, customAttributes } = req.body;
+
+    // grab default attributes, and custom attributes
+    // merge them into being both default attributes
+    // set is_custom to false 
+
+    const universeCollectablesQuery = await db
+        .select({ universeCollectableId: universeCollectables.universe_collectable_id})
+        .from(universeCollectables)
+        .where(eq(collectionUniverseId, universeCollectables.universe_collectable_id))
+        .execute();
+
+    await db.transaction(async (trx) => {
+        await trx
+            .update()
+            .set()
+            .where()
+            .execute();
+    });
+});
+
 module.exports = router;

@@ -167,6 +167,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
           if(key != "owned") {
             if(defaultAttributes.includes(key)) {
               defaultAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
@@ -177,6 +178,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             }
             else {
               customAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: collection_id,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
@@ -197,6 +199,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
               insertValue = value;
             if(defaultAttributes.includes(key)) {
               defaultAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: collection_id,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
@@ -207,6 +210,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             }
             else {
               customAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: collection_id,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
@@ -238,6 +242,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         await trx
         .insert(collectableAttributes)
         .values({
+          collection_universe_id: collection_universe_id,
           collection_id: null,
           collectable_id: null,
           universe_collectable_id: universe_collectable_id,
@@ -252,6 +257,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         await trx
         .insert(collectableAttributes)
         .values({
+          collection_universe_id: collection_universe_id,
           collection_id: null,
           collectable_id: null,
           universe_collectable_id: universe_collectable_id,

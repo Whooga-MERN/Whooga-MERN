@@ -180,6 +180,7 @@ router.post('/copy-universe', async (req, res) => {
       for (let i = 0; i < creatorAttributes.length; i++) {
         const newCollectableId = newUniverseCollectableIds[Math.floor(i / (1+attributesLength))];
         newCollectableAttributes.push({
+          collection_universe_id: newUniverseId,
           universe_collectable_id: newCollectableId,
           name: creatorAttributes[i].attributeName,
           slug: creatorAttributes[i].slug,
@@ -196,7 +197,7 @@ router.post('/copy-universe', async (req, res) => {
 
       console.log("Successfully copied collectable attributes");
       res.status(200).send("Successfully copied unviverse");
-    })
+    });
   } catch (error) {
     console.log("FAILED to copy universe");
     console.log(error)

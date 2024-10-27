@@ -29,9 +29,9 @@ function makeSlug(text) {
 
 // Create
 router.post('', async (req, res) => {
-    const {collectionId, collectableId, universeCollectableId, name, value, isCustom} = req.body;
+    const {collectionId, collectableId, universeCollectableId, collectionUniverseId, name, value, isCustom} = req.body;
 
-    if (!collectionId || !collectableId || !universeCollectableId || !name || !value || !isCustom) {
+    if (!collectionId || !collectableId || !universeCollectableId || !name || !value || !isCustom || !collectionUniverseId) {
         return res.status(400).send({ error: 'Request body is missing a parameter' });
     }
 
@@ -39,6 +39,7 @@ router.post('', async (req, res) => {
 
     try {
         const newItem = await db.insert(collectableAttributes).values({
+            collection_universe_id: collectionUniverseId,
             collection_id: collectionId,
             collectable_id: collectableId,
             universe_collectable_id: universeCollectableId,

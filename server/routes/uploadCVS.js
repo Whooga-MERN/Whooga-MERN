@@ -189,6 +189,7 @@ router.post('', cpUpload, async (req, res) => {
                 for (const [key, value] of Object.entries(row)) {
                     if (key !== 'owned' && key !== 'image') {
                         collectableAttributesData.push({
+                            collection_universe_id: collection_universe_id,
                             universe_collectable_id: universeCollectableID,
                             name: key,
                             slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -206,6 +207,7 @@ router.post('', cpUpload, async (req, res) => {
                         console.log("Value: ", value);
                         if(value) {
                             collectableAttributesData.push({
+                                collection_universe_id: collection_universe_id,
                                 universe_collectable_id: universeCollectableID,
                                 name: key,
                                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -215,6 +217,7 @@ router.post('', cpUpload, async (req, res) => {
                         }
                         else {
                             collectableAttributesData.push({
+                                collection_universe_id: collection_universe_id,
                                 universe_collectable_id: universeCollectableID,
                                 name: key,
                                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -369,6 +372,7 @@ try {
             for (const [key, value] of Object.entries(row)) {
                 if (key !== 'owned' && key !== 'image') {
                     collectableAttributesData.push({
+                        collection_universe_id: collectionUniverseId,
                         universe_collectable_id: universeCollectableID,
                         name: key,
                         slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -384,6 +388,7 @@ try {
                 }
                 else if (key == 'image') {
                     collectableAttributesData.push({
+                        collection_universe_id: collectionUniverseId,
                         universe_collectable_id: universeCollectableID,
                         name: key,
                         slug: key.toLowerCase().replace(/\s+/g, '_'),

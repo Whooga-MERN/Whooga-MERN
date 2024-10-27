@@ -134,6 +134,13 @@
       "when": 1729902111321,
       "tag": "0018_red_plazm",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1730062724488,
+      "tag": "0019_sturdy_gateway",
+      "breakpoints": true
     }
   ]
 }
