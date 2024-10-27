@@ -120,7 +120,7 @@ router.post('', cpUpload, async (req, res) => {
                 name: universeCollectionName,
                 created_by: userName,
                 default_attributes: parsedDefaultAttributes,
-                universe_collection_pic: urlUniverseThumbnailImage,
+                universe_collection_pic: urlUniverseThumbnailImage || '',
                 user_id: user_id,
                 description: universeCollectionDescription,
                 is_published: isPublishedBool
