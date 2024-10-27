@@ -11,7 +11,8 @@ const router = express.Router();
 // Universe Collectable Search APIs
 
 router.get('', async (req, res) => {
-    const { collectionUniverseId, attributeToSearch, searchTerm } = req.query;
+    // Default pagination values for 1st page and items per page 8
+    const { collectionUniverseId, attributeToSearch, searchTerm, page = 1, itemsPerPage = 8} = req.query;
 
     if (!searchTerm || !attributeToSearch || !collectionUniverseId) {
         return res.status(400).send({ error: 'Missing a request parameter' });
@@ -25,7 +26,6 @@ router.get('', async (req, res) => {
     }
 
     try {
-        // Fetch all collectable IDs that match any of the search terms
         const matchingCollectables = await db
             .select({
                 universe_collectable_id: universeCollectables.universe_collectable_id
@@ -53,7 +53,6 @@ router.get('', async (req, res) => {
             return res.status(404).send({ error: 'No matching collectables found' });
         }
 
-        // Count occurrences of each universe_collectable_id
         const collectableIdsCount = matchingCollectables.reduce((acc, current) => {
             const id = current.universe_collectable_id;
             acc[id] = (acc[id] || 0) + 1;
@@ -69,14 +68,18 @@ router.get('', async (req, res) => {
             return res.status(404).send({ error: 'No matching collectables found' });
         }
 
-        // Fetch all attributes for the filtered collectables
+        // Calculate pagination values
+        const offset = (page - 1) * itemsPerPage;
+        const paginatedCollectableIds = filteredCollectableIds.slice(offset, offset + parseInt(itemsPerPage));
+
+        // Fetch all attributes for the paginated collectables
         const attributes = await db
             .select()
             .from(collectableAttributes)
-            .where(inArray(collectableAttributes.universe_collectable_id, filteredCollectableIds));
+            .where(inArray(collectableAttributes.universe_collectable_id, paginatedCollectableIds));
 
         // Map the collectables with their respective attributes
-        const collectablesWithAttributes = filteredCollectableIds.map(collectableId => {
+        const collectablesWithAttributes = paginatedCollectableIds.map(collectableId => {
             const relatedAttributes = attributes.filter(
                 attribute => attribute.universe_collectable_id === parseInt(collectableId)
             );
@@ -100,8 +103,10 @@ router.get('', async (req, res) => {
     }
 });
 
+
 router.get('/owned', async (req, res) => {
-    const { collectionId, attributeToSearch, searchTerm } = req.query;
+    // Default pagination values for 1st page and items per page 8
+    const { collectionId, attributeToSearch, searchTerm, page = 1, itemsPerPage = 8 } = req.query;
 
     if (!searchTerm || !attributeToSearch || !collectionId) {
         return res.status(400).send({ error: 'Missing a request parameter' });
@@ -119,7 +124,7 @@ router.get('/owned', async (req, res) => {
             .select({
                 collectable_id: collectables.collectable_id,
                 universe_collectable_id: collectables.universe_collectable_id,
-                isWishlist: collectables.isWishlist // Include isWishlist in the select
+                isWishlist: collectables.isWishlist
             })
             .from(collectables)
             .innerJoin(
@@ -128,7 +133,7 @@ router.get('/owned', async (req, res) => {
             )
             .where(
                 and(
-                    eq(collectables.collection_id, collectionId), // Ensure the correct collection_id is used
+                    eq(collectables.collection_id, collectionId),
                     or(
                         ...attributesToSearch.map((attribute, index) =>
                             and(
@@ -144,16 +149,16 @@ router.get('/owned', async (req, res) => {
             return res.status(404).send({ error: 'No matching collectables found' });
         }
 
-        
+
         const universeCollectableIdsCount = matchingCollectables.reduce((acc, current) => {
             const id = current.universe_collectable_id;
             if (id !== null) {
-                acc[id] = (acc[id] || 0) + 1; // Only count non-null universe_collectable_ids
+                acc[id] = (acc[id] || 0) + 1;
             }
             return acc;
         }, {});
 
-        
+        // Filter collectables that match all conditions
         const filteredUniverseCollectableIds = Object.keys(universeCollectableIdsCount).filter(
             id => universeCollectableIdsCount[id] === attributesToSearch.length
         );
@@ -162,18 +167,21 @@ router.get('/owned', async (req, res) => {
             return res.status(404).send({ error: 'No matching collectables found' });
         }
 
-        
+        // Apply pagination
+        const offset = (page - 1) * itemsPerPage;
+        const paginatedUniverseCollectableIds = filteredUniverseCollectableIds.slice(offset, offset + parseInt(itemsPerPage));
+
+        // Fetch all attributes for the paginated collectables
         const attributes = await db
             .select()
             .from(collectableAttributes)
-            .where(inArray(collectableAttributes.universe_collectable_id, filteredUniverseCollectableIds));
+            .where(inArray(collectableAttributes.universe_collectable_id, paginatedUniverseCollectableIds));
 
-        
-        const collectablesWithAttributes = filteredUniverseCollectableIds.map(universeCollectableId => {
+        // Map the collectables with their respective attributes
+        const collectablesWithAttributes = paginatedUniverseCollectableIds.map(universeCollectableId => {
             const relatedCollectables = matchingCollectables.filter(
                 collectable => collectable.universe_collectable_id === parseInt(universeCollectableId)
             );
-
 
             const collectableId = relatedCollectables.length > 0 ? relatedCollectables[0].collectable_id : null;
 
@@ -201,6 +209,7 @@ router.get('/owned', async (req, res) => {
         res.status(500).send({ error: 'Error fetching collectables and attributes' });
     }
 });
+
 
 
 
