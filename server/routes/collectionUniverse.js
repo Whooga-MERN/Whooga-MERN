@@ -17,6 +17,11 @@ router.post('/copy-universe', async (req, res) => {
     return res.status(404).send("None or invalid collectionUniverseId given");
   }
 
+  if(!userEmail) {
+    console.log("No userEmail provided");
+    return res.status(404).send("No userEmail provided");
+  }
+
   // I need to grab all universeCollectables that are published
   // For attributes I need to: Find non-custom attribute rows for ith universeCollectable
 
@@ -100,6 +105,16 @@ router.post('/copy-universe', async (req, res) => {
         console.log(error);
       }
       console.log("newUniverseId: ", newUniverseId);
+
+      const customAttributes = []
+      const newCollection = await trx.insert(collections).values({
+        name: collectionName,
+        user_id: userId,
+        collection_universe_id: newUniverseId,
+        collection_pic: universeCollectionPic,
+        custom_attributes: customAttributes,
+        favorite_attributes: defaultAttributes.slice(0,4),
+    }).returning({ collection_id: collections.collection_id});
   
       console.log("finding creatorUniverseCollectables");
       // select creator universe collectables

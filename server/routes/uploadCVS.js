@@ -139,12 +139,14 @@ router.post('', cpUpload, async (req, res) => {
 
             console.log("Finished udating source_universe value\n");
             console.log("Creating Collection");
-    
+            const customAttributes = [];
+
             const newCollection = await trx.insert(collections).values({
                 name: universeCollectionName,
                 user_id: user_id,
                 collection_universe_id: collectionUniverseID,
                 collection_pic: urlUniverseThumbnailImage,
+                custom_attributes: customAttributes,
                 favorite_attributes: favoriteAttributes
             }).returning({ collection_id: collections.collection_id});
     
@@ -189,7 +191,7 @@ router.post('', cpUpload, async (req, res) => {
                 for (const [key, value] of Object.entries(row)) {
                     if (key !== 'owned' && key !== 'image') {
                         collectableAttributesData.push({
-                            collection_universe_id: collection_universe_id,
+                            collection_universe_id: collectionUniverseID,
                             universe_collectable_id: universeCollectableID,
                             name: key,
                             slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -207,7 +209,7 @@ router.post('', cpUpload, async (req, res) => {
                         console.log("Value: ", value);
                         if(value) {
                             collectableAttributesData.push({
-                                collection_universe_id: collection_universe_id,
+                                collection_universe_id: collectionUniverseID,
                                 universe_collectable_id: universeCollectableID,
                                 name: key,
                                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -217,7 +219,7 @@ router.post('', cpUpload, async (req, res) => {
                         }
                         else {
                             collectableAttributesData.push({
-                                collection_universe_id: collection_universe_id,
+                                collection_universe_id: collectionUniverseID,
                                 universe_collectable_id: universeCollectableID,
                                 name: key,
                                 slug: key.toLowerCase().replace(/\s+/g, '_'),
