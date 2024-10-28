@@ -1,8 +1,8 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {collections, collectionUniverses, collectableAttributes} = require('../config/schema');
+const {collections, collectionUniverses, collectableAttributes, universeCollectables} = require('../config/schema');
 const express = require('express');
-const {eq} = require('drizzle-orm');
+const {eq, count} = require('drizzle-orm');
 //const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
@@ -201,5 +201,98 @@ router.put('/update-favorite-attributes', async (req, res) => {
     res.status(500).send("FAILED to update favorite attributes");
   }
 }); 
+
+router.put('/add-custom-attributes', async (req, res) => {
+  const { customAttributes, collectionUniverseId } = req.body;
+    //so this is array of new attributes
+  if(!customAttributes || customAttributes.length < 1) {
+    console.log("customAttributes not given or given improperly");
+    res.status(404).send("customAttributes not given or given improperly");
+  }
+  if(!collectionUniverseId || isNaN(collectionUniverseId)) {
+    console.log("colletionUniverseId not given or given improperly")
+    res.status(404).send("colletionUniverseId not given or given improperly");
+  }
+
+  // Finding original custom attributes
+  try {
+    console.log("Fetching originalCustomAttributes");
+    const customAttributesQuery = await db
+      .select({ originalCustomAttributes: collections.custom_attributes })
+      .from(collections)
+      .where(eq(collectionUniverseId, collections.collection_universe_id))
+      .execute();
+  
+    let combinedAttributes;
+    try {
+      combinedAttributes = [...customAttributesQuery[0].originalCustomAttributes, ...customAttributes];
+    } catch (error) {
+      console.log("Failed to fetch customAttributes");
+      console.log(error);
+      return res.status(404).send("Failed to fetch customAttributes");
+    }
+    console.log("Finished Fetching originalCustomAttributes");
+  
+    await db.transaction(async (trx) => {
+      // Updates custom_attributes in collections
+      console.log("Updating custom_attributes in collections");
+      await trx
+        .update(collections)
+        .set({ custom_attributes: combinedAttributes })
+        .where(eq(collectionUniverseId, collections.collection_universe_id))
+        .execute();
+      console.log("Finished Updating custom_attributes in collections\n");
+  
+      // Find the number of collectables
+      console.log("Finding universeCollectables for universeCollection");
+      const universeCollectablesQuery = await trx
+      .select(
+        {
+          universeCollectable: universeCollectables.universe_collectable_id
+        }
+      )
+      .from(universeCollectables)
+      .where(eq(collectionUniverseId, universeCollectables.collection_universe_id))
+      .execute();
+  
+      let numCollectables = 0;
+      try {
+        numCollectables = universeCollectablesQuery.length;
+        console.log("numCollectables: ", numCollectables);
+      } catch (error) {
+        return res.status(404).send("Failed to find universeCollectables count");
+      }
+      console.log("Finished Finding count() of universeCollectables for universeCollection\n");
+  
+      let collectableAttributesInsert = []
+  
+      for(let i = 0; i < customAttributes.length; i++)
+      {
+        universeCollectablesQuery.map(collectable => {
+          collectableAttributesInsert.push({
+            collection_universe_id: collectionUniverseId,
+            universe_collectable_id: collectable.universeCollectable,
+            name: customAttributes[i],
+            slug: customAttributes[i].toLowerCase().replace(/\s+/g, '_'),
+            value: '',
+            is_custom: true,
+          })
+        })
+      }
+
+      await trx
+        .insert(collectableAttributes)
+        .values(collectableAttributesInsert)
+        .execute();
+
+      console.log("Succesfully added custom attribute");
+      res.status(200).send("Succesfully added custom attribute");
+    });
+  } catch (error) {
+    console.log("Failed to add custom attribute");
+    console.log(error);
+    res.status(400).send("Failed to add custom attribute");
+  }
+});
 
 module.exports = router;

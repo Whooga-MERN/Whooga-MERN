@@ -97,25 +97,73 @@ router.put('/publish-universe', async (req, res) => {
 })
 
 router.put('/publish-custom-attributes', async (req, res) => {
-    const { collectionUniverseId, customAttributes } = req.body;
+    const { collectionUniverseId, customAttributesPublish } = req.body;
 
-    // grab default attributes, and custom attributes
-    // merge them into being both default attributes
-    // set is_custom to false 
+    if(!collectionUniverseId || isNaN(collectionUniverseId)) {
+        console.log("No or improper collectionUniverseId");
+        return res.status(404).send("No or improper collectionUniverseId");
+    }
+    if(!customAttributesPublish || customAttributesPublish < 1) {
+        console.log("No or improper customAttributesPublish");
+        return res.status(404).send("No or improper customAttributesPublish");
+    }
 
-    const universeCollectablesQuery = await db
-        .select({ universeCollectableId: universeCollectables.universe_collectable_id})
-        .from(universeCollectables)
-        .where(eq(collectionUniverseId, universeCollectables.universe_collectable_id))
+    //fetch default attributes
+    console.log("Fetching default attributes");
+    const universeDefaultAttributesQuery = await db
+        .select(
+            {
+                defaulAttributes: collectionUniverses.default_attributes,
+                customAttributes: collections.custom_attributes
+            }
+        )
+        .from(collectionUniverses)
+        .innerJoin(collections, eq(collections.collection_universe_id, collectionUniverses.collection_universe_id))
+        .where(eq(collectionUniverseId, collectionUniverses.collection_universe_id))
         .execute();
 
+    let defaulAttributes;
+    let customAttributes; 
+    try {
+        defaulAttributes = universeDefaultAttributesQuery[0].defaulAttributes;
+        console.log("defaultAttributes: ", defaulAttributes);
+        customAttributes = universeDefaultAttributesQuery[0].customAttributes;
+        console.log("customAttributes: ", customAttributes);
+    } catch (error) {
+        console.log("Failed to grab default attributes");
+        console.log(error);
+    }
+    console.log("Finished Fetching default attributes\n");
+
+    const updatedCustomAttributes = customAttributes.filter(attr => !customAttributesPublish.includes(attr));
+    console.log("updatedCustomAttributes: ", updatedCustomAttributes);
+
     await db.transaction(async (trx) => {
+        console.log("\nUpdating custom attributes in collections");
         await trx
-            .update()
-            .set()
-            .where()
+            .update(collections)
+            .set({ custom_attributes: updatedCustomAttributes})
+            .where(eq(collectionUniverseId, collections.collection_universe_id))
             .execute();
+
+        console.log("Finished Updating custom attributes in collections\n");
+
+        console.log("Updating is_custom for the published custom_attributes in collectableAttributes");
+        await trx
+            .update(collectableAttributes)
+            .set({ is_custom: false })
+            .where(
+                and(
+                    eq(collectionUniverseId, collectableAttributes.collection_universe_id)),
+                    inArray(customAttributesPublish, collectableAttributes.name)
+                )   
+            .execute();
+        
+        console.log("Finished updating custom attributes for collectableAttributes\n");
+        res.status(200).send("Succesfully published custom attributes");
+
     });
+    
 });
 
 module.exports = router;

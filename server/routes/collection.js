@@ -9,15 +9,6 @@ const router = express.Router();
 // router.use(authenticateJWTToken);
 
 // Collection CRUD APIs
-
-router.put('/add-custom-attributes', async (req, res) => {
-  const { customAttributes, collectionUniverseId } = req.body;
-  //so this is array of new attributes
-
-  // I need to update default attributes, and custom attributes 
-  // Then I need to grab allt he collectable
-});
-
 // Create
 router.post('', async (req, res) => {
   const { userId, collectionUniverseId, customAttributes, collectionPic } = req.body;
