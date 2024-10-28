@@ -316,14 +316,14 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE
-router.delete('/delete-universe/:id', async (req, res) => {
-  const { id } = req.params;
+router.delete('/delete-universe', async (req, res) => {
+  const { id } = req.body;
 
   try {
     const deletedItem = await db.delete(collectionUniverses)
       .where(eq(id, collectionUniverses.collection_universe_id))
       .execute();
-      
+
     res.status(204).send("Successfully deleted Universe"); // No content on successful delete
   } catch (error) {
     console.error(error);
