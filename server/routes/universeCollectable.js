@@ -106,6 +106,59 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
   }
 });
 
+router.get('/universe-collection-paginated/:universe_collection_id', async (req, res) => {
+  const { universe_collection_id } = req.params;
+  const { page = 1, itemsPerPage = 8 } = req.query;
+
+  try {
+    // Fetch the collectables for the specified universe collection with pagination
+    const offset = (page - 1) * itemsPerPage;
+    const collectables = await db
+      .select()
+      .from(universeCollectables)
+      .where(eq(universeCollectables.collection_universe_id, universe_collection_id))
+      .limit(parseInt(itemsPerPage))
+      .offset(offset);
+
+    if (collectables.length === 0) {
+      return res.status(404).send({ error: 'No collectables found in this collection' });
+    }
+
+    // Get the list of collectable IDs for attribute fetching
+    const collectableIds = collectables.map(c => c.universe_collectable_id);
+
+    // Fetch attributes for the paginated collectables
+    const attributes = await db
+      .select()
+      .from(collectableAttributes)
+      .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
+
+    // Map the collectables with their respective attributes
+    const collectablesWithAttributes = collectables.map(collectable => {
+      const relatedAttributes = attributes.filter(
+        attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
+      );
+
+      return {
+        ...collectable,
+        attributes: relatedAttributes.map(attr => ({
+          collectable_attribute_id: attr.collectable_attribute_id,
+          name: attr.name,
+          slug: attr.slug,
+          value: attr.value,
+          is_custom: attr.is_custom
+        }))
+      };
+    });
+
+    res.json(collectablesWithAttributes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching collectables and attributes' });
+  }
+});
+
+
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;

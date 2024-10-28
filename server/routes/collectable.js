@@ -416,6 +416,62 @@ router.get('/collection/:collection_id', async (req, res) => {
   }
 });
 
+router.get('/collection-paginated/:collection_id', async (req, res) => {
+  const { collection_id } = req.params;
+  const { page = 1, itemsPerPage = 8 } = req.query;
+
+  try {
+    // Calculate offset for pagination
+    const offset = (page - 1) * itemsPerPage;
+
+    // Fetch collectables for the specified collection with pagination
+    const collectedItems = await db
+      .select()
+      .from(collectables)
+      .where(eq(collectables.collection_id, collection_id))
+      .limit(parseInt(itemsPerPage))
+      .offset(offset);
+
+    // Check if any collectables were found
+    if (collectedItems.length === 0) {
+      return res.status(404).send({ error: 'No collectables found in this collection' });
+    }
+
+    // Extract universe_collectable_ids from the paginated collectables
+    const collectableIds = collectedItems.map(c => c.universe_collectable_id);
+
+    // Fetch attributes for the paginated collectables
+    const attributes = await db
+      .select()
+      .from(collectableAttributes)
+      .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
+
+    // Combine collectables with their corresponding attributes
+    const collectablesWithAttributes = collectedItems.map(collectable => {
+      const relatedAttributes = attributes.filter(
+        attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
+      );
+
+      return {
+        ...collectable,
+        attributes: relatedAttributes.map(attr => ({
+          collectable_attribute_id: attr.collectable_attribute_id,
+          name: attr.name,
+          slug: attr.slug,
+          value: attr.value,
+          is_custom: attr.is_custom
+        }))
+      };
+    });
+
+    res.json(collectablesWithAttributes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching collectables and attributes' });
+  }
+});
+
+
 router.put('/edit-collectable', upload.single('collectableImage'), async (req, res) => {
   const { collectionId, universeCollectableId, attributeValuesJson, owned} = req.body;
   let image = null;
