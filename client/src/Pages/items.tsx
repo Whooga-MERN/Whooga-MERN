@@ -554,13 +554,22 @@ export default function HomePage() {
                   <BsFillGridFill />
                 </button>
                 {isOwned ? (
-                  <button
-                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    onClick={openModal}
-                  >
-                    New Collectible
-                    <IoIosAdd />
-                  </button>
+                  <div>
+                    <button
+                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                      onClick={openModal}
+                    >
+                      New Collectible
+                      <IoIosAdd />
+                    </button>
+                    <button
+                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                      onClick={openModal}
+                    >
+                      Bulk Upload
+                      <IoIosAdd />
+                    </button>
+                  </div>
                 ) : (
                   <button
                     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
