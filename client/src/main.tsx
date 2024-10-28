@@ -24,9 +24,8 @@ import WishlistItems from "./Pages/wishlist_items.tsx";
 import PrivacyPolicy from "./Pages/privacypolicy.tsx";
 import ContactUs from "./Pages/contactus.tsx";
 
-
 import "./custom-amplify-styles.css";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 Amplify.configure(awsExports);
 const queryClient = new QueryClient();

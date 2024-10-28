@@ -7,10 +7,12 @@ import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import Auth, { AuthUser } from "@aws-amplify/auth";
 import { Form, useNavigate } from "react-router-dom";
 import { buildPath } from "../utils/utils";
+import { set } from "lodash";
 
 function UploadCollection() {
   const [featureTags, setFeatureTags] = useState<string[]>([]);
   const [collectionName, setCollectionName] = useState<string>("");
+  const [isPublished, setIsPublished] = useState<boolean>(false);
   const [collectionDescription, setCollectionDescription] =
     useState<string>("");
   const [collectionImageURL, setCollectionImageURL] = useState<string>("");
@@ -53,9 +55,14 @@ function UploadCollection() {
       localStorage.getItem("collectionDescription") ?? "";
     const storedCollectionImage =
       localStorage.getItem("collectionImageURL") ?? "";
+    const storedIsPublished = localStorage.getItem("isPublished") ?? "";
+
     setCollectionName(storedCollectionName);
     setCollectionDescription(storedCollectionDescription);
+    setIsPublished(storedIsPublished === "true");
+
     console.log("Collection Image in local: ", storedCollectionImage);
+    console.log("Is Published in local: ", storedIsPublished);
     setCollectionImageURL(storedCollectionImage);
     if (storedFeatureTags) {
       const featureTagsArray = storedFeatureTags.split(",");
@@ -133,6 +140,7 @@ function UploadCollection() {
     formData.append("defaultAttributes", JSON.stringify(featureTags));
     formData.append("csvJsonData", JSON.stringify(jsonData));
     formData.append("email", user.loginId);
+    formData.append("isPublished", isPublished.toString());
     images.forEach((image, index) => {
       formData.append("collectableImages", image);
     });

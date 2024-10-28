@@ -33,17 +33,21 @@ export const fetchUniverseCollectionId = async (collectionId: string) => {
 };
 
 export const fetchUniverseCollectables = async (
-  universeCollectionId: string
+  universeCollectionId: string,
+  page: number,
+  itemsPerPage: number
 ) => {
+  console.log("universe_id: ", universeCollectionId);
+  console.log("universe_page: ", page);
+  console.log("universe_itemsPerPage: ", itemsPerPage);
   if (!universeCollectionId) {
     console.error("Missing universeCollectionId", { universeCollectionId });
     throw new Error("Missing a request parameter");
   }
 
   try {
-    // const url = `http://localhost:3000/universe-collectable/universe-collection/${universeCollectionId}`;
     const url = buildPath(
-      `universe-collectable/universe-collection/${universeCollectionId}`
+      `universe-collectable/universe-collection-paginated/${universeCollectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
     );
     console.log(url);
 
@@ -62,6 +66,7 @@ export const fetchUniverseCollectables = async (
     }
 
     const jsonResponse = await response.json();
+
     const collectables = jsonResponse
       .map((item: any) => ({
         universeCollectableId: item.universe_collectable_id,
@@ -85,15 +90,23 @@ export const fetchUniverseCollectables = async (
   }
 };
 
-export const fetchOwnedCollectables = async (collectionId: string) => {
+export const fetchOwnedCollectables = async (
+  collectionId: string,
+  page: number,
+  itemsPerPage: number
+) => {
+  console.log("owned_id: ", collectionId);
+  console.log("owned_page: ", page);
+  console.log("owned_itemsPerPage: ", itemsPerPage);
   if (!collectionId) {
     console.error("Missing collectionId", { collectionId });
     throw new Error("Missing a request parameter");
   }
 
   try {
-    // const url = `http://localhost:3000/collectable/collection/${collectionId}`;
-    const url = buildPath(`collectable/collection/${collectionId}`);
+    const url = buildPath(
+      `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
+    );
     console.log(url);
 
     const response = await fetch(url, {
@@ -137,7 +150,9 @@ export const fetchOwnedCollectables = async (collectionId: string) => {
 export const fetchUniverseSearchResults = async (
   searchterm: { attribute: string; term: string }[],
   userId: string,
-  universeCollectionId: string
+  universeCollectionId: string,
+  page: number,
+  itemsPerPage: number = 12
 ) => {
   if (!userId || !universeCollectionId || searchterm.length === 0) {
     console.error("Missing userId, collectionId, or search tags", {
@@ -164,9 +179,11 @@ export const fetchUniverseSearchResults = async (
     queryParams
   );
 
-  // const url = `http://localhost:3000/universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}`;
+  // const url = buildPath(
+  //   `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}`
+  // );
   const url = buildPath(
-    `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}`
+    `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}&page=${page}&itemsPerPage=${itemsPerPage}`
   );
 
   console.log("Request URL:", url);
@@ -185,7 +202,7 @@ export const fetchUniverseSearchResults = async (
     }
 
     const jsonResponse = await response.json();
-    console.log("search result: ", jsonResponse);
+    console.log("here: ", jsonResponse);
     return jsonResponse;
   } catch (e) {
     console.error(
@@ -198,7 +215,8 @@ export const fetchUniverseSearchResults = async (
 export const fetchOwnedSearchResults = async (
   searchterm: { attribute: string; term: string }[],
   userId: string,
-  collectionId: string
+  collectionId: string,
+  page: number
 ) => {
   if (!userId || !collectionId || searchterm.length === 0) {
     console.error("Missing userId, collectionId, or search tags", {
