@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
 const {collections, collectionUniverses, collectableAttributes, universeCollectables} = require('../config/schema');
 const express = require('express');
-const {eq, count} = require('drizzle-orm');
+const {eq, count, inArray, and} = require('drizzle-orm');
 //const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
@@ -292,6 +292,70 @@ router.put('/add-custom-attributes', async (req, res) => {
     console.log("Failed to add custom attribute");
     console.log(error);
     res.status(400).send("Failed to add custom attribute");
+  }
+});
+
+router.delete('/remove-custom-attribute', async (req, res) => {
+  const { customAttributes, collectionUniverseId } = req.body;
+
+  if(!customAttributes || customAttributes.length < 1) {
+    console.log("customAttributes not given or given improperly");
+    res.status(404).send("customAttributes not given or given improperly");
+  }
+  if(!collectionUniverseId || isNaN(collectionUniverseId)) {
+    console.log("colletionUniverseId not given or given improperly")
+    res.status(404).send("colletionUniverseId not given or given improperly");
+  }
+
+  try {
+    console.log("Fetching original custom attributes");
+    const customAttributesQuery = await db
+      .select({ originalCustomAttributes: collections.custom_attributes })
+      .from(collections)
+      .where(eq(collections.collection_universe_id, collectionUniverseId))
+      .execute();
+  
+    let originalCustomAttributes;
+    try {
+      originalCustomAttributes = customAttributesQuery[0].originalCustomAttributes;
+      console.log("originalCustomAttributes: ", originalCustomAttributes);
+    } catch (error) {
+      console.log("Error fetching original custom attributes");
+      console.log(error);
+    }
+    console.log("Finished fetching original custom attributes\n");
+  
+    const combinedAttributes = originalCustomAttributes.filter(attr => !customAttributes.includes(attr));
+  
+    await db.transaction(async (trx) => {
+  
+      console.log("Updating custom_attributes from collections");
+      await trx
+        .update(collections)
+        .set({ custom_attributes: combinedAttributes })
+        .where()
+        .execute();
+        console.log("Finished Updating custom_attributes from collections\n");
+  
+      console.log("Deleting custom attributes from collectableAttributes");
+      await trx
+        .delete(collectableAttributes)
+        .where(
+          and(
+            inArray(collectableAttributes.name, customAttributes),
+            eq(collectionUniverseId, collectableAttributes.collection_universe_id)
+          )
+        ) 
+        .execute();
+      console.log("Finished Deleting custom attributes from collectableAttributes");
+
+    });
+  
+    res.status(200).send("Successfully deleted custom attributes");
+  } catch (error) {
+    console.log("Failed to delete custom attribute");
+    console.log(error);
+    res.status(400).send("Failed to delete custom attributes");
   }
 });
 
