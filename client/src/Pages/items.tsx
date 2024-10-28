@@ -12,10 +12,6 @@ import { BsFillGridFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
 import { PhotoIcon } from "@heroicons/react/24/solid";
-import {
-  ArrowLongLeftIcon,
-  ArrowLongRightIcon,
-} from "@heroicons/react/20/solid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as faSolidStar } from "@fortawesome/free-solid-svg-icons";
 import { faStar as faRegularStar } from "@fortawesome/free-regular-svg-icons";
@@ -25,6 +21,8 @@ import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
 import OwnedToggle from "../Components/ownedToggle";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useIntersection } from "@mantine/hooks";
 
 import { buildPath } from "../utils/utils";
 import {
@@ -38,7 +36,8 @@ import {
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 
-const ITEMS_PER_PAGE = 24;
+const ITEMS_PER_PAGE = 12;
+const initialPage = 1;
 
 const sortBy = [
   { id: "yearLowToHigh", label: "Year: Low to High" },
@@ -82,7 +81,7 @@ export default function HomePage() {
     setSpecificTag(null);
   };
 
-  const handleDelete= () => {
+  const handleDelete = () => {
     console.log("Delete button clicked");
   };
 
@@ -173,7 +172,7 @@ export default function HomePage() {
   };
 
   //--------------------- handle form field ------------------------
-  const [formData, setFormData] = useState<Record<string, any>>({owned: "F"});
+  const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isNewCollectableWishlist, setIsNewCollectableWishlist] =
     useState<boolean>(false);
@@ -248,9 +247,11 @@ export default function HomePage() {
       console.error("Collection ID is undefined");
       return;
     }
-    if (specificTag?.universeCollectableId)
-    {
-      request.append("universeCollectableId", specificTag.universeCollectableId);
+    if (specificTag?.universeCollectableId) {
+      request.append(
+        "universeCollectableId",
+        specificTag.universeCollectableId
+      );
     }
     const { owned, image, ...restFormData } = formData;
     console.log("owned", owned);
@@ -261,21 +262,17 @@ export default function HomePage() {
     if (imageFile) {
       request.append("collectableImage", imageFile);
     }
- 
+
     logFormData(request);
 
     try {
-      const response = await fetch(
-        buildPath(`collectable/edit-collectable`),
-        // "http://localhost:3000/collectable/edit-collectable",
-        {
-          method: "PUT",
-          body: request,
-          headers: {
-            Authorization: `Bearer ${JWT}`,
-          },
-        }
-      );
+      const response = await fetch(buildPath(`collectable/edit-collectable`), {
+        method: "PUT",
+        body: request,
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
 
       if (response.ok) {
         console.log("Form submitted successfully");
@@ -358,7 +355,6 @@ export default function HomePage() {
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [enabled, setEnabled] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -372,29 +368,24 @@ export default function HomePage() {
     setUniverseCollectionName(collectionName);
   }, []);
 
-  const updateTotalPages = (items: any[]) => {
-    const pageCount = Math.ceil(items.length / ITEMS_PER_PAGE);
-    setTotalPages(pageCount);
-  };
-
   useEffect(() => {
     const getUniverseCollectionId = async () => {
       try {
         if (collectionId) {
-          const ownedCollectables = await fetchOwnedCollectables(collectionId);
+          const ownedCollectables = await fetchOwnedCollectables(
+            collectionId,
+            initialPage,
+            ITEMS_PER_PAGE
+          );
           setOwnedCollectables(ownedCollectables);
-          if (enabled) {
-            updateTotalPages(ownedCollectables);
-          }
 
           if (universeCollectionId) {
             const collectables = await fetchUniverseCollectables(
-              universeCollectionId
+              universeCollectionId,
+              initialPage,
+              ITEMS_PER_PAGE
             );
             setUniverseCollectables(collectables);
-            if (!enabled) {
-              updateTotalPages(collectables);
-            }
           }
         } else {
           console.error("universeCollectionId is null");
@@ -409,6 +400,7 @@ export default function HomePage() {
   }, [collectionId, universeCollectionId]);
 
   const handleSearchResults = (results: any[]) => {
+    console.log("Search Results:", results);
     if (results.length === 0) {
       setNoSearchResults(true);
     } else {
@@ -423,51 +415,63 @@ export default function HomePage() {
     setNoSearchResults(false);
   };
 
-  const handleToggleChange = async (enabled: boolean) => {
+  const { ref, entry } = useIntersection({ threshold: 1 });
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handleToggleChange = (enabled: boolean) => {
     setEnabled(enabled);
     handleClearSearch();
-
-    try {
-      if (enabled) {
-        // Fetch and set owned collectables
-        const ownedCollectables = await fetchOwnedCollectables(collectionId);
-        setOwnedCollectables(ownedCollectables);
-        updateTotalPages(ownedCollectables);
-      } else {
-        // Fetch and set universe collectables
-        if (universeCollectionId) {
-          const collectables = await fetchUniverseCollectables(
-            universeCollectionId
-          );
-          setUniverseCollectables(collectables);
-          updateTotalPages(collectables);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching items:", error);
-    }
+    setCurrentPage(1);
   };
 
-  // Get items for the current page
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIdx = startIdx + ITEMS_PER_PAGE;
-  // const paginatedCollectables = universeCollectables.slice(startIdx, endIdx);
-  const paginatedCollectables = (
-    enabled ? ownedCollectables : universeCollectables
-  ).slice(startIdx, endIdx);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useInfiniteQuery({
+      queryKey: ["collectables", collectionId, universeCollectionId, enabled],
+      queryFn: ({ pageParam = 1 }) => {
+        if (enabled) {
+          return fetchOwnedCollectables(
+            collectionId!,
+            pageParam,
+            ITEMS_PER_PAGE
+          );
+        } else {
+          return fetchUniverseCollectables(
+            universeCollectionId!,
+            pageParam,
+            ITEMS_PER_PAGE
+          );
+        }
+      },
+      initialPageParam: 1,
+      getNextPageParam: (lastPage, allPages) =>
+        lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+      refetchOnWindowFocus: false,
+    });
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [totalPages, currentPage]);
+    if (entry?.isIntersecting && hasNextPage) {
+      fetchNextPage().then((result) => {
+        const newPages = result.data;
 
-  // Handle page change
-  const handlePageChange = (pageNum: number) => {
-    if (pageNum >= 1 && pageNum <= totalPages) {
-      setCurrentPage(pageNum);
+        if (newPages) {
+          const lastFetchedPage =
+            newPages.pages[newPages.pages.length - 1] || [];
+          console.log(
+            `Fetched items for page ${newPages.pages.length}:`,
+            lastFetchedPage
+          );
+
+          setCurrentPage((prevPage) => {
+            const nextPage = prevPage + 1;
+            console.log(`Reached page number: ${nextPage}`);
+            return nextPage;
+          });
+        }
+      });
     }
-  };
+  }, [entry, hasNextPage, fetchNextPage]);
+
+  const collectables = data?.pages.flatMap((page) => page) ?? [];
 
   // Error handler for search queries
   const handleError = (error: any) => {
@@ -491,13 +495,19 @@ export default function HomePage() {
     setSpecificTag(null);
   };
 
-    useEffect(() => {
+  useEffect(() => {
     // Initialize formData with specificTag attributes
     if (specificTag) {
-      const initialFormData = specificTag.attributes.reduce((acc: { [x: string]: any; }, attr: { name: string | number; value: any; }) => {
-        acc[attr.name] = attr.value;
-        return acc;
-      }, {} as Record<string, string>);
+      const initialFormData = specificTag.attributes.reduce(
+        (
+          acc: { [x: string]: any },
+          attr: { name: string | number; value: any }
+        ) => {
+          acc[attr.name] = attr.value;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
       setFormData(initialFormData);
     }
   }, [specificTag]);
@@ -755,7 +765,7 @@ export default function HomePage() {
                   <div className="flex flex-wrap -mx-4">
                     {(searchResults.length > 0
                       ? searchResults
-                      : paginatedCollectables
+                      : collectables
                     ).map((item) => (
                       <div
                         key={item.universeCollectableId}
@@ -832,8 +842,10 @@ export default function HomePage() {
                             >
                               <FaRegEdit />
                             </button>
-                            <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={handleDelete}>
+                            <button
+                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                              onClick={handleDelete}
+                            >
                               <FaRegTrashCan />
                             </button>
                           </div>
@@ -845,7 +857,7 @@ export default function HomePage() {
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                     {(searchResults.length > 0
                       ? searchResults
-                      : paginatedCollectables
+                      : collectables
                     ).map((item) => (
                       <div key={item.universeCollectableId}>
                         <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
@@ -931,6 +943,9 @@ export default function HomePage() {
                     ))}
                   </div>
                 )}
+                <div ref={ref} className="loading-indicator text-center p-4">
+                  {isFetchingNextPage && <p>Loading more items...</p>}
+                </div>
               </div>
             )}
             {/* send data to modal */}
@@ -950,66 +965,68 @@ export default function HomePage() {
 
                   <form onSubmit={handleEditSubmit}>
                     {favoriteAttributes
-                          .concat(customAttributes)
-                          .concat("owned", "image")
-                          .filter((attr) => attr !== null)
-                          .map((attribute, index) => (
-                      <div key={index} className="mb-4 lg:max-w-lg">
-                        {attribute !== "image" ? (
-                          <>
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                              {attribute.charAt(0).toUpperCase() +
-                                attribute.slice(1)}
-                            </label>
-                            <input
-                              type="text"
-                              name={attribute}
-                              placeholder={`${attribute}`}
-                              value={formData[attribute] || ""}
-                              onChange={handleChange}
-                              className="border rounded w-full py-2 px-3 text-gray-700"
-                              required={attribute === "owned"}
-                            />
-                          </>
-                        ) : (
-                          <>
-                            <label
-                              htmlFor="cover-photo"
-                              className="block text-sm font-bold leading-6 text-gray-900 dark:text-gray-300"
-                            >
-                              Change Photo
-                            </label>
-                            <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                              <div className="text-center">
-                                <PhotoIcon
-                                  aria-hidden="true"
-                                  className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                />
-                                <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                  <label
-                                    htmlFor="file-upload"
-                                    className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                                  >
-                                    <span>Upload a photo</span>
-                                    <input
-                                      id="file-upload"
-                                      name="file-upload"
-                                      type="file"
-                                      className="sr-only"
-                                      onChange={handleFileChange}
-                                    />
-                                  </label>
-                                  <p className="pl-1">or leave blank to keep original photo</p>
+                      .concat(customAttributes)
+                      .concat("owned", "image")
+                      .filter((attr) => attr !== null)
+                      .map((attribute, index) => (
+                        <div key={index} className="mb-4 lg:max-w-lg">
+                          {attribute !== "image" ? (
+                            <>
+                              <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                {attribute.charAt(0).toUpperCase() +
+                                  attribute.slice(1)}
+                              </label>
+                              <input
+                                type="text"
+                                name={attribute}
+                                placeholder={`${attribute}`}
+                                value={formData[attribute] || ""}
+                                onChange={handleChange}
+                                className="border rounded w-full py-2 px-3 text-gray-700"
+                                required={attribute === "owned"}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <label
+                                htmlFor="cover-photo"
+                                className="block text-sm font-bold leading-6 text-gray-900 dark:text-gray-300"
+                              >
+                                Change Photo
+                              </label>
+                              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                <div className="text-center">
+                                  <PhotoIcon
+                                    aria-hidden="true"
+                                    className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                  />
+                                  <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                    <label
+                                      htmlFor="file-upload"
+                                      className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                    >
+                                      <span>Upload a photo</span>
+                                      <input
+                                        id="file-upload"
+                                        name="file-upload"
+                                        type="file"
+                                        className="sr-only"
+                                        onChange={handleFileChange}
+                                      />
+                                    </label>
+                                    <p className="pl-1">
+                                      or leave blank to keep original photo
+                                    </p>
+                                  </div>
+                                  <p className="text-xs leading-5 text-gray-600">
+                                    PNG, JPG
+                                  </p>
                                 </div>
-                                <p className="text-xs leading-5 text-gray-600">
-                                  PNG, JPG
-                                </p>
                               </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
+                            </>
+                          )}
+                        </div>
+                      ))}
 
                     <div className="flex justify-end space-x-4 mt-8">
                       <button
@@ -1032,54 +1049,6 @@ export default function HomePage() {
             )}
           </div>
         </div>
-
-        {/* Pagination */}
-        <nav className="flex items-center justify-between px-4 sm:px-0 mt-28">
-          {/* Left Arrow */}
-          <div className="flex-1 flex justify-start ml-20">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="inline-flex items-center border-t-2 border-transparent px-6 pt-4 text-md text-gray-500 hover:border-gray-300"
-            >
-              <ArrowLongLeftIcon
-                aria-hidden="true"
-                className="h-8 w-8 text-gray-400"
-              />
-            </button>
-          </div>
-
-          {/* Page Numbers */}
-          <div className="flex items-center justify-center space-x-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`inline-flex items-center border-t-4 px-4 pt-4 text-lg font-bold ${
-                  currentPage === i + 1
-                    ? "border-yellow-600 text-yellow-600"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-
-          {/* Right Arrow */}
-          <div className="flex-1 flex justify-end mr-20">
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="inline-flex items-center border-t-2 border-transparent px-6 pt-4 text-md text-gray-500 hover:border-gray-300"
-            >
-              <ArrowLongRightIcon
-                aria-hidden="true"
-                className="h-8 w-8 text-gray-400"
-              />
-            </button>
-          </div>
-        </nav>
         <Footer />
       </div>
     </>
