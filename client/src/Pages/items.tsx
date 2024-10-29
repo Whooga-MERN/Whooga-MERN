@@ -212,17 +212,13 @@ export default function HomePage() {
     logFormData(request);
 
     try {
-      const response = await fetch(
-        buildPath(`collectable/newCollectable`),
-        // "http://localhost:3000/collectable/newCollectable",
-        {
-          method: "POST",
-          body: request,
-          headers: {
-            Authorization: `Bearer ${JWT}`,
-          },
-        }
-      );
+      const response = await fetch(buildPath(`collectable/newCollectable`), {
+        method: "POST",
+        body: request,
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
 
       if (response.ok) {
         console.log("Form submitted successfully");
@@ -355,7 +351,6 @@ export default function HomePage() {
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [enabled, setEnabled] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [resetDropdown, setResetDropdown] = useState(false);
@@ -415,7 +410,12 @@ export default function HomePage() {
     setNoSearchResults(false);
   };
 
-  const { ref, entry } = useIntersection({ threshold: 1 });
+  const { ref: collectableRef, entry: collectableEntry } = useIntersection({
+    threshold: 1,
+  });
+  const { ref: searchRef, entry: searchEntry } = useIntersection({
+    threshold: 1,
+  });
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleToggleChange = (enabled: boolean) => {
@@ -424,54 +424,46 @@ export default function HomePage() {
     setCurrentPage(1);
   };
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
-    useInfiniteQuery({
-      queryKey: ["collectables", collectionId, universeCollectionId, enabled],
-      queryFn: ({ pageParam = 1 }) => {
-        if (enabled) {
-          return fetchOwnedCollectables(
-            collectionId!,
-            pageParam,
-            ITEMS_PER_PAGE
-          );
-        } else {
-          return fetchUniverseCollectables(
-            universeCollectionId!,
-            pageParam,
-            ITEMS_PER_PAGE
-          );
-        }
-      },
-      initialPageParam: 1,
-      getNextPageParam: (lastPage, allPages) =>
-        lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
-      refetchOnWindowFocus: false,
-    });
+  const {
+    data: collectablesDate,
+    fetchNextPage: fetchCollectablesNextPage,
+    hasNextPage: hasMoreCollectables,
+    isFetchingNextPage: isFetchingCollectables,
+  } = useInfiniteQuery({
+    queryKey: ["collectables", collectionId, universeCollectionId, enabled],
+    queryFn: ({ pageParam = 1 }) => {
+      if (enabled) {
+        return fetchOwnedCollectables(collectionId!, pageParam, ITEMS_PER_PAGE);
+      } else {
+        return fetchUniverseCollectables(
+          universeCollectionId!,
+          pageParam,
+          ITEMS_PER_PAGE
+        );
+      }
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+    refetchOnWindowFocus: false,
+  });
 
   useEffect(() => {
-    if (entry?.isIntersecting && hasNextPage) {
-      fetchNextPage().then((result) => {
+    if (collectableEntry?.isIntersecting && hasMoreCollectables) {
+      fetchCollectablesNextPage().then((result) => {
         const newPages = result.data;
 
         if (newPages) {
-          const lastFetchedPage =
-            newPages.pages[newPages.pages.length - 1] || [];
-          console.log(
-            `Fetched items for page ${newPages.pages.length}:`,
-            lastFetchedPage
-          );
-
           setCurrentPage((prevPage) => {
             const nextPage = prevPage + 1;
-            console.log(`Reached page number: ${nextPage}`);
             return nextPage;
           });
         }
       });
     }
-  }, [entry, hasNextPage, fetchNextPage]);
+  }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
 
-  const collectables = data?.pages.flatMap((page) => page) ?? [];
+  const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
 
   // Error handler for search queries
   const handleError = (error: any) => {
@@ -512,6 +504,69 @@ export default function HomePage() {
     }
   }, [specificTag]);
 
+  const [searchTags, setSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
+
+  const {
+    data: searchResultsData,
+    fetchNextPage: fetchSearchNextPage,
+    hasNextPage: hasNextSearchPage,
+    isFetchingNextPage: isFetchingSearchResults,
+  } = useInfiniteQuery({
+    queryKey: ["searchResults", searchTags, enabled],
+    queryFn: ({ pageParam = 1 }) => {
+      if (enabled) {
+        return fetchOwnedSearchResults(
+          searchTags,
+          userId,
+          collectionId,
+          pageParam
+        );
+      } else {
+        return fetchUniverseSearchResults(
+          searchTags,
+          userId,
+          universeCollectionId!,
+          pageParam
+        );
+      }
+    },
+    initialPageParam: 1,
+    enabled: searchTags.length > 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (searchEntry?.isIntersecting && hasNextSearchPage) {
+      fetchSearchNextPage().then((result) => {
+        const newPages = result.data;
+
+        if (newPages) {
+          setCurrentPage((prevPage) => {
+            const nextPage = prevPage + 1;
+            return nextPage;
+          });
+        }
+      });
+    }
+  }, [searchEntry, hasNextSearchPage, fetchSearchNextPage]);
+
+  const _searchResults = searchResultsData?.pages.flat() || [];
+
+  const handleSearch = async (
+    searchTags: { attribute: string; term: string }[]
+  ) => {
+    console.log("Search Tags Received:", searchTags);
+    setSearchTags(searchTags); // Update search tags
+    // Reset the results and current page
+    setSearchResults([]);
+    // Refetch with new search tags
+    fetchSearchNextPage();
+  };
+
   return (
     <>
       <div>
@@ -535,17 +590,11 @@ export default function HomePage() {
               {universeCollectionId && (
                 <SearchBar
                   attributes={favoriteAttributes}
-                  fetchOwnedSearchResults={fetchOwnedSearchResults}
-                  fetchUniverseSearchResults={fetchUniverseSearchResults}
-                  handleError={handleError}
-                  userId={userId}
-                  collectionId={collectionId!}
-                  universeCollectionId={universeCollectionId!}
                   onSearchResults={handleSearchResults}
-                  onResetSearch={handleClearSearch}
-                  isOwnedEnabled={enabled}
+                  onResetSearch={() => setSearchResults([])}
                   resetDropdown={resetDropdown}
                   setResetDropdown={setResetDropdown}
+                  onSearch={handleSearch}
                 />
               )}
 
@@ -747,8 +796,8 @@ export default function HomePage() {
           <div className="w-full p-2">
             <div className="text-xl py-4 text-right pr-10">
               Total items in the collection:{" "}
-              {searchResults.length > 0
-                ? searchResults.length
+              {_searchResults.length > 0
+                ? _searchResults.length
                 : enabled
                 ? ownedCollectables.length
                 : universeCollectables.length}
@@ -763,8 +812,8 @@ export default function HomePage() {
                 {/* switch between grid and list */}
                 {view === "list" ? (
                   <div className="flex flex-wrap -mx-4">
-                    {(searchResults.length > 0
-                      ? searchResults
+                    {(_searchResults.length > 0
+                      ? _searchResults
                       : collectables
                     ).map((item) => (
                       <div
@@ -855,8 +904,8 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                    {(searchResults.length > 0
-                      ? searchResults
+                    {(_searchResults.length > 0
+                      ? _searchResults
                       : collectables
                     ).map((item) => (
                       <div key={item.universeCollectableId}>
@@ -943,8 +992,17 @@ export default function HomePage() {
                     ))}
                   </div>
                 )}
-                <div ref={ref} className="loading-indicator text-center p-4">
-                  {isFetchingNextPage && <p>Loading more items...</p>}
+                <div
+                  ref={collectableRef}
+                  className="loading-indicator text-center p-4"
+                >
+                  {isFetchingCollectables && <p>Loading more items...</p>}
+                </div>
+                <div
+                  ref={searchRef}
+                  className="loading-indicator text-center p-4"
+                >
+                  {isFetchingSearchResults && <p>Loading more items...</p>}
                 </div>
               </div>
             )}

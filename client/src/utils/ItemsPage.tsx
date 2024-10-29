@@ -7,7 +7,6 @@ export const fetchUniverseCollectionId = async (collectionId: string) => {
   }
 
   try {
-    // const url = `http://localhost:3000/collection/${collectionId}`;
     const url = buildPath(`collection/${collectionId}`);
 
     const response = await fetch(url, {
@@ -37,9 +36,6 @@ export const fetchUniverseCollectables = async (
   page: number,
   itemsPerPage: number
 ) => {
-  console.log("universe_id: ", universeCollectionId);
-  console.log("universe_page: ", page);
-  console.log("universe_itemsPerPage: ", itemsPerPage);
   if (!universeCollectionId) {
     console.error("Missing universeCollectionId", { universeCollectionId });
     throw new Error("Missing a request parameter");
@@ -49,7 +45,6 @@ export const fetchUniverseCollectables = async (
     const url = buildPath(
       `universe-collectable/universe-collection-paginated/${universeCollectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
     );
-    console.log(url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -95,9 +90,6 @@ export const fetchOwnedCollectables = async (
   page: number,
   itemsPerPage: number
 ) => {
-  console.log("owned_id: ", collectionId);
-  console.log("owned_page: ", page);
-  console.log("owned_itemsPerPage: ", itemsPerPage);
   if (!collectionId) {
     console.error("Missing collectionId", { collectionId });
     throw new Error("Missing a request parameter");
@@ -107,7 +99,6 @@ export const fetchOwnedCollectables = async (
     const url = buildPath(
       `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
     );
-    console.log(url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -151,8 +142,7 @@ export const fetchUniverseSearchResults = async (
   searchterm: { attribute: string; term: string }[],
   userId: string,
   universeCollectionId: string,
-  page: number,
-  itemsPerPage: number = 12
+  page: number
 ) => {
   if (!userId || !universeCollectionId || searchterm.length === 0) {
     console.error("Missing userId, collectionId, or search tags", {
@@ -179,14 +169,11 @@ export const fetchUniverseSearchResults = async (
     queryParams
   );
 
-  // const url = buildPath(
-  //   `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}`
-  // );
   const url = buildPath(
-    `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}&page=${page}&itemsPerPage=${itemsPerPage}`
+    `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}&page=${page}&itemsPerPage=12`
   );
 
-  console.log("Request URL:", url);
+  console.log("universe URL:", url);
 
   try {
     const response = await fetch(url, {
@@ -202,7 +189,7 @@ export const fetchUniverseSearchResults = async (
     }
 
     const jsonResponse = await response.json();
-    console.log("here: ", jsonResponse);
+    console.log("universe: ", jsonResponse);
     return jsonResponse;
   } catch (e) {
     console.error(
@@ -218,14 +205,18 @@ export const fetchOwnedSearchResults = async (
   collectionId: string,
   page: number
 ) => {
-  if (!userId || !collectionId || searchterm.length === 0) {
-    console.error("Missing userId, collectionId, or search tags", {
-      userId,
-      collectionId,
-      searchterm,
-    });
-    throw new Error("Missing a request parameter");
-  }
+  console.log("userid", userId);
+  console.log("search", searchterm);
+  console.log("collectionId", collectionId);
+  console.log("page", page);
+  // if (!userId || !collectionId || searchterm.length === 0) {
+  //   console.error("Missing userId, collectionId, or search tags", {
+  //     userId,
+  //     collectionId,
+  //     searchterm,
+  //   });
+  //   throw new Error("Missing a request parameter");
+  // }
 
   const queryParams = searchterm
     .map(
@@ -236,14 +227,11 @@ export const fetchOwnedSearchResults = async (
     )
     .join("&");
 
-  console.log("collection search: ", collectionId, queryParams);
-
-  // const url = `http://localhost:3000/universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}`;
   const url = buildPath(
-    `universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}`
+    `universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}&page=${page}&itemsPerPage=12`
   );
 
-  console.log("Request URL:", url);
+  console.log("owned URL:", url);
 
   try {
     const response = await fetch(url, {
@@ -254,12 +242,12 @@ export const fetchOwnedSearchResults = async (
     });
 
     if (response.status === 404) {
+      console.log("No matching collectables found.");
       return [];
     }
 
     const jsonResponse = await response.json();
-
-    console.log("search result: ", jsonResponse);
+    console.log("universe: ", jsonResponse);
     return jsonResponse;
   } catch (e) {
     console.error(
