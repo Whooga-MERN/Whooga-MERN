@@ -141,6 +141,13 @@
       "when": 1730062724488,
       "tag": "0019_sturdy_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1730234768131,
+      "tag": "0020_slow_ultron",
+      "breakpoints": true
     }
   ]
 }
