@@ -205,26 +205,7 @@ router.delete('/delete-universe-collectable', async (req, res) => {
     console.log(error);
     return res.status(400).send("Error deleting collectable");
   }
-
 });
 
-// DELETE
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const deletedItem = await db.delete(universeCollectables)
-      .where(eq(id, universeCollectables.universe_collectable_id))
-      .returning(); // Fetch the deleted item
-
-    if (deletedItem.length === 0) {
-      return res.status(404).send({ error: 'Item not found' });
-    }
-    res.status(204).send(); // No content on successful delete
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: 'Error deleting item' });
-  }
-});
 
 module.exports = router;
