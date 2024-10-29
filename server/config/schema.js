@@ -7,7 +7,8 @@ const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull(),
   phoneNumber: varchar('phone_number', { length: 255 }).notNull(),
   createdDate: date('created_date').notNull(),
-  userProfilePic: varchar('user_profile_pic', { length: 2048 })
+  userProfilePic: varchar('user_profile_pic', { length: 2048 }),
+  notification_opt_in: boolean('notification_opt_in')
 });
 
 const collections = pgTable('collections', {
