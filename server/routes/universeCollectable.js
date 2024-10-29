@@ -186,18 +186,26 @@ router.delete('/delete-universe-collectable', async (req, res) => {
     return res.status(404).send('No or improper universeCollectableId given');
   console.log("universeCollectableId: ", universeCollectableId);
 
-  console.log("\nStarting Deletion of universeCollecatble");
-  const deletedUniverseCollectable = await db
-    .delete(universeCollectables)
-    .where(eq(universeCollectableId, universeCollectables.universe_collectable_id))
-    .returning();
-
-  if(deletedUniverseCollectable.length < 0) {
-    console.log("No Collecatble found to delete")
-    return res.status(404).send("No Collectable found to delete");
+  try {
+    console.log("\nStarting Deletion of universeCollecatble");
+    const deletedUniverseCollectable = await db
+      .delete(universeCollectables)
+      .where(eq(universeCollectableId, universeCollectables.universe_collectable_id))
+      .returning();
+  
+    console.log("deletedUniverseCollectable.length: ", deletedUniverseCollectable.length);
+    if(deletedUniverseCollectable.length < 1) {
+      console.log("No Collecatble found to delete")
+      return res.status(404).send("No Collectable found to delete");
+    }
+  
+    return res.status(200).send("Successfully deleted universeCollectable");
+  } catch (error) {
+    console.log("Failed to delete collectable");
+    console.log(error);
+    return res.status(400).send("Error deleting collectable");
   }
 
-  return res.status(200).send("Successfully deleted universeCollectable");
 });
 
 // DELETE
