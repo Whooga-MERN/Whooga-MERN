@@ -4,40 +4,19 @@ import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 
 interface SearchBarProps {
   attributes: string[];
-  fetchOwnedSearchResults: (
-    tags: { attribute: string; term: string }[],
-    userId: string,
-    collectionId: string
-  ) => Promise<any>;
-  fetchUniverseSearchResults: (
-    tags: { attribute: string; term: string }[],
-    userId: string,
-    universeCollectionId: string
-  ) => Promise<any>;
-  handleError: (error: any) => void;
-  userId: string;
-  collectionId: string;
-  universeCollectionId: string;
   onSearchResults: (results: any[]) => void;
   onResetSearch: () => void;
   resetDropdown: boolean;
   setResetDropdown: (value: boolean) => void;
-  isOwnedEnabled: boolean;
+  onSearch: (tags: { attribute: string; term: string }[]) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   attributes,
-  userId,
-  collectionId,
-  universeCollectionId,
-  fetchOwnedSearchResults,
-  fetchUniverseSearchResults,
-  handleError,
-  onSearchResults,
   onResetSearch,
-  isOwnedEnabled,
   resetDropdown,
   setResetDropdown,
+  onSearch,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>(attributes[0]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -88,33 +67,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
     onResetSearch();
   };
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     if (searchTags.length === 0) {
       alert("Please add at least one search tag.");
       return;
     }
-
-    try {
-      let searchResults;
-      if (isOwnedEnabled) {
-        // Fetch results for owned collectables
-        searchResults = await fetchOwnedSearchResults(
-          searchTags,
-          userId,
-          collectionId
-        );
-      } else {
-        // Fetch results for universe collectables
-        searchResults = await fetchUniverseSearchResults(
-          searchTags,
-          userId,
-          universeCollectionId
-        );
-      }
-      onSearchResults(searchResults);
-    } catch (error) {
-      handleError(error);
-    }
+    onSearch(searchTags);
   };
 
   return (
