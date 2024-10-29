@@ -501,7 +501,7 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
       .execute();
       console.log("Finished querying for collectableId");
       
-
+      console.log("collectableIdQuery.length: ", collectableIdQuery.length);
       if(collectableIdQuery.length < 1) {
         console.log("Before update, not owned");
         if(owned === 'T') { 
@@ -580,15 +580,17 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
             .set({ value: value })
             .where(
               and(
-                eq(collectableAttributes.slug, key),
+                eq(collectableAttributes.slug, key.toLowerCase().replace(/\s+/g, '_')),
                 eq(collectableAttributes.universe_collectable_id, universeCollectableId),
                 or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
               )
             )
             .execute();
         });
-        console.log("Finished Updating Attributes");
 
+        await Promise.all(updateAttributes);
+        console.log("Finished Updating Attributes");
+        
         let imageUrl = null;
         if(image)
         {
