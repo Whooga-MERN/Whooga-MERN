@@ -86,8 +86,9 @@ export default function HomePage() {
     console.log("Item to delete:", item.universeCollectableId);
 
     const request = {
-      universeCollectableId: item.universeCollectableId,
+      "universeCollectableId": item.universeCollectableId,
     }
+    console.log("Request: ", request);
 
     try {
       const response = await fetch(buildPath(`universe-collectable/delete-universe-collectable`), {
@@ -286,8 +287,11 @@ export default function HomePage() {
     const { owned, image, ...restFormData } = formData;
     console.log("owned", owned);
     request.append("attributeValuesJson", JSON.stringify(restFormData));
-    if (owned !== undefined) {
+    if (owned) {
       request.append("owned", owned);
+    }
+    else {
+      request.append("owned", "F");
     }
     if (imageFile) {
       request.append("collectableImage", imageFile);
