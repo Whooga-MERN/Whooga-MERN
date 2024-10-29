@@ -81,8 +81,32 @@ export default function HomePage() {
     setSpecificTag(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async (item: Record<string, any>) => {
     console.log("Delete button clicked");
+    console.log("Item to delete:", item.universeCollectableId);
+
+    const request = {
+      universeCollectableId: item.universeCollectableId,
+    }
+
+    try {
+      const response = await fetch(buildPath(`universe-collectable/delete-universe-collectable`), {
+        method: "DELETE",
+        body: JSON.stringify(request),
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log("Item deleted successfully");
+      } else {
+        console.error("Error deleting item:", response);
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
+
   };
 
   const [isOwned, setIsOwned] = useState(true);
@@ -176,6 +200,7 @@ export default function HomePage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isNewCollectableWishlist, setIsNewCollectableWishlist] =
     useState<boolean>(false);
+  const [isPublished, setIsPublished] = useState(false);
 
   // handle form field change
   const handleChange = (
@@ -185,11 +210,19 @@ export default function HomePage() {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const handleOwnedChange = (owned: boolean) => {
+    setFormData((prevData) => ({ ...prevData, ["owned"]: owned ? "T" : "F" }));
+  }
+
   // handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
     }
+  };
+
+    const handlePublishChange = () => {
+    setIsPublished(!isPublished);
   };
 
   // handle form submit
@@ -204,7 +237,7 @@ export default function HomePage() {
       return;
     }
     request.append("attributes_values_json", JSON.stringify(formData));
-    request.append("isWishlist", isNewCollectableWishlist ? "true" : "false");
+    request.append("isPublished", isPublished ? "true" : "false");
     if (imageFile) {
       request.append("collectableImage", imageFile);
     }
@@ -253,6 +286,7 @@ export default function HomePage() {
         specificTag.universeCollectableId
       );
     }
+    console.log("universe collectable id: ", specificTag?.universeCollectableId);
     const { owned, image, ...restFormData } = formData;
     console.log("owned", owned);
     request.append("attributeValuesJson", JSON.stringify(restFormData));
@@ -261,6 +295,9 @@ export default function HomePage() {
     }
     if (imageFile) {
       request.append("collectableImage", imageFile);
+    }
+    else{
+      request.append("collectableImage", image);
     }
 
     logFormData(request);
@@ -284,7 +321,7 @@ export default function HomePage() {
     }
 
     closeEdit();
-    window.location.reload();
+    //window.location.reload();
   };
 
   const logFormData = (formData: FormData) => {
@@ -603,25 +640,41 @@ export default function HomePage() {
                       <form onSubmit={handleSubmit}>
                         {favoriteAttributes
                           .concat(customAttributes)
-                          .concat("image")
+                          .concat("owned", "image")
                           .filter((attr) => attr !== null)
                           .map((attribute, index) => (
                             <div key={index} className="mb-4 lg:max-w-lg">
                               {attribute !== "image" ? (
-                                <>
-                                  <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                    {attribute.charAt(0).toUpperCase() +
-                                      attribute.slice(1)}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    name={attribute}
-                                    placeholder={`${attribute}`}
-                                    value={formData[attribute] || ""}
-                                    onChange={handleChange}
-                                    className="border rounded w-full py-2 px-3 text-gray-700"
-                                  />
-                                </>
+                                attribute === "owned" ? (
+                                  <div className="flex items-center mb-3">
+                                    <input
+                                      type="checkbox"
+                                      id="publishCollection"
+                                      onChange={(e) => handleOwnedChange(e.target.checked)}
+                                      className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                    />
+                                    <label
+                                      htmlFor="publishCollection"
+                                      className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                    >
+                                      Is Owned
+                                    </label>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                      {attribute.charAt(0).toUpperCase() + attribute.slice(1)}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      name={attribute}
+                                      placeholder={`${attribute}`}
+                                      value={formData[attribute] || ""}
+                                      onChange={handleChange}
+                                      className="border rounded w-full py-2 px-3 text-gray-700"
+                                    />
+                                  </>
+                                )
                               ) : (
                                 <>
                                   <label
@@ -652,15 +705,29 @@ export default function HomePage() {
                                         </label>
                                         <p>or drag and drop</p>
                                       </div>
-                                      <p className="text-xs leading-5 text-gray-600">
-                                        PNG, JPG
-                                      </p>
+                                      <p className="text-xs leading-5 text-gray-600">PNG, JPG</p>
                                     </div>
                                   </div>
                                 </>
                               )}
+                              
                             </div>
                           ))}
+                          <div className="flex items-center mb-3">
+                            <input
+                              type="checkbox"
+                              id="publishCollection"
+                              checked={isPublished}
+                              onChange={handlePublishChange}
+                              className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                            />
+                            <label
+                              htmlFor="publishCollection"
+                              className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                            >
+                              Publish Collectable
+                            </label>
+                          </div>
 
                         <div className="flex justify-end space-x-4 mt-8">
                           <button
@@ -853,7 +920,7 @@ export default function HomePage() {
                             </button>
                             <button
                               className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={handleDelete}
+                              onClick={() => handleDelete(item)}
                             >
                               <FaRegTrashCan />
                             </button>
@@ -942,7 +1009,8 @@ export default function HomePage() {
                               >
                                 <FaRegEdit />
                               </button>
-                              <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                              <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                onClick={() => handleDelete(item)}>
                                 <FaRegTrashCan />
                               </button>
                             </div>
@@ -967,8 +1035,8 @@ export default function HomePage() {
             )}
             {showEdit && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
-                  <h2 className="text-xl font-bold mb-4">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                  <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
                     Edit your Collectible
                   </h2>
 
@@ -980,62 +1048,88 @@ export default function HomePage() {
                       .map((attribute, index) => (
                         <div key={index} className="mb-4 lg:max-w-lg">
                           {attribute !== "image" ? (
-                            <>
-                              <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                {attribute.charAt(0).toUpperCase() +
-                                  attribute.slice(1)}
-                              </label>
-                              <input
-                                type="text"
-                                name={attribute}
-                                placeholder={`${attribute}`}
-                                value={formData[attribute] || ""}
-                                onChange={handleChange}
-                                className="border rounded w-full py-2 px-3 text-gray-700"
-                                required={attribute === "owned"}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <label
-                                htmlFor="cover-photo"
-                                className="block text-sm font-bold leading-6 text-gray-900 dark:text-gray-300"
-                              >
-                                Change Photo
-                              </label>
-                              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                                <div className="text-center">
-                                  <PhotoIcon
-                                    aria-hidden="true"
-                                    className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                  />
-                                  <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                attribute === "owned" ? (
+                                  <div className="flex items-center mb-3">
+                                    <input
+                                      type="checkbox"
+                                      id="publishCollection"
+                                      onChange={(e) => handleOwnedChange(e.target.checked)}
+                                      className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                    />
                                     <label
-                                      htmlFor="file-upload"
-                                      className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                      htmlFor="publishCollection"
+                                      className="text-gray-700 dark:text-gray-300 text-sm font-bold"
                                     >
-                                      <span>Upload a photo</span>
-                                      <input
-                                        id="file-upload"
-                                        name="file-upload"
-                                        type="file"
-                                        className="sr-only"
-                                        onChange={handleFileChange}
-                                      />
+                                      Is Owned
                                     </label>
-                                    <p className="pl-1">
-                                      or leave blank to keep original photo
-                                    </p>
                                   </div>
-                                  <p className="text-xs leading-5 text-gray-600">
-                                    PNG, JPG
-                                  </p>
-                                </div>
-                              </div>
-                            </>
-                          )}
+                                ) : (
+                                  <>
+                                    <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                      {attribute.charAt(0).toUpperCase() + attribute.slice(1)}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      name={attribute}
+                                      placeholder={`${attribute}`}
+                                      value={formData[attribute] || ""}
+                                      onChange={handleChange}
+                                      className="border rounded w-full py-2 px-3 text-gray-700"
+                                    />
+                                  </>
+                                )
+                              ) : (
+                                <>
+                                  <label
+                                    htmlFor="cover-photo"
+                                    className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                  >
+                                    Upload Photo
+                                  </label>
+                                  <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                    <div className="text-center">
+                                      <PhotoIcon
+                                        aria-hidden="true"
+                                        className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                      />
+                                      <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                        <label
+                                          htmlFor="file-upload"
+                                          className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                        >
+                                          <span>Upload a photo</span>
+                                          <input
+                                            id="file-upload"
+                                            name="file-upload"
+                                            type="file"
+                                            className="sr-only"
+                                            onChange={handleFileChange}
+                                          />
+                                        </label>
+                                        <p>or drag and drop</p>
+                                      </div>
+                                      <p className="text-xs leading-5 text-gray-600">PNG, JPG</p>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                         </div>
                       ))}
+                      <div className="flex items-center mb-3">
+                        <input
+                          type="checkbox"
+                          id="publishCollection"
+                          checked={isPublished}
+                          onChange={handlePublishChange}
+                          className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                        />
+                        <label
+                          htmlFor="publishCollection"
+                          className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                        >
+                          Publish Collectable
+                        </label>
+                      </div>
 
                     <div className="flex justify-end space-x-4 mt-8">
                       <button
