@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import _ from "lodash";
 
 import {
@@ -86,7 +86,7 @@ export default function HomePage() {
     console.log("Item to delete:", item.universeCollectableId);
 
     const request = {
-      "universeCollectableId": item.universeCollectableId,
+      universeCollectableId: item.universeCollectableId,
     }
     console.log("Request: ", request);
 
@@ -95,6 +95,7 @@ export default function HomePage() {
         method: "DELETE",
         body: JSON.stringify(request),
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${JWT}`,
         },
       });
@@ -662,13 +663,13 @@ export default function HomePage() {
                       New Collectible
                       <IoIosAdd />
                     </button>
-                    <button
+                    <Link
                       className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                      onClick={openModal}
+                      to={`/bulk-upload/${collectionId}`}
                     >
                       Bulk Upload
                       <IoIosAdd />
-                    </button>
+                    </Link>
                   </div>
                 ) : (
                   <button
