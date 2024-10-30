@@ -349,6 +349,7 @@ try {
 
             universeCollectablesData.push({
                 collection_universe_id: collectionUniverseId,
+                is_published: isPublishedBool
             });
         }
 
