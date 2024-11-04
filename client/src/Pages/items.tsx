@@ -641,7 +641,7 @@ export default function HomePage() {
               )}
 
               {/* icon button for view hidden lg:block md:block*/}
-              <div className="pt-3 mt-3">
+              <div className="hidden lg:block md:block pt-3 mt-3">
                 {isOwned ? (
                   <div>
                     <button className="pr-5" onClick={() => setView("list")}>
