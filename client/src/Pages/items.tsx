@@ -195,7 +195,11 @@ export default function HomePage() {
     } else {
       // Add the item to the wishlist and make the star solid
       setWishlistIds((prev) => [...prev, universeCollectableId]);
-      addToWishlist(collectionId, universeCollectableId);
+      if (universeCollectionId) {
+        addToWishlist(universeCollectionId, universeCollectableId);
+      } else {
+        console.error("universeCollectionId is null");
+      }
     }
   };
 
@@ -403,6 +407,7 @@ export default function HomePage() {
 
   useEffect(() => {
     var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
+    console.log("collectionUID: ", collectionUID);
     setUniverseCollectionId(collectionUID);
     const collectionName = localStorage.getItem("collectionName") ?? "";
     setUniverseCollectionName(collectionName);
