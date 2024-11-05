@@ -157,6 +157,7 @@ export default function Collections() {
         "collectionUniverseId",
         collection.collectionUniverseId
       );
+      console.log("sending stored UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionName", collection.name);
       navigate(`/items/${collectionId}`);
       console.log("clicked collection");
