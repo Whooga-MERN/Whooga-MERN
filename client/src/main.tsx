@@ -155,22 +155,6 @@ createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/bulk-upload/:collectionId"
-            element={
-              <ProtectedRoute>
-                <BulkUpload />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/bulk-upload-step-2/:collectionId"
-            element={
-              <ProtectedRoute>
-                <BulkUploadStep2 />
-              </ProtectedRoute>
-            }
-          />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
