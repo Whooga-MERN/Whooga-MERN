@@ -278,7 +278,7 @@ export default function HomePage() {
     }
 
     closeModal();
-    navigate(0);
+    navigate("/", { replace: true });
   };
 
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -336,7 +336,7 @@ export default function HomePage() {
     }
 
     closeEdit();
-    navigate(0);
+    window.location.href = window.location.pathname;
   };
 
   const logFormData = (formData: FormData) => {
