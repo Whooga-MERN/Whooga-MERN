@@ -43,12 +43,15 @@ router.post('', cpUpload, async (req, res) => {
         urlUniverseThumbnailImage,
         defaultAttributes,
         csvJsonData,
-        email
+        email,
+        isPublished
     } = req.body;
 
-    if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email)
+    if (!universeCollectionName || !defaultAttributes || !csvJsonData || !email || !isPublished)
         return res.status(400).send({
-            error: `Request body is missing a either universeCollectionName, defaultAttributes, or csvJsonData` });
+            error: `Request body is missing a either universeCollectionName, defaultAttributes, isPublished, email or csvJsonData` });
+
+        const isPublishedBool = isPublished === 'true';
 
         let collectableImages = [];
         if(req.files['collectableImages'])
@@ -95,10 +98,17 @@ router.post('', cpUpload, async (req, res) => {
             });
         }
 
-
+        // Start inserting into tables, now that we have read in the images
         await db.transaction(async (trx) => {
             console.log("\nSearching for user");
-            const user = await trx.select({ user_id: users.user_id, userName: users.name }).from(users).where(eq(users.email, email)).execute();
+            const user = await trx.select(
+                {
+                    user_id: users.user_id,
+                    userName: users.name 
+                })
+                .from(users)
+                .where(eq(users.email, email))
+                .execute();
 
             if (!user || user.length === 0)
                 res.status(400).send({ error: "FAILED to find user" });
@@ -110,22 +120,33 @@ router.post('', cpUpload, async (req, res) => {
                 name: universeCollectionName,
                 created_by: userName,
                 default_attributes: parsedDefaultAttributes,
-                universe_collection_pic: urlUniverseThumbnailImage,
+                universe_collection_pic: urlUniverseThumbnailImage || '',
                 user_id: user_id,
                 description: universeCollectionDescription,
+                is_published: isPublishedBool
             }).returning({ collection_universe_id: collectionUniverses.collection_universe_id });
             console.log("New Universe Collection Created");
 
             const collectionUniverseID = newUniverseCollection[0].collection_universe_id;
             const favoriteAttributes = parsedDefaultAttributes.slice(0,4);
 
+            console.log("updating source_universe value");
+            await trx
+                .update(collectionUniverses)
+                .set({ source_universe: collectionUniverseID })
+                .where(eq(collectionUniverseID, collectionUniverses.collection_universe_id))
+                .execute();
+
+            console.log("Finished udating source_universe value\n");
             console.log("Creating Collection");
-    
+            const customAttributes = [];
+
             const newCollection = await trx.insert(collections).values({
                 name: universeCollectionName,
                 user_id: user_id,
                 collection_universe_id: collectionUniverseID,
                 collection_pic: urlUniverseThumbnailImage,
+                custom_attributes: customAttributes,
                 favorite_attributes: favoriteAttributes
             }).returning({ collection_id: collections.collection_id});
     
@@ -152,6 +173,7 @@ router.post('', cpUpload, async (req, res) => {
 
                 universeCollectablesData.push({
                     collection_universe_id: collectionUniverseID,
+                    is_published: isPublishedBool
                 });
             }
 
@@ -169,6 +191,7 @@ router.post('', cpUpload, async (req, res) => {
                 for (const [key, value] of Object.entries(row)) {
                     if (key !== 'owned' && key !== 'image') {
                         collectableAttributesData.push({
+                            collection_universe_id: collectionUniverseID,
                             universe_collectable_id: universeCollectableID,
                             name: key,
                             slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -183,13 +206,27 @@ router.post('', cpUpload, async (req, res) => {
                         });
                     }
                     else if (key == 'image') {
-                        collectableAttributesData.push({
-                            universe_collectable_id: universeCollectableID,
-                            name: key,
-                            slug: key.toLowerCase().replace(/\s+/g, '_'),
-                            value: mappedCollectableImage[index],
-                            is_custom: false,
-                        });
+                        console.log("Value: ", value);
+                        if(value) {
+                            collectableAttributesData.push({
+                                collection_universe_id: collectionUniverseID,
+                                universe_collectable_id: universeCollectableID,
+                                name: key,
+                                slug: key.toLowerCase().replace(/\s+/g, '_'),
+                                value: mappedCollectableImage[index],
+                                is_custom: false,
+                            });
+                        }
+                        else {
+                            collectableAttributesData.push({
+                                collection_universe_id: collectionUniverseID,
+                                universe_collectable_id: universeCollectableID,
+                                name: key,
+                                slug: key.toLowerCase().replace(/\s+/g, '_'),
+                                value: '',
+                                is_custom: false,
+                            });
+                        }
                     }
                 }
             });
@@ -205,8 +242,9 @@ router.post('', cpUpload, async (req, res) => {
             console.error(error);
 
             // Cleanup: Delete uploaded files from S3
-            const deletePromises = [...urlCollectableImages.map(image => image.url), ...urlUniverseThumbnailImage].map(url => {
+            const deletePromises = [...urlCollectableImages.map(image => image.url), urlUniverseThumbnailImage].map(url => {
                 const filename = url.split('/').pop();
+                console.log(filename);
                 const params = {
                     Bucket: process.env.S3_BUCKET_NAME,
                     Key: filename
@@ -229,7 +267,8 @@ router.post('/existing-universe', cpUpload, async (req, res) => {
     const {
         collectionId,
         collectionUniverseId,
-        csvJsonData
+        csvJsonData,
+        isPublished
     } = req.body;
 
     if(!csvJsonData)
@@ -239,7 +278,12 @@ router.post('/existing-universe', cpUpload, async (req, res) => {
     console.log("collectionUniverseId: ", collectionUniverseId);
     if(!collectionId || isNaN(collectionId))
         return res.status(404).send("No or Invalid universeCollectionId given");
+    if(!isPublished)
+        return res.status(404).send('No isPublished given');
+
+    console.log("isPublished: ", isPublished);
     console.log("collectionId: ", collectionId);
+    const isPublishedBool = isPublished === 'true';
 
     let collectableImages = [];
     if(req.files['collectableImages'])
@@ -305,6 +349,7 @@ try {
 
             universeCollectablesData.push({
                 collection_universe_id: collectionUniverseId,
+                is_published: isPublishedBool
             });
         }
 
@@ -313,7 +358,10 @@ try {
         const newUniverseCollectables = await trx
             .insert(universeCollectables)
             .values(universeCollectablesData)
-            .returning({ universe_collectable_id: universeCollectables.universe_collectable_id });
+            .returning({
+                universe_collectable_id: universeCollectables.universe_collectable_id,
+                isPublished: isPublishedBool
+            });
         console.log("Finished creating universe collectables");
 
         console.log("Creating attributes");
@@ -327,6 +375,7 @@ try {
             for (const [key, value] of Object.entries(row)) {
                 if (key !== 'owned' && key !== 'image') {
                     collectableAttributesData.push({
+                        collection_universe_id: collectionUniverseId,
                         universe_collectable_id: universeCollectableID,
                         name: key,
                         slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -342,10 +391,11 @@ try {
                 }
                 else if (key == 'image') {
                     collectableAttributesData.push({
+                        collection_universe_id: collectionUniverseId,
                         universe_collectable_id: universeCollectableID,
                         name: key,
                         slug: key.toLowerCase().replace(/\s+/g, '_'),
-                        value: mappedCollectableImage[index] || 'empty',
+                        value: mappedCollectableImage[index] || '',
                         is_custom: false,
                     });
                 }
@@ -384,5 +434,8 @@ try {
 
 });
 
+router.put('/bulk-update-images', cpUpload, async (req, res) => {
+const { csvJson } = req.body;
+});
 
 module.exports = router;

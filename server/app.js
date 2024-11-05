@@ -16,6 +16,7 @@ const s3Router = require('./routes/s3Bucket');
 const wishlist = require('./routes/wishlist');
 const universeCollectableSearchRouter = require('./routes/universeCollectableSearch');
 const collectionSearchRouter = require('./routes/collectionSearch');
+const publishRouter = require('./routes/publish');
 /*const { drizzle } = require('drizzle-orm');
 const { pgAdapter } = require('drizzle-orm-pg');
 const pg = require('pg');*/
@@ -59,6 +60,8 @@ app.use('/wishlist', wishlist);
 app.use('/universe-collectable-search', universeCollectableSearchRouter);
 
 app.use('/collection-search', collectionSearchRouter);
+
+app.use('/publish', publishRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

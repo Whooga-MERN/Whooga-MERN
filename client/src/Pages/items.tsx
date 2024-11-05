@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import _ from "lodash";
 
 import {
@@ -12,10 +12,6 @@ import { BsFillGridFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
 import { PhotoIcon } from "@heroicons/react/24/solid";
-import {
-  ArrowLongLeftIcon,
-  ArrowLongRightIcon,
-} from "@heroicons/react/20/solid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as faSolidStar } from "@fortawesome/free-solid-svg-icons";
 import { faStar as faRegularStar } from "@fortawesome/free-regular-svg-icons";
@@ -25,6 +21,8 @@ import Modal from "../Components/Modal";
 import Footer from "../Components/Footer";
 import SearchBar from "../Components/searchBar";
 import OwnedToggle from "../Components/ownedToggle";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useIntersection } from "@mantine/hooks";
 
 import { buildPath } from "../utils/utils";
 import {
@@ -38,7 +36,8 @@ import {
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 
-const ITEMS_PER_PAGE = 24;
+const ITEMS_PER_PAGE = 12;
+const initialPage = 1;
 
 const sortBy = [
   { id: "yearLowToHigh", label: "Year: Low to High" },
@@ -72,12 +71,46 @@ export default function HomePage() {
   };
 
   // edit collectible
-  const openEdit = () => {
+  const openEdit = (item: Record<string, any>) => {
+    setSpecificTag(item);
     setShowEdit(true);
   };
 
   const closeEdit = () => {
     setShowEdit(false);
+    setSpecificTag(null);
+  };
+
+  const handleDelete = async (item: Record<string, any>) => {
+    console.log("Delete button clicked");
+    console.log("Item to delete:", item.universeCollectableId);
+
+    const request = {
+      universeCollectableId: item.universeCollectableId,
+    };
+    console.log("Request: ", request);
+
+    try {
+      const response = await fetch(
+        buildPath(`universe-collectable/delete-universe-collectable`),
+        {
+          method: "DELETE",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        console.log("Item deleted successfully");
+      } else {
+        console.error("Error deleting item:", response);
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
   };
 
   const [isOwned, setIsOwned] = useState(true);
@@ -162,15 +195,20 @@ export default function HomePage() {
     } else {
       // Add the item to the wishlist and make the star solid
       setWishlistIds((prev) => [...prev, universeCollectableId]);
-      addToWishlist(collectionId, universeCollectableId);
+      if (universeCollectionId) {
+        addToWishlist(universeCollectionId, universeCollectableId);
+      } else {
+        console.error("universeCollectionId is null");
+      }
     }
   };
 
   //--------------------- handle form field ------------------------
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isNewCollectableWishlist, setIsNewCollectableWishlist] =
     useState<boolean>(false);
+  const [isPublished, setIsPublished] = useState(false);
 
   // handle form field change
   const handleChange = (
@@ -180,11 +218,19 @@ export default function HomePage() {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const handleOwnedChange = (owned: boolean) => {
+    setFormData((prevData) => ({ ...prevData, ["owned"]: owned ? "T" : "F" }));
+  };
+
   // handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
     }
+  };
+
+  const handlePublishChange = () => {
+    setIsPublished(!isPublished);
   };
 
   // handle form submit
@@ -199,7 +245,7 @@ export default function HomePage() {
       return;
     }
     request.append("attributes_values_json", JSON.stringify(formData));
-    request.append("isWishlist", isNewCollectableWishlist ? "true" : "false");
+    request.append("isPublished", isPublished ? "true" : "false");
     if (imageFile) {
       request.append("collectableImage", imageFile);
     }
@@ -207,17 +253,13 @@ export default function HomePage() {
     logFormData(request);
 
     try {
-      const response = await fetch(
-        buildPath(`collectable/newCollectable`),
-        // "http://localhost:3000/collectable/newCollectable",
-        {
-          method: "POST",
-          body: request,
-          headers: {
-            Authorization: `Bearer ${JWT}`,
-          },
-        }
-      );
+      const response = await fetch(buildPath(`collectable/newCollectable`), {
+        method: "POST",
+        body: request,
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
 
       if (response.ok) {
         console.log("Form submitted successfully");
@@ -229,6 +271,65 @@ export default function HomePage() {
     }
 
     closeModal();
+    window.location.reload();
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const request = new FormData();
+
+    if (collectionId) {
+      request.append("collectionId", collectionId);
+    } else {
+      console.error("Collection ID is undefined");
+      return;
+    }
+    if (specificTag?.universeCollectableId) {
+      request.append(
+        "universeCollectableId",
+        specificTag.universeCollectableId
+      );
+    }
+    console.log(
+      "universe collectable id: ",
+      specificTag?.universeCollectableId
+    );
+    const { owned, image, ...restFormData } = formData;
+    console.log("owned", owned);
+    request.append("attributeValuesJson", JSON.stringify(restFormData));
+    if (owned) {
+      request.append("owned", owned);
+    } else {
+      request.append("owned", "F");
+    }
+    if (imageFile) {
+      request.append("collectableImage", imageFile);
+    } else {
+      request.append("collectableImage", image);
+    }
+
+    logFormData(request);
+
+    try {
+      const response = await fetch(buildPath(`collectable/edit-collectable`), {
+        method: "PUT",
+        body: request,
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log("Form submitted successfully");
+      } else {
+        console.error("Error submitting form:", response);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+
+    closeEdit();
+    //window.location.reload();
   };
 
   const logFormData = (formData: FormData) => {
@@ -299,8 +400,6 @@ export default function HomePage() {
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [enabled, setEnabled] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [resetDropdown, setResetDropdown] = useState(false);
@@ -308,34 +407,30 @@ export default function HomePage() {
 
   useEffect(() => {
     var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
+    console.log("collectionUID: ", collectionUID);
     setUniverseCollectionId(collectionUID);
     const collectionName = localStorage.getItem("collectionName") ?? "";
     setUniverseCollectionName(collectionName);
   }, []);
 
-  const updateTotalPages = (items: any[]) => {
-    const pageCount = Math.ceil(items.length / ITEMS_PER_PAGE);
-    setTotalPages(pageCount);
-  };
-
   useEffect(() => {
     const getUniverseCollectionId = async () => {
       try {
         if (collectionId) {
-          const ownedCollectables = await fetchOwnedCollectables(collectionId);
+          const ownedCollectables = await fetchOwnedCollectables(
+            collectionId,
+            initialPage,
+            ITEMS_PER_PAGE
+          );
           setOwnedCollectables(ownedCollectables);
-          if (enabled) {
-            updateTotalPages(ownedCollectables);
-          }
 
           if (universeCollectionId) {
             const collectables = await fetchUniverseCollectables(
-              universeCollectionId
+              universeCollectionId,
+              initialPage,
+              ITEMS_PER_PAGE
             );
             setUniverseCollectables(collectables);
-            if (!enabled) {
-              updateTotalPages(collectables);
-            }
           }
         } else {
           console.error("universeCollectionId is null");
@@ -364,51 +459,60 @@ export default function HomePage() {
     setNoSearchResults(false);
   };
 
-  const handleToggleChange = async (enabled: boolean) => {
+  const { ref: collectableRef, entry: collectableEntry } = useIntersection({
+    threshold: 1,
+  });
+  const { ref: searchRef, entry: searchEntry } = useIntersection({
+    threshold: 1,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handleToggleChange = (enabled: boolean) => {
     setEnabled(enabled);
     handleClearSearch();
-
-    try {
-      if (enabled) {
-        // Fetch and set owned collectables
-        const ownedCollectables = await fetchOwnedCollectables(collectionId);
-        setOwnedCollectables(ownedCollectables);
-        updateTotalPages(ownedCollectables);
-      } else {
-        // Fetch and set universe collectables
-        if (universeCollectionId) {
-          const collectables = await fetchUniverseCollectables(
-            universeCollectionId
-          );
-          setUniverseCollectables(collectables);
-          updateTotalPages(collectables);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching items:", error);
-    }
+    setCurrentPage(1);
   };
 
-  // Get items for the current page
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIdx = startIdx + ITEMS_PER_PAGE;
-  // const paginatedCollectables = universeCollectables.slice(startIdx, endIdx);
-  const paginatedCollectables = (
-    enabled ? ownedCollectables : universeCollectables
-  ).slice(startIdx, endIdx);
+  const {
+    data: collectablesDate,
+    fetchNextPage: fetchCollectablesNextPage,
+    hasNextPage: hasMoreCollectables,
+    isFetchingNextPage: isFetchingCollectables,
+  } = useInfiniteQuery({
+    queryKey: ["collectables", collectionId, universeCollectionId, enabled],
+    queryFn: ({ pageParam = 1 }) => {
+      if (enabled) {
+        return fetchOwnedCollectables(collectionId!, pageParam, ITEMS_PER_PAGE);
+      } else {
+        return fetchUniverseCollectables(
+          universeCollectionId!,
+          pageParam,
+          ITEMS_PER_PAGE
+        );
+      }
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+    refetchOnWindowFocus: false,
+  });
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [totalPages, currentPage]);
+    if (collectableEntry?.isIntersecting && hasMoreCollectables) {
+      fetchCollectablesNextPage().then((result) => {
+        const newPages = result.data;
 
-  // Handle page change
-  const handlePageChange = (pageNum: number) => {
-    if (pageNum >= 1 && pageNum <= totalPages) {
-      setCurrentPage(pageNum);
+        if (newPages) {
+          setCurrentPage((prevPage) => {
+            const nextPage = prevPage + 1;
+            return nextPage;
+          });
+        }
+      });
     }
-  };
+  }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
+
+  const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
 
   // Error handler for search queries
   const handleError = (error: any) => {
@@ -430,6 +534,84 @@ export default function HomePage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setSpecificTag(null);
+  };
+
+  useEffect(() => {
+    if (specificTag) {
+      const initialFormData = specificTag.attributes.reduce(
+        (
+          acc: { [x: string]: any },
+          attr: { name: string | number; value: any }
+        ) => {
+          acc[attr.name] = attr.value;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      setFormData(initialFormData);
+    }
+  }, [specificTag]);
+
+  const [searchTags, setSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
+
+  const {
+    data: searchResultsData,
+    fetchNextPage: fetchSearchNextPage,
+    hasNextPage: hasNextSearchPage,
+    isFetchingNextPage: isFetchingSearchResults,
+  } = useInfiniteQuery({
+    queryKey: ["searchResults", searchTags, enabled],
+    queryFn: ({ pageParam = 1 }) => {
+      if (enabled) {
+        return fetchOwnedSearchResults(
+          searchTags,
+          userId,
+          collectionId,
+          pageParam
+        );
+      } else {
+        return fetchUniverseSearchResults(
+          searchTags,
+          userId,
+          universeCollectionId!,
+          pageParam
+        );
+      }
+    },
+    initialPageParam: 1,
+    enabled: searchTags.length > 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (searchEntry?.isIntersecting && hasNextSearchPage) {
+      fetchSearchNextPage().then((result) => {
+        const newPages = result.data;
+
+        if (newPages) {
+          setCurrentPage((prevPage) => {
+            const nextPage = prevPage + 1;
+            return nextPage;
+          });
+        }
+      });
+    }
+  }, [searchEntry, hasNextSearchPage, fetchSearchNextPage]);
+
+  const _searchResults = searchResultsData?.pages.flat() || [];
+
+  const handleSearch = async (
+    searchTags: { attribute: string; term: string }[]
+  ) => {
+    setSearchTags(searchTags);
+    // Reset the results and current page
+    setSearchResults([]);
+    // Refetch with new search tags
+    fetchSearchNextPage();
   };
 
   return (
@@ -455,42 +637,39 @@ export default function HomePage() {
               {universeCollectionId && (
                 <SearchBar
                   attributes={favoriteAttributes}
-                  fetchOwnedSearchResults={fetchOwnedSearchResults}
-                  fetchUniverseSearchResults={fetchUniverseSearchResults}
-                  handleError={handleError}
-                  userId={userId}
-                  collectionId={collectionId!}
-                  universeCollectionId={universeCollectionId!}
                   onSearchResults={handleSearchResults}
-                  onResetSearch={handleClearSearch}
-                  isOwnedEnabled={enabled}
+                  onResetSearch={() => setSearchResults([])}
                   resetDropdown={resetDropdown}
                   setResetDropdown={setResetDropdown}
+                  onSearch={handleSearch}
                 />
               )}
 
-              {/* icon button for view*/}
+              {/* icon button for view hidden lg:block md:block*/}
               <div className="hidden lg:block md:block pt-3 mt-3">
-                <button
-                  className="inline-block pr-5"
-                  onClick={() => setView("list")}
-                >
-                  <FaListUl />
-                </button>
-                <button
-                  className="inline-block pr-16"
-                  onClick={() => setView("grid")}
-                >
-                  <BsFillGridFill />
-                </button>
                 {isOwned ? (
-                  <button
-                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    onClick={openModal}
-                  >
-                    New Collectible
-                    <IoIosAdd />
-                  </button>
+                  <div>
+                    <button className="pr-5" onClick={() => setView("list")}>
+                      <FaListUl />
+                    </button>
+                    <button className="pr-16" onClick={() => setView("grid")}>
+                      <BsFillGridFill />
+                    </button>
+                    <button
+                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                      onClick={openModal}
+                    >
+                      New Collectible
+                      <IoIosAdd />
+                    </button>
+                    <Link
+                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
+                      to={`/bulk-upload/${collectionId}`}
+                    >
+                      Bulk Upload
+                      <IoIosAdd />
+                    </Link>
+                  </div>
                 ) : (
                   <button
                     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
@@ -514,25 +693,44 @@ export default function HomePage() {
                       <form onSubmit={handleSubmit}>
                         {favoriteAttributes
                           .concat(customAttributes)
-                          .concat("image")
+                          .concat("owned", "image")
                           .filter((attr) => attr !== null)
                           .map((attribute, index) => (
                             <div key={index} className="mb-4 lg:max-w-lg">
                               {attribute !== "image" ? (
-                                <>
-                                  <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                    {attribute.charAt(0).toUpperCase() +
-                                      attribute.slice(1)}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    name={attribute}
-                                    placeholder={`${attribute}`}
-                                    value={formData[attribute] || ""}
-                                    onChange={handleChange}
-                                    className="border rounded w-full py-2 px-3 text-gray-700"
-                                  />
-                                </>
+                                attribute === "owned" ? (
+                                  <div className="flex items-center mb-3">
+                                    <input
+                                      type="checkbox"
+                                      id="publishCollection"
+                                      onChange={(e) =>
+                                        handleOwnedChange(e.target.checked)
+                                      }
+                                      className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                    />
+                                    <label
+                                      htmlFor="publishCollection"
+                                      className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                    >
+                                      Is Owned
+                                    </label>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                      {attribute.charAt(0).toUpperCase() +
+                                        attribute.slice(1)}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      name={attribute}
+                                      placeholder={`${attribute}`}
+                                      value={formData[attribute] || ""}
+                                      onChange={handleChange}
+                                      className="border rounded w-full py-2 px-3 text-gray-700"
+                                    />
+                                  </>
+                                )
                               ) : (
                                 <>
                                   <label
@@ -572,6 +770,21 @@ export default function HomePage() {
                               )}
                             </div>
                           ))}
+                        <div className="flex items-center mb-3">
+                          <input
+                            type="checkbox"
+                            id="publishCollection"
+                            checked={isPublished}
+                            onChange={handlePublishChange}
+                            className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                          />
+                          <label
+                            htmlFor="publishCollection"
+                            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                          >
+                            Publish Collectable
+                          </label>
+                        </div>
 
                         <div className="flex justify-end space-x-4 mt-8">
                           <button
@@ -665,6 +878,15 @@ export default function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* collectibles */}
           <div className="w-full p-2">
+            <div className="text-xl py-4 text-right pr-10">
+              Total items in the collection:{" "}
+              {_searchResults.length > 0
+                ? _searchResults.length
+                : enabled
+                ? ownedCollectables.length
+                : universeCollectables.length}
+            </div>
+
             {noSearchResults ? (
               <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
                 No match found :(
@@ -674,9 +896,9 @@ export default function HomePage() {
                 {/* switch between grid and list */}
                 {view === "list" ? (
                   <div className="flex flex-wrap -mx-4">
-                    {(searchResults.length > 0
-                      ? searchResults
-                      : paginatedCollectables
+                    {(_searchResults.length > 0
+                      ? _searchResults
+                      : collectables
                     ).map((item) => (
                       <div
                         key={item.universeCollectableId}
@@ -749,11 +971,14 @@ export default function HomePage() {
                           <div className="flex space-x-4">
                             <button
                               className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={openEdit}
+                              onClick={() => openEdit(item)}
                             >
                               <FaRegEdit />
                             </button>
-                            <button className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                            <button
+                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                              onClick={() => handleDelete(item)}
+                            >
                               <FaRegTrashCan />
                             </button>
                           </div>
@@ -763,9 +988,9 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                    {(searchResults.length > 0
-                      ? searchResults
-                      : paginatedCollectables
+                    {(_searchResults.length > 0
+                      ? _searchResults
+                      : collectables
                     ).map((item) => (
                       <div key={item.universeCollectableId}>
                         <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
@@ -837,11 +1062,14 @@ export default function HomePage() {
                             <div className="pt-3 pb-2 text-center">
                               <button
                                 className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={openEdit}
+                                onClick={() => openEdit(item)}
                               >
                                 <FaRegEdit />
                               </button>
-                              <button className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full">
+                              <button
+                                className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                onClick={() => handleDelete(item)}
+                              >
                                 <FaRegTrashCan />
                               </button>
                             </div>
@@ -851,6 +1079,18 @@ export default function HomePage() {
                     ))}
                   </div>
                 )}
+                <div
+                  ref={collectableRef}
+                  className="loading-indicator text-center p-4"
+                >
+                  {isFetchingCollectables && <p>Loading more items...</p>}
+                </div>
+                <div
+                  ref={searchRef}
+                  className="loading-indicator text-center p-4"
+                >
+                  {isFetchingSearchResults && <p>Loading more items...</p>}
+                </div>
               </div>
             )}
             {/* send data to modal */}
@@ -863,68 +1103,106 @@ export default function HomePage() {
             )}
             {showEdit && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-lg p-8 sm:w-3/4 lg:w-[480px]">
-                  <h2 className="text-xl font-bold mb-4">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                  <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
                     Edit your Collectible
                   </h2>
 
-                  <form onSubmit={handleSubmit}>
-                    {favoriteAttributes.map((attribute, index) => (
-                      <div key={index} className="mb-4 lg:max-w-lg">
-                        {attribute !== "image" ? (
-                          <>
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                              {attribute.charAt(0).toUpperCase() +
-                                attribute.slice(1)}
-                            </label>
-                            <input
-                              type="text"
-                              name={attribute}
-                              placeholder={`${attribute}`}
-                              value={formData[attribute] || ""}
-                              onChange={handleChange}
-                              className="border rounded w-full py-2 px-3 text-gray-700"
-                            />
-                          </>
-                        ) : (
-                          <>
-                            <label
-                              htmlFor="cover-photo"
-                              className="block text-sm font-bold leading-6 text-gray-900 dark:text-gray-300"
-                            >
-                              Upload Photo
-                            </label>
-                            <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                              <div className="text-center">
-                                <PhotoIcon
-                                  aria-hidden="true"
-                                  className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                  <form onSubmit={handleEditSubmit}>
+                    {favoriteAttributes
+                      .concat(customAttributes)
+                      .concat("owned", "image")
+                      .filter((attr) => attr !== null)
+                      .map((attribute, index) => (
+                        <div key={index} className="mb-4 lg:max-w-lg">
+                          {attribute !== "image" ? (
+                            attribute === "owned" ? (
+                              <div className="flex items-center mb-3">
+                                <input
+                                  type="checkbox"
+                                  id="publishCollection"
+                                  onChange={(e) =>
+                                    handleOwnedChange(e.target.checked)
+                                  }
+                                  className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
                                 />
-                                <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                  <label
-                                    htmlFor="file-upload"
-                                    className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                                  >
-                                    <span>Upload a photo</span>
-                                    <input
-                                      id="file-upload"
-                                      name="file-upload"
-                                      type="file"
-                                      className="sr-only"
-                                      onChange={handleFileChange}
-                                    />
-                                  </label>
-                                  <p className="pl-1">or drag and drop</p>
-                                </div>
-                                <p className="text-xs leading-5 text-gray-600">
-                                  PNG, JPG
-                                </p>
+                                <label
+                                  htmlFor="publishCollection"
+                                  className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                >
+                                  Is Owned
+                                </label>
                               </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
+                            ) : (
+                              <>
+                                <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                  {attribute.charAt(0).toUpperCase() +
+                                    attribute.slice(1)}
+                                </label>
+                                <input
+                                  type="text"
+                                  name={attribute}
+                                  placeholder={`${attribute}`}
+                                  value={formData[attribute] || ""}
+                                  onChange={handleChange}
+                                  className="border rounded w-full py-2 px-3 text-gray-700"
+                                />
+                              </>
+                            )
+                          ) : (
+                            <>
+                              <label
+                                htmlFor="cover-photo"
+                                className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                              >
+                                Upload Photo
+                              </label>
+                              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                <div className="text-center">
+                                  <PhotoIcon
+                                    aria-hidden="true"
+                                    className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                  />
+                                  <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                    <label
+                                      htmlFor="file-upload"
+                                      className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                    >
+                                      <span>Upload a photo</span>
+                                      <input
+                                        id="file-upload"
+                                        name="file-upload"
+                                        type="file"
+                                        className="sr-only"
+                                        onChange={handleFileChange}
+                                      />
+                                    </label>
+                                    <p>or drag and drop</p>
+                                  </div>
+                                  <p className="text-xs leading-5 text-gray-600">
+                                    PNG, JPG
+                                  </p>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    <div className="flex items-center mb-3">
+                      <input
+                        type="checkbox"
+                        id="publishCollection"
+                        checked={isPublished}
+                        onChange={handlePublishChange}
+                        className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                      />
+                      <label
+                        htmlFor="publishCollection"
+                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                      >
+                        Publish Collectable
+                      </label>
+                    </div>
 
                     <div className="flex justify-end space-x-4 mt-8">
                       <button
@@ -947,54 +1225,6 @@ export default function HomePage() {
             )}
           </div>
         </div>
-
-        {/* Pagination */}
-        <nav className="flex items-center justify-between px-4 sm:px-0 mt-28">
-          {/* Left Arrow */}
-          <div className="flex-1 flex justify-start ml-20">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="inline-flex items-center border-t-2 border-transparent px-6 pt-4 text-md text-gray-500 hover:border-gray-300"
-            >
-              <ArrowLongLeftIcon
-                aria-hidden="true"
-                className="h-8 w-8 text-gray-400"
-              />
-            </button>
-          </div>
-
-          {/* Page Numbers */}
-          <div className="flex items-center justify-center space-x-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`inline-flex items-center border-t-4 px-4 pt-4 text-lg font-bold ${
-                  currentPage === i + 1
-                    ? "border-yellow-600 text-yellow-600"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-
-          {/* Right Arrow */}
-          <div className="flex-1 flex justify-end mr-20">
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="inline-flex items-center border-t-2 border-transparent px-6 pt-4 text-md text-gray-500 hover:border-gray-300"
-            >
-              <ArrowLongRightIcon
-                aria-hidden="true"
-                className="h-8 w-8 text-gray-400"
-              />
-            </button>
-          </div>
-        </nav>
         <Footer />
       </div>
     </>

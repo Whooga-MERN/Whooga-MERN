@@ -1,21 +1,18 @@
-import React, { useEffect, useState } from "react";
-
-import Header from "../Components/Header";
+import { useEffect, useState } from "react";
 import Footer from "../Components/Footer";
+import Header from "../Components/Header";
+import { useNavigate, useParams } from "react-router-dom";
 import fetchJWT from "../fetchJWT";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
-import Auth, { AuthUser } from "@aws-amplify/auth";
-import { Form, useNavigate } from "react-router-dom";
 import { buildPath } from "../utils/utils";
 import { set } from "lodash";
 
-function UploadCollection() {
-  const [featureTags, setFeatureTags] = useState<string[]>([]);
+
+const BulkUploadStep2 = () => {
+  const { collectionId } = useParams<{ collectionId: string }>();
   const [collectionName, setCollectionName] = useState<string>("");
   const [isPublished, setIsPublished] = useState<boolean>(false);
-  const [collectionDescription, setCollectionDescription] =
-    useState<string>("");
-  const [collectionImageURL, setCollectionImageURL] = useState<string>("");
+  const [collectionUniverseId, setCollectionUniverseId] = useState<string>("");
   const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
   const [haveImages, setHaveImages] = useState<boolean>(false);
   const [jsonData, setJsonData] = useState<any[]>([]);
@@ -49,26 +46,12 @@ function UploadCollection() {
     };
     fetchUserDetails();
 
-    const storedFeatureTags = localStorage.getItem("featureTags");
     const storedCollectionName = localStorage.getItem("collectionName") ?? "";
-    const storedCollectionDescription =
-      localStorage.getItem("collectionDescription") ?? "";
-    const storedCollectionImage =
-      localStorage.getItem("collectionImageURL") ?? "";
     const storedIsPublished = localStorage.getItem("isPublished") ?? "";
+    const storedCollectionUniverseId = localStorage.getItem("collectionUniverseId") ?? "";
 
     setCollectionName(storedCollectionName);
-    setCollectionDescription(storedCollectionDescription);
-    setIsPublished(storedIsPublished === "true");
-
-    console.log("Collection Image in local: ", storedCollectionImage);
-    console.log("Is Published in local: ", storedIsPublished);
-    setCollectionImageURL(storedCollectionImage);
-    if (storedFeatureTags) {
-      const featureTagsArray = storedFeatureTags.split(",");
-      console.log("Feature Tags in local:", featureTagsArray);
-      setFeatureTags(featureTagsArray);
-    }
+    setCollectionUniverseId(storedCollectionUniverseId);
   }, []);
 
   const onFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,21 +117,23 @@ function UploadCollection() {
     setIsUploading(true);
     event?.preventDefault();
     const formData = new FormData();
-    formData.append("universeCollectionName", collectionName);
-    formData.append("universeCollectionDescription", collectionDescription);
-    formData.append("urlUniverseThumbnailImage", collectionImageURL);
-    formData.append("defaultAttributes", JSON.stringify(featureTags));
+    if (collectionId) {
+      formData.append("collectionId", collectionId);
+    } else {
+      console.error("Collection ID is undefined");
+    }
+    formData.append ("collectionUniverseId", collectionUniverseId);
     formData.append("csvJsonData", JSON.stringify(jsonData));
-    formData.append("email", user.loginId);
     formData.append("isPublished", isPublished.toString());
     images.forEach((image, index) => {
       formData.append("collectableImages", image);
     });
 
-    console.log("Request image:", collectionImageURL);
+    logFormData(formData);
+
     try {
       // const response = await fetch('http://localhost:3000/upload-csv', {
-      const response = await fetch(buildPath(`upload-csv`), {
+      const response = await fetch(buildPath(`upload-csv/existing-universe`), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${JWT}`,
@@ -168,13 +153,25 @@ function UploadCollection() {
     }
   };
 
+  const handlePublishChange = () => {
+    setIsPublished(!isPublished);
+  };
+  
+    const logFormData = (formData: FormData) => {
+        const formDataEntries: Record<string, any> = {};
+        formData.forEach((value, key) => {
+        formDataEntries[key] = value;
+        });
+        console.log("FormData Contents:", formDataEntries);
+    };
+
   return (
     <>
       <Header />
       <div className="w-full">
         <div className="flex items-center justify-between">
           <h2 className="px-16 py-8 font-manrope font-bold text-4xl text-center">
-            Create New Collection
+            Bulk Upload to {collectionName}
           </h2>
         </div>
       </div>
@@ -262,6 +259,25 @@ function UploadCollection() {
           )}
         </div>
 
+        {/* Publish Collection */}
+        <div className="flex items-center mt-6">
+            
+            <label
+            htmlFor="publishCollection"
+            className="mr-1 font-semibold text-lg"
+            >
+            Publish Items
+            </label>
+            <p className="text-gray-500 text-md mr-2">(Make these items public)</p>
+            <input
+            type="checkbox"
+            id="publishCollection"
+            checked={isPublished}
+            onChange={handlePublishChange}
+            className="h-5 w-5 text-primary border-gray-300 rounded"
+            />
+        </div>
+
         {/* Upload Button */}
         <button
           className="btn btn-primary mt-10 text-lg hover:btn-primary"
@@ -278,6 +294,6 @@ function UploadCollection() {
       <Footer />
     </>
   );
-}
+};
 
-export default UploadCollection;
+export default BulkUploadStep2;

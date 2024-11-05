@@ -21,14 +21,13 @@ import Profile from "./Pages/profile.tsx";
 import MessageSignup from "./Pages/message_signup.tsx";
 import Wishlist from "./Pages/wishlist.tsx";
 import WishlistItems from "./Pages/wishlist_items.tsx";
+import BulkUpload from "./Pages/bulk_upload.tsx";
+import BulkUploadStep2 from "./Pages/bulk_upload_step_2.tsx";
 import PrivacyPolicy from "./Pages/privacypolicy.tsx";
 import ContactUs from "./Pages/contactus.tsx";
-import OptIn from "./Pages/OptIn.tsx";
-
-
 
 import "./custom-amplify-styles.css";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 Amplify.configure(awsExports);
 const queryClient = new QueryClient();
@@ -153,14 +152,6 @@ createRoot(document.getElementById("root")!).render(
             element={
               <ProtectedRoute>
                 <WishlistItems />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/OptIn"
-            element={
-              <ProtectedRoute>
-                <OptIn />
               </ProtectedRoute>
             }
           />

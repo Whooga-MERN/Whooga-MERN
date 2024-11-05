@@ -9,7 +9,6 @@ const router = express.Router();
 // router.use(authenticateJWTToken);
 
 // Collection CRUD APIs
-
 // Create
 router.post('', async (req, res) => {
   const { userId, collectionUniverseId, customAttributes, collectionPic } = req.body;

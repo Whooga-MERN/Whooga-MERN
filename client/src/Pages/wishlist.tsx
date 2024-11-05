@@ -3,7 +3,7 @@ import { IconContext } from "react-icons";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import debounce from "lodash.debounce";
 import { Collection } from "../Types/Collection";
 import { useEffect, useState } from "react";
@@ -128,15 +128,15 @@ export default function Collections() {
         );
         localStorage.setItem("collectionIds", JSON.stringify(collectionIds));
 
-        //console.log("Collections as collection:", collections);
+        console.log("Collections as collection:", collections);
       };
 
       fetchCollections();
     }
   }, [isUserIdFetched, userId, JWT]);
 
-  function handleClick(collectionId: number) {
-    const collection = collections.find((col) => col.id === collectionId);
+  function handleClick(collectionUId: number) {
+    const collection = collections.find((col) => col.id === collectionUId);
     console.log("sending UCID: ", collection.collectionUniverseId);
     localStorage.setItem(
       "collectionUniverseId",
@@ -144,7 +144,7 @@ export default function Collections() {
     );
     localStorage.setItem("collectionName", collection.name);
     console.log("collection upon being clicked: ", collection);
-    navigate(`/wishlist/${collectionId}`);
+    navigate(`/wishlist/${collectionUId}`);
     console.log("clicked collection");
   }
 
@@ -171,13 +171,12 @@ export default function Collections() {
     isFetching: isFetchingSearch,
     isError: searchIsError,
     error: searchError,
-  } = useQuery(
-    ["search", debouncedSearchTerm],
-    () => fetchCollectionSearchResults(debouncedSearchTerm, userId),
-    {
-      enabled: debouncedSearchTerm.length > 0,
-    }
-  );
+  } = useQuery({
+    queryKey: ["search", debouncedSearchTerm],
+    queryFn: async () =>
+      await fetchCollectionSearchResults(debouncedSearchTerm, userId),
+    enabled: debouncedSearchTerm.length > 0,
+  });
 
   return (
     <>
@@ -237,7 +236,7 @@ export default function Collections() {
                   <div key={collections.collection_id}>
                     <div
                       className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                      onClick={() => handleClick(collections.collection_id)}
+                      onClick={() => handleClick(collections.collectionUniverseId)}
                     >
                       <div
                         style={{
@@ -283,7 +282,7 @@ export default function Collections() {
               <div key={collection.id}>
                 <div
                   className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                  onClick={() => handleClick(collection.id)}
+                  onClick={() => handleClick(collection.collectionUniverseId)}
                 >
                   <div
                     style={{

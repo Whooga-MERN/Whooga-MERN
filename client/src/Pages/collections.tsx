@@ -3,7 +3,8 @@ import { IconContext } from "react-icons";
 import Header from "../Components/Header";
 import Footer from "../Components/Footer";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "react-query";
+// import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import debounce from "lodash.debounce";
 import { Collection } from "../Types/Collection";
 import { useEffect, useState } from "react";
@@ -156,6 +157,7 @@ export default function Collections() {
         "collectionUniverseId",
         collection.collectionUniverseId
       );
+      console.log("sending stored UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionName", collection.name);
       navigate(`/items/${collectionId}`);
       console.log("clicked collection");
@@ -187,13 +189,12 @@ export default function Collections() {
     isFetching: isFetchingSearch,
     isError: searchIsError,
     error: searchError,
-  } = useQuery(
-    ["search", debouncedSearchTerm],
-    () => fetchCollectionSearchResults(debouncedSearchTerm, userId),
-    {
-      enabled: debouncedSearchTerm.length > 0,
-    }
-  );
+  } = useQuery({
+    queryKey: ["search", debouncedSearchTerm],
+    queryFn: async () =>
+      await fetchCollectionSearchResults(debouncedSearchTerm, userId),
+    enabled: debouncedSearchTerm.length > 0,
+  });
 
   return (
     <>

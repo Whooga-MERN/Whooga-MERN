@@ -21,6 +21,7 @@ if (!fs.existsSync(uploadsDir)) {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+        console.log(file);
         cb(null, uploadsDir);
     },
     filename: function (req, file, cb) {
@@ -35,8 +36,8 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 // Collectable CRUD APIs
 
 router.post('/newCollectable', upload.single('collectableImage'), async(req, res) => {
-  const {collection_id, attributes_values_json} = req.body;
-
+  const {collection_id, attributes_values_json, isPublished} = req.body;
+  
   let image = null;
   if(req.file)
     image = req.file;
@@ -53,6 +54,13 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
     return res.status(404).send({ error: "Missing attributes_values_json"});
   }
 
+  if(!isPublished) {
+    console.log("Missing isPublished");
+    return res.status(404).send({ error: "Missing isPublished"});
+  }
+  const isPublishedBool = isPublished === 'true';
+
+  console.log("isPublished: ", isPublished);
   console.log("attribute_values_json\n", attributes_values_json);
   const parsedAttributeValues = JSON.parse(attributes_values_json);
   console.log("parsedAttributeValue\n", parsedAttributeValues);
@@ -70,6 +78,8 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         return res.status(500).send({ error: 'Error creating image for S3 Bucket'});
       }
     }
+
+    console.log("imageUrl: ", imageUrl);
 
     await db.transaction(async (trx) => {
       console.log("Fetching Universe Collection Id\n");
@@ -102,7 +112,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .execute();
 
       console.log("Finished fetching custom attributes and default attributes\n");
-      let customAttributes = [];
+      let customAttributes = []; // currently not used
       let defaultAttributes = [];
       if(attributesQuery.length > 0) {
         customAttributes = attributesQuery[0].custom_attributes;
@@ -120,6 +130,7 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
       .insert(universeCollectables)
       .values({
         collection_universe_id: collection_universe_id,
+        is_published: isPublishedBool
       })
       .returning({
         universe_collectable_id: universeCollectables.universe_collectable_id
@@ -156,8 +167,8 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
           if(key != "owned") {
             if(defaultAttributes.includes(key)) {
               defaultAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: null,
-                collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -167,8 +178,8 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             }
             else {
               customAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: collection_id,
-                collectable_id: newCollectable[0].collectable_id,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -188,8 +199,8 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
               insertValue = value;
             if(defaultAttributes.includes(key)) {
               defaultAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: collection_id,
-                collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -199,8 +210,8 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
             }
             else {
               customAttributeInsert.push({
+                collection_universe_id: collection_universe_id,
                 collection_id: collection_id,
-                collectable_id: null,
                 universe_collectable_id: universe_collectable_id,
                 name: key,
                 slug: key.toLowerCase().replace(/\s+/g, '_'),
@@ -226,12 +237,12 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         .execute();
       }
 
-
       //Insert the image row
       if(imageUrl) {
         await trx
         .insert(collectableAttributes)
         .values({
+          collection_universe_id: collection_universe_id,
           collection_id: null,
           collectable_id: null,
           universe_collectable_id: universe_collectable_id,
@@ -246,12 +257,13 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
         await trx
         .insert(collectableAttributes)
         .values({
+          collection_universe_id: collection_universe_id,
           collection_id: null,
           collectable_id: null,
           universe_collectable_id: universe_collectable_id,
           name: "image",
           slug: "image",
-          value: "empty",
+          value: "",
           is_custom: false
         })
         .execute();
@@ -262,8 +274,15 @@ router.post('/newCollectable', upload.single('collectableImage'), async(req, res
     console.log(error);
     
     try {
-      if(imageUrl)
-        await deleteS3File(imageUrl);
+      if(imageUrl) {
+        const filename = imageUrl.split('/').pop();
+        console.log(filename);
+        const params = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: filename
+        };
+        return s3Client.send(new DeleteObjectCommand(params));
+      }
     } catch (error) {
       return res.status(500).send({ error: 'Failed to create new collectable... Failed to delete new S3 Image'});
     }
@@ -397,9 +416,64 @@ router.get('/collection/:collection_id', async (req, res) => {
   }
 });
 
+router.get('/collection-paginated/:collection_id', async (req, res) => {
+  const { collection_id } = req.params;
+  const { page = 1, itemsPerPage = 8 } = req.query;
+
+  try {
+    // Calculate offset for pagination
+    const offset = (page - 1) * itemsPerPage;
+
+    // Fetch collectables for the specified collection with pagination
+    const collectedItems = await db
+      .select()
+      .from(collectables)
+      .where(eq(collectables.collection_id, collection_id))
+      .limit(parseInt(itemsPerPage))
+      .offset(offset);
+
+    // Check if any collectables were found
+    if (collectedItems.length === 0) {
+      return res.status(404).send({ error: 'No collectables found in this collection' });
+    }
+
+    // Extract universe_collectable_ids from the paginated collectables
+    const collectableIds = collectedItems.map(c => c.universe_collectable_id);
+
+    // Fetch attributes for the paginated collectables
+    const attributes = await db
+      .select()
+      .from(collectableAttributes)
+      .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
+
+    // Combine collectables with their corresponding attributes
+    const collectablesWithAttributes = collectedItems.map(collectable => {
+      const relatedAttributes = attributes.filter(
+        attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
+      );
+
+      return {
+        ...collectable,
+        attributes: relatedAttributes.map(attr => ({
+          collectable_attribute_id: attr.collectable_attribute_id,
+          name: attr.name,
+          slug: attr.slug,
+          value: attr.value,
+          is_custom: attr.is_custom
+        }))
+      };
+    });
+
+    res.json(collectablesWithAttributes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error fetching collectables and attributes' });
+  }
+});
+
+
 router.put('/edit-collectable', upload.single('collectableImage'), async (req, res) => {
   const { collectionId, universeCollectableId, attributeValuesJson, owned} = req.body;
-
   let image = null;
   if(req.file)
     image = req.file;
@@ -427,7 +501,7 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
       .execute();
       console.log("Finished querying for collectableId");
       
-
+      console.log("collectableIdQuery.length: ", collectableIdQuery.length);
       if(collectableIdQuery.length < 1) {
         console.log("Before update, not owned");
         if(owned === 'T') { 
@@ -444,13 +518,13 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
 
         console.log("Updating Attributes");
         const updateAttributes = Object.entries(parsedAttributeValuesJson).map(async ([key, value]) => {
-          console.log("key: ", key, " value: ", value);
+          console.log("key: ", key.toLowerCase().replace(/\s+/g, '_'), " value: ", value);
           const query = await trx
             .update(collectableAttributes)
             .set({ value: value })
             .where(
               and(
-                eq(collectableAttributes.slug, key),
+                eq(collectableAttributes.slug, key.toLowerCase().replace(/\s+/g, '_')),
                 eq(collectableAttributes.universe_collectable_id, universeCollectableId),
                 or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
               )
@@ -506,15 +580,17 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
             .set({ value: value })
             .where(
               and(
-                eq(collectableAttributes.slug, key),
+                eq(collectableAttributes.slug, key.toLowerCase().replace(/\s+/g, '_')),
                 eq(collectableAttributes.universe_collectable_id, universeCollectableId),
                 or(eq(collectableAttributes.collection_id, collectionId), isNull(collectableAttributes.collection_id))
               )
             )
             .execute();
         });
-        console.log("Finished Updating Attributes");
 
+        await Promise.all(updateAttributes);
+        console.log("Finished Updating Attributes");
+        
         let imageUrl = null;
         if(image)
         {

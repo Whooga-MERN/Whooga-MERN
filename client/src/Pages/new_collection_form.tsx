@@ -20,6 +20,7 @@ function NewCollectionForm() {
   const [featureTags, setFeatureTags] = useState<string[]>(["Name"]);
   const [isFeaturesEmpty, setIsFeaturesEmpty] = useState(false);
   const [isNameEmpty, setIsNameEmpty] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
 
   const [JWT, setJWT] = useState<string>("");
   const navigate = useNavigate();
@@ -92,6 +93,7 @@ function NewCollectionForm() {
       "collectionDescription",
       collectionObject?.description ?? ""
     );
+    localStorage.setItem("isPublished", isPublished ? "true" : "false");
     localStorage.setItem("featureTags", featureTags.join(","));
 
     navigate("/upload_collection_csv_page1");
@@ -160,6 +162,10 @@ function NewCollectionForm() {
       }
       return prevCollection;
     });
+  };
+
+  const handlePublishChange = () => {
+    setIsPublished(!isPublished);
   };
 
   return (
@@ -259,6 +265,25 @@ function NewCollectionForm() {
             className="w-full h-32 mt-2 border-2 border-gray-300 rounded-md px-4 py-2"
           />
         </div>
+
+        {/* Publish Collection */}
+      <div className="flex items-center mt-6">
+        
+        <label
+          htmlFor="publishCollection"
+          className="mr-1 font-semibold text-lg"
+        >
+          Publish Collection
+        </label>
+        <p className="text-gray-500 text-md mr-2">(Make this collection public)</p>
+        <input
+          type="checkbox"
+          id="publishCollection"
+          checked={isPublished}
+          onChange={handlePublishChange}
+          className="h-5 w-5 text-primary border-gray-300 rounded"
+        />
+      </div>
 
         {/* Features */}
         <div className="flex flex-col justify-center mt-8">
