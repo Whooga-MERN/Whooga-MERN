@@ -166,4 +166,24 @@ router.put('/publish-custom-attributes', async (req, res) => {
     
 });
 
+router.get('/display-published-universes', async (req, res) => {
+    
+    try {
+        console.log("Fetching published universes");
+        const publishedUniverses = await db
+            .select()
+            .from(collectionUniverses)
+            .where(eq(collectionUniverses.is_published, true))
+            .execute();
+        console.log("Finished Fetching published universes");
+        
+        res.status(200).json(publishedUniverses);   
+    } catch (error) {
+        console.log("Failed to Fetch collection Universes");
+        console.log(error);
+        res.status(400).send("Failed to fetch collection universes");
+    }
+    
+})
+
 module.exports = router;

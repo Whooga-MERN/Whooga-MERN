@@ -9,10 +9,12 @@ router.post('/add-wishlist', async (req, res) => {
     const {collection_universe_id, universe_collectable_id} = req.body;
 
     if(!collection_universe_id, !universe_collectable_id){
-        console.log("collection_id: ", collection_universe_id );
-        console.log("universe_collectable_id: ", universe_collectable_id);
+        console.log("No collection_universe_id or universe_collectable_id given");
         return res.status(404).send({ error: 'Not Given either collection_id or universe_collectable_id'});
     }
+    console.log("collection_universe_id: ", collection_universe_id );
+    console.log("universe_collectable_id: ", universe_collectable_id);
+
 
     try {
         console.log("Starting query for sourceUniverse");

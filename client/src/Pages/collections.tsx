@@ -157,6 +157,7 @@ export default function Collections() {
         "collectionUniverseId",
         collection.collectionUniverseId
       );
+      console.log("sending stored UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionName", collection.name);
       navigate(`/items/${collectionId}`);
       console.log("clicked collection");
@@ -226,13 +227,13 @@ export default function Collections() {
               </svg>
             </label>
             {/* New Button */}
-            <div className="pl-20 relative sm: w-[400px] border-none ml-auto">
+            <div className="pl-10 relative sm: w-[400px] border-none ml-auto">
               <IconContext.Provider value={{ color: "#554141", size: "35px" }}>
                 <Link
                   to="/new_collection_start"
                   className="btn btn-primary text-2xl w-250 "
                 >
-                  New Collection
+                  Add New Collection
                   <IoMdAddCircleOutline />
                 </Link>
               </IconContext.Provider>

@@ -279,7 +279,7 @@ export const addToWishlist = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        collection_id: collectionId,
+        collection_universe_id: collectionId,
         universe_collectable_id: universeCollectableId,
       }),
     });
