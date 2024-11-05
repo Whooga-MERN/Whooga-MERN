@@ -23,6 +23,8 @@ import Wishlist from "./Pages/wishlist.tsx";
 import WishlistItems from "./Pages/wishlist_items.tsx";
 import PrivacyPolicy from "./Pages/privacypolicy.tsx";
 import ContactUs from "./Pages/contactus.tsx";
+import OptIn from "./Pages/OptIn.tsx";
+
 
 
 import "./custom-amplify-styles.css";
@@ -151,6 +153,14 @@ createRoot(document.getElementById("root")!).render(
             element={
               <ProtectedRoute>
                 <WishlistItems />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/OptIn"
+            element={
+              <ProtectedRoute>
+                <OptIn />
               </ProtectedRoute>
             }
           />
