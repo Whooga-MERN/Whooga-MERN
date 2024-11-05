@@ -1,4 +1,4 @@
-const { pgTable, serial, varchar, date, jsonb, boolean, text, integer} = require("drizzle-orm/pg-core");
+const { pgTable, serial, varchar, date, jsonb, boolean, text, integer, vector} = require("drizzle-orm/pg-core");
 
 const users = pgTable('users', {
   user_id: serial('user_id').primaryKey(),
@@ -63,14 +63,19 @@ const scraped = pgTable('scraped', {
   title: varchar('title', { length: 255 }),
   price: varchar('price', { length: 255 }),
   link: text('link'),
-  image_url: text('image_url')
+  image_url: text('image_url'),
+  text_vector: vector('text_vector', { dimensions: 768 }), 
+  image_vector: vector('image_vector', { dimensions: 512 }) 
 });
 
 const wishlist = pgTable('wishlist', {
   id: serial('id').primaryKey().notNull(),
+  closest_match: integer('closest_match').references(() => scraped.id ),
   source_universe: serial('source_universe').notNull(),
   collection_universe_id: integer('collection_universe_id').notNull().references(() => collectionUniverses.collection_universe_id, { onDelete: 'CASCADE' }),
-  universe_collectable_id: integer('universe_collectable_id').notNull().references(() => universeCollectables.universe_collectable_id, { onDelete: 'CASCADE' })
+  universe_collectable_id: integer('universe_collectable_id').notNull().references(() => universeCollectables.universe_collectable_id, { onDelete: 'CASCADE' }),
+  text_vector: vector('text_vector', { dimensions: 768 }), 
+  image_vector: vector('image_vector', { dimensions: 512 }) 
 });
 
 module.exports = {
