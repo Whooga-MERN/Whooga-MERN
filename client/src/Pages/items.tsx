@@ -278,7 +278,7 @@ export default function HomePage() {
     }
 
     closeModal();
-    navigate("/", { replace: true });
+    navigate(`/items/${collectionId}`, { replace: true });
   };
 
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
