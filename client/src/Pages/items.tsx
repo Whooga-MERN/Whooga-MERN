@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import _ from "lodash";
 
 import {
@@ -85,35 +85,40 @@ export default function HomePage() {
     console.log("Delete button clicked");
     console.log("Item to delete:", item.universeCollectableId);
 
-    const request = {
-      universeCollectableId: item.universeCollectableId,
-    };
-    console.log("Request: ", request);
+    if (confirm("Are you sure you want to delete this item?")) {
+      const request = {
+        universeCollectableId: item.universeCollectableId,
+      };
+      console.log("Request: ", request);
 
-    try {
-      const response = await fetch(
-        buildPath(`universe-collectable/delete-universe-collectable`),
-        {
-          method: "DELETE",
-          body: JSON.stringify(request),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${JWT}`,
-          },
+      try {
+        const response = await fetch(
+          buildPath(`universe-collectable/delete-universe-collectable`),
+          {
+            method: "DELETE",
+            body: JSON.stringify(request),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          console.log("Item deleted successfully");
+          navigate(0);
+        } else {
+          console.error("Error deleting item:", response);
         }
-      );
-
-      if (response.ok) {
-        console.log("Item deleted successfully");
-      } else {
-        console.error("Error deleting item:", response);
+      } catch (error) {
+        console.error("Error deleting item:", error);
       }
-    } catch (error) {
-      console.error("Error deleting item:", error);
+    } else {
+      return;
     }
   };
 
-  const [isOwned, setIsOwned] = useState(true);
+  const [isCollectionOwned, setIsCollectionOwned] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
   const [selectedSort, setSelectedSort] = useState<string>("");
@@ -271,7 +276,7 @@ export default function HomePage() {
     }
 
     closeModal();
-    window.location.reload();
+    navigate(0);
   };
 
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -329,7 +334,7 @@ export default function HomePage() {
     }
 
     closeEdit();
-    //window.location.reload();
+    navigate(0);
   };
 
   const logFormData = (formData: FormData) => {
@@ -404,6 +409,7 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [resetDropdown, setResetDropdown] = useState(false);
   const [noSearchResults, setNoSearchResults] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
@@ -411,6 +417,11 @@ export default function HomePage() {
     setUniverseCollectionId(collectionUID);
     const collectionName = localStorage.getItem("collectionName") ?? "";
     setUniverseCollectionName(collectionName);
+    const collectionIds = localStorage.getItem("collectionIds") ?? "";
+
+    if (collectionIds.includes(collectionUID)) {
+      setIsCollectionOwned(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -483,9 +494,9 @@ export default function HomePage() {
     queryFn: ({ pageParam = 1 }) => {
       if (enabled) {
         return fetchOwnedCollectables(collectionId!, pageParam, ITEMS_PER_PAGE);
-      } else {
+      } else if (universeCollectionId) {
         return fetchUniverseCollectables(
-          universeCollectionId!,
+          universeCollectionId,
           pageParam,
           ITEMS_PER_PAGE
         );
@@ -536,6 +547,40 @@ export default function HomePage() {
     setSpecificTag(null);
   };
 
+  const deleteCollection = async () => {
+    console.log("Delete collection clicked");
+    console.log("Collection ID: ", universeCollectionId);
+    if (confirm("Are you sure you want to delete this collection?")) {
+      const request = {
+        id: universeCollectionId,
+      };
+      console.log("Request: ", request);
+
+      try {
+        const response = await fetch(buildPath(`collection-universe/delete-universe`), {
+          method: "DELETE",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
+
+        if (response.ok) {
+          console.log("Collection deleted successfully");
+          navigate("/collections");
+        } else {
+          console.error("Error deleting collection:", response);
+        }
+      } catch (error) {
+        console.error("Error deleting collection:", error);
+      }
+    }
+    else{
+      return;
+    } 
+  };
+
   useEffect(() => {
     if (specificTag) {
       const initialFormData = specificTag.attributes.reduce(
@@ -571,11 +616,11 @@ export default function HomePage() {
           collectionId,
           pageParam
         );
-      } else {
+      } else if (universeCollectionId) {
         return fetchUniverseSearchResults(
           searchTags,
           userId,
-          universeCollectionId!,
+          universeCollectionId,
           pageParam
         );
       }
@@ -647,7 +692,7 @@ export default function HomePage() {
 
               {/* icon button for view hidden lg:block md:block*/}
               <div className="hidden lg:block md:block pt-3 mt-3">
-                {isOwned ? (
+                {isCollectionOwned ? (
                   <div>
                     <button className="pr-5" onClick={() => setView("list")}>
                       <FaListUl />
@@ -669,6 +714,12 @@ export default function HomePage() {
                       Bulk Upload
                       <IoIosAdd />
                     </Link>
+                    <button
+                      className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
+                      onClick={deleteCollection}
+                    >
+                      Delete Collection
+                    </button>
                   </div>
                 ) : (
                   <button
