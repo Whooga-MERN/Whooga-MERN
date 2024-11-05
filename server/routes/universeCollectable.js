@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
 const {universeCollectables, collectableAttributes} = require('../config/schema');
 const express = require('express');
-const { eq, and, inArray } = require('drizzle-orm');
+const { eq, and, inArray, or, ilike } = require('drizzle-orm');
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router.get('', async (req, res) => {
 });
 
 // READ (Single item)
-router.get('/:id', async (req, res) => {
+router.get('/single-collectable/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -108,55 +108,61 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
 
 router.get('/universe-collection-paginated/:universe_collection_id', async (req, res) => {
   const { universe_collection_id } = req.params;
-  const { page = 1, itemsPerPage = 8 } = req.query;
+  const page = parseInt(req.query.page);
+  const itemsPerPage = parseInt(req.query.itemsPerPage);
 
   try {
-    // Fetch the collectables for the specified universe collection with pagination
-    const offset = (page - 1) * itemsPerPage;
-    const collectables = await db
-      .select()
-      .from(universeCollectables)
-      .where(eq(universeCollectables.collection_universe_id, universe_collection_id))
-      .limit(parseInt(itemsPerPage))
-      .offset(offset);
+      // Calculate offset for pagination
+      const offset = (page - 1) * itemsPerPage;
 
-    if (collectables.length === 0) {
-      return res.status(404).send({ error: 'No collectables found in this collection' });
-    }
+      // Fetch the collectables for the specified universe collection with pagination
+      const collectables = await db
+          .select()
+          .from(universeCollectables)
+          .where(eq(universeCollectables.collection_universe_id, universe_collection_id))
+          .limit(itemsPerPage)
+          .offset(offset);
 
-    // Get the list of collectable IDs for attribute fetching
-    const collectableIds = collectables.map(c => c.universe_collectable_id);
+      if (collectables.length === 0) {
+          return res.status(404).send({ error: 'No collectables found in this collection' });
+      }
 
-    // Fetch attributes for the paginated collectables
-    const attributes = await db
-      .select()
-      .from(collectableAttributes)
-      .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
+      // Get the list of collectable IDs for attribute fetching
+      const collectableIds = collectables.map(c => c.universe_collectable_id);
 
-    // Map the collectables with their respective attributes
-    const collectablesWithAttributes = collectables.map(collectable => {
-      const relatedAttributes = attributes.filter(
-        attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
-      );
+      // Fetch attributes for the paginated collectables
+      const attributes = await db
+          .select()
+          .from(collectableAttributes)
+          .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
 
-      return {
-        ...collectable,
-        attributes: relatedAttributes.map(attr => ({
-          collectable_attribute_id: attr.collectable_attribute_id,
-          name: attr.name,
-          slug: attr.slug,
-          value: attr.value,
-          is_custom: attr.is_custom
-        }))
-      };
-    });
+      // Map the collectables with their respective attributes
+      const collectablesWithAttributes = collectables.map(collectable => {
+          const relatedAttributes = attributes.filter(
+              attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
+          );
 
-    res.json(collectablesWithAttributes);
+          return {
+              ...collectable,
+              attributes: relatedAttributes.map(attr => ({
+                  collectable_attribute_id: attr.collectable_attribute_id,
+                  name: attr.name,
+                  slug: attr.slug,
+                  value: attr.value,
+                  is_custom: attr.is_custom
+              }))
+          };
+      });
+
+      // Return the page number and collectables
+      res.json({ page, collectables: collectablesWithAttributes });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: 'Error fetching collectables and attributes' });
+      console.error(error);
+      res.status(500).send({ error: 'Error fetching collectables and attributes' });
   }
 });
+
+
 
 
 // UPDATE
@@ -206,6 +212,82 @@ router.delete('/delete-universe-collectable', async (req, res) => {
     return res.status(400).send("Error deleting collectable");
   }
 });
+
+router.get('/jump', async (req, res) => {
+  const { collectionUniverseId, attributeToSearch, searchTerm, itemsPerPage = 8 } = req.query;
+
+  if (!searchTerm || !attributeToSearch || !collectionUniverseId) {
+      return res.status(400).send({ error: 'Missing a request parameter' });
+  }
+
+  const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
+  const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
+
+  if (attributesToSearch.length !== searchTerms.length) {
+      return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
+  }
+
+  try {
+      // Step 1: Find the first matching collectable
+      const matchingCollectables = await db
+          .select({
+              universe_collectable_id: universeCollectables.universe_collectable_id
+          })
+          .from(universeCollectables)
+          .innerJoin(
+              collectableAttributes,
+              eq(universeCollectables.universe_collectable_id, collectableAttributes.universe_collectable_id)
+          )
+          .where(
+              and(
+                  eq(universeCollectables.collection_universe_id, collectionUniverseId),
+                  or(
+                      ...attributesToSearch.map((attribute, index) =>
+                          and(
+                              eq(collectableAttributes.slug, attribute),
+                              ilike(collectableAttributes.value, `%${searchTerms[index]}%`)
+                          )
+                      )
+                  )
+              )
+          );
+
+      if (matchingCollectables.length === 0) {
+          return res.status(404).send({ error: 'No matching collectables found' });
+      }
+
+      // Step 2: Find the first match index in the full collection
+      const firstMatchId = matchingCollectables[0].universe_collectable_id;
+
+      const allCollectables = await db
+          .select({
+              universe_collectable_id: universeCollectables.universe_collectable_id
+          })
+          .from(universeCollectables)
+          .where(eq(universeCollectables.collection_universe_id, collectionUniverseId))
+          .orderBy(universeCollectables.universe_collectable_id);
+
+      const firstMatchIndex = allCollectables.findIndex(
+          collectable => collectable.universe_collectable_id === firstMatchId
+      );
+
+      if (firstMatchIndex === -1) {
+          return res.status(404).send({ error: 'First match not found in overall collection' });
+      }
+
+      // Step 3: Calculate the page number where the first matching collectable is located
+      const pageNumber = Math.floor(firstMatchIndex / itemsPerPage) + 1;
+
+      // Step 4: Redirect to the paginated endpoint to fetch the desired page of collectables
+      req.url = `/universe-collection-paginated/${collectionUniverseId}?page=${pageNumber}&itemsPerPage=${itemsPerPage}`;
+      req.query.page = pageNumber;
+      return router.handle(req, res); // Forward the request to the paginated endpoint
+  } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: 'Error fetching collectables and attributes' });
+  }
+});
+
 
 
 module.exports = router;
