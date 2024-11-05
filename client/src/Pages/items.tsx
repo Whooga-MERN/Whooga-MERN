@@ -125,7 +125,6 @@ export default function HomePage() {
   const [selectedSort, setSelectedSort] = useState<string>("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "grid">("grid");
-  const [reload, setReload] = useState(false);
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
@@ -278,7 +277,7 @@ export default function HomePage() {
     }
 
     closeModal();
-    navigate(`/items/${collectionId}`, { replace: true });
+    window.location.reload();
   };
 
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -336,7 +335,7 @@ export default function HomePage() {
     }
 
     closeEdit();
-    window.location.href = window.location.pathname;
+    window.location.reload();
   };
 
   const logFormData = (formData: FormData) => {
@@ -524,13 +523,6 @@ export default function HomePage() {
       });
     }
   }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
-
-  useEffect(() => {
-    fetchOwnedCollectables(collectionId, initialPage, ITEMS_PER_PAGE);
-    if (universeCollectionId) {
-      fetchUniverseCollectables(universeCollectionId, initialPage, ITEMS_PER_PAGE);
-    }
-  }, [reload]);
 
   const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
 
