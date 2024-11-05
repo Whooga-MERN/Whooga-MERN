@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const { db, pool } = require('../config/db');
 const {collectables, collectionUniverses, universeCollectables, collectableAttributes, collections} = require('../config/schema');
 const express = require('express');
-const { eq, inArray, and } = require('drizzle-orm');
+const { eq, inArray, and, ilike } = require('drizzle-orm');
 // const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
@@ -167,23 +167,36 @@ router.put('/publish-custom-attributes', async (req, res) => {
 });
 
 router.get('/display-published-universes', async (req, res) => {
-    
+    const {searchTerm} = req.query;
+
+    if(!searchTerm) {
+        console.log("No searchTerm given");
+        return res.status(404).send("No searchTerm given");
+    }
+    console.log("searchTerm: ", searchTerm);
+
     try {
         console.log("Fetching published universes");
         const publishedUniverses = await db
             .select()
             .from(collectionUniverses)
-            .where(eq(collectionUniverses.is_published, true))
+            .where(
+                and(
+                    eq(collectionUniverses.is_published, true),
+                    ilike(collectionUniverses.name, `%${searchTerm}%`)
+                )
+            )
             .execute();
+
         console.log("Finished Fetching published universes");
-        
-        res.status(200).json(publishedUniverses);   
+        console.log(publishedUniverses);
+        return res.status(200).json(publishedUniverses);   
     } catch (error) {
         console.log("Failed to Fetch collection Universes");
         console.log(error);
-        res.status(400).send("Failed to fetch collection universes");
+        return res.status(400).send("Failed to fetch collection universes");
     }
     
-})
+});
 
 module.exports = router;
