@@ -106,7 +106,8 @@ export default function HomePage() {
 
         if (response.ok) {
           console.log("Item deleted successfully");
-          navigate(0);
+          //navigate(`/items/${collectionId}`);
+          window.location.reload();
         } else {
           console.error("Error deleting item:", response);
         }
@@ -124,6 +125,7 @@ export default function HomePage() {
   const [selectedSort, setSelectedSort] = useState<string>("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "grid">("grid");
+  const [reload, setReload] = useState(false);
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
@@ -522,6 +524,13 @@ export default function HomePage() {
       });
     }
   }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
+
+  useEffect(() => {
+    fetchOwnedCollectables(collectionId, initialPage, ITEMS_PER_PAGE);
+    if (universeCollectionId) {
+      fetchUniverseCollectables(universeCollectionId, initialPage, ITEMS_PER_PAGE);
+    }
+  }, [reload]);
 
   const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
 

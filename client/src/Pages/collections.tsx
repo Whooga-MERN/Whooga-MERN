@@ -90,7 +90,6 @@ export default function Collections() {
       const fetchCollections = async () => {
         const response = await fetch(
           buildPath(`collection/user/${userId}`),
-          //"http://localhost:3000/collection/user/" + userId,
           {
             method: "GET",
             headers: {
