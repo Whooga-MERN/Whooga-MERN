@@ -4,8 +4,26 @@ import { useEffect, useState } from "react";
 export default function Profile() {
   const [isDarkMode, setIsDarkMode] = useState(false); // Track dark mode state
   const [isEmailNotifications, setIsEmailNotifications] = useState(false); // Email notifications toggle
-  const [email, setEmail] = useState("user@example.com"); // Fetch current user email
-  const [name, setName] = useState("John Doe"); // Fetch current user name
+  const [name, setName] = useState("Example"); // Fetch current user name
+  const [userId, setUserId] = useState<number | null>(null); // User ID from backend
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+        try {
+            const response = await fetch("http://localhost:3000/user?user_email=yo213976@ucf.edu");
+            const data = await response.json();
+            if (data.length > 0) {
+                setUserId(data[0].user_id);
+                setIsEmailNotifications(data[0].notification_opt_in); // Set button state to current DB value
+                setName(data[0].name);
+            }
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+        }
+    };
+    fetchUserData();
+}, []);
+
 
   // Function to handle dark mode toggle
   const toggleDarkMode = () => {
@@ -13,24 +31,55 @@ export default function Profile() {
     document.documentElement.setAttribute(
       "data-theme",
       isDarkMode ? "light" : "dark"
-    ); // Toggle the theme attribute
+    );
   };
 
-  // Function to handle email notifications toggle
-  const toggleEmailNotifications = () => {
-    setIsEmailNotifications(!isEmailNotifications);
+  const toggleEmailNotifications = async () => {
+    if (!userId) return;
+
+    const newStatus = !isEmailNotifications;
+    setIsEmailNotifications(newStatus);
+
+    try {
+      const response = await fetch("http://localhost:3000/user/update-opt-in", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId, notification_opt_in: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update notification preference");
+      }
+      console.log("Notification preference updated successfully.");
+    } catch (error) {
+      console.error("Error updating notification preference:", error);
+    }
   };
 
-  // Function to handle profile update
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  // Function to handle profile update (only updating name)
+  const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Logic to update profile in the backend
-    console.log("Profile Updated", { email, name });
+    if (!userId) return;
+
+    try {
+      await fetch(`/user/update-name-email`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId, name }),
+      });
+      console.log("Profile Updated", { name });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   // Function to handle account deletion
   const handleDeleteAccount = () => {
-    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone."
+      )
+    ) {
       // Logic to delete the account from the backend
       console.log("Account Deleted");
     }
@@ -46,6 +95,26 @@ export default function Profile() {
             {/* Profile Section */}
             <div>
               <h2 className="text-3xl font-extrabold leading-7">Profile</h2>
+              <form onSubmit={handleProfileUpdate}>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="mt-5 rounded-md bg-yellow-300 px-5 py-2 text-lg font-semibold text-black shadow-sm hover:bg-yellow-500"
+                >
+                  Update Profile
+                </button>
+              </form>
             </div>
 
             {/* Email Notifications */}
@@ -93,9 +162,12 @@ export default function Profile() {
                 </button>
               </div>
             </div>
+
             {/* Delete Account */}
             <div>
-              <h2 className="text-2xl font-extrabold leading-7">Delete Account</h2>
+              <h2 className="text-2xl font-extrabold leading-7">
+                Delete Account
+              </h2>
               <p className="pb-5 mt-1 text-md leading-6 text-gray-500">
                 No longer collecting? Delete your account here. This action is
                 permanent and cannot be undone.
