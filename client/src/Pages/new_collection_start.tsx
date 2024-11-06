@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from "../Components/Header";
 
 import { Collection } from "../Types/Collection";
+import { buildPath } from "../utils/utils";
 
 function NewCollectionStart(){
     const [collectionName, setCollectionName] = useState('');
@@ -30,29 +31,16 @@ function NewCollectionStart(){
           //setCollectionSearchResults(data.results);
           //navigate('/new_collection_form', { state: { searchResults: data.results } });
 
-          const data: Collection[] = [
-          {
-            name: "Pathtags",
-            id: 1,
-            image_url: "/bear.jpg",
-            description: "Pathtags are a type of geocaching swag that are small and lightweight. They are usually made of metal and have a unique design on them. Pathtags are often traded between geocachers and are a fun way to collect souvenirs from different caches.",
-            newListing: true,
-          },
-          {
-            name: "Shoe Pathtags",
-            id: 2,
-            image_url: "/jordans.jpg",
-            description: "Shoes are a type of footwear that are typically worn on the feet.",
-            newListing: false,
-          },
-          {
-            name: "Snowglobe Pathtags",
-            id: 3,
-            image_url: "/snowglobe.jpg",
-            description: "Snowglobes are a type of souvenir that are often sold in gift shops.",
-            newListing: true,
-          }
-          ];
+
+          const response = await fetch(buildPath(`publish/display-published-universes?searchTerm=${collectionName}`), {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const data = await response.json();
+          console.log(data);
 
           if (data.length === 0) {
               // If no search results, navigate to new_collection_form

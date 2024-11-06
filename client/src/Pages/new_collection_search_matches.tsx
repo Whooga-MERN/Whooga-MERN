@@ -24,14 +24,14 @@ function NewCollectionSearchMatches () {
                 {/* collectibles */}
                 <div className="pl-24 w-2/3">
                     <div className="mt-8 grid lg:grid-cols-3 gap-8 md:grid-cols-2 sm:grid-cols-1">
-                    {searchResults.map((collection: Collection) => (
-                        <div key={collection.id}>
+                    {searchResults.map((collection: any) => (
+                        <div key={collection.collection_universe_id}>
                         <div className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300">
                             <figure style={{aspectRatio: '1 / 1'}}>
                             <img
                                 className="object-cover w-full h-full rounded-t-lg border-b-2"
                                 style={{ height: '100%', width: '100%', aspectRatio: '1 / 1'}}
-                                src={collection.image_url}
+                                src={collection.universe_collection_pic}
                                 alt={collection.name} />
                             </figure>
                             <div className="card-body">
@@ -39,7 +39,7 @@ function NewCollectionSearchMatches () {
                                 {collection.name}
                             </h2>
                             <div className="card-actions justify-end">
-                                <button className="btn btn-primary">View Collection</button>
+                                <Link to={`/items/${collection.collection_universe_id}`} className="btn btn-primary">View Collection</Link>
                             </div>
                             </div>
                         </div>
