@@ -32,6 +32,7 @@ import {
   fetchOwnedSearchResults,
   addToWishlist,
   removeFromWishlist,
+  fetchUniverseJumpResults,
 } from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
@@ -398,6 +399,74 @@ export default function HomePage() {
     return <div>Error: Collection ID is missing!</div>;
   }
 
+  // ------------------------ open card for details -----------------------------------
+  const [showModal, setShowModal] = useState(false);
+  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
+    null
+  );
+
+  const handleOpenModal = (item: Record<string, any>) => {
+    setSpecificTag(item);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSpecificTag(null);
+  };
+
+  const deleteCollection = async () => {
+    console.log("Delete collection clicked");
+    console.log("Collection ID: ", universeCollectionId);
+    if (confirm("Are you sure you want to delete this collection?")) {
+      const request = {
+        id: universeCollectionId,
+      };
+      console.log("Request: ", request);
+
+      try {
+        const response = await fetch(
+          buildPath(`collection-universe/delete-universe`),
+          {
+            method: "DELETE",
+            body: JSON.stringify(request),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          console.log("Collection deleted successfully");
+          navigate("/collections");
+        } else {
+          console.error("Error deleting collection:", response);
+        }
+      } catch (error) {
+        console.error("Error deleting collection:", error);
+      }
+    } else {
+      return;
+    }
+  };
+
+  useEffect(() => {
+    if (specificTag) {
+      const initialFormData = specificTag.attributes.reduce(
+        (
+          acc: { [x: string]: any },
+          attr: { name: string | number; value: any }
+        ) => {
+          acc[attr.name] = attr.value;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      setFormData(initialFormData);
+    }
+  }, [specificTag]);
+
   // -------------------------- show universecollectables and search ------------------
   const [universeCollectionId, setUniverseCollectionId] = useState<
     string | null
@@ -477,6 +546,9 @@ export default function HomePage() {
   const { ref: searchRef, entry: searchEntry } = useIntersection({
     threshold: 1,
   });
+  const { ref: jumpNextRef, entry: jumpNextEntry } = useIntersection({
+    threshold: 1,
+  });
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleToggleChange = (enabled: boolean) => {
@@ -526,81 +598,17 @@ export default function HomePage() {
 
   const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
 
-  // Error handler for search queries
-  const handleError = (error: any) => {
-    console.error("Search error:", error);
-    alert("An error occurred during the search. Please try again.");
-  };
-
-  // ------------------------ open card for details -----------------------------------
-  const [showModal, setShowModal] = useState(false);
-  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
-    null
-  );
-
-  const handleOpenModal = (item: Record<string, any>) => {
-    setSpecificTag(item);
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSpecificTag(null);
-  };
-
-  const deleteCollection = async () => {
-    console.log("Delete collection clicked");
-    console.log("Collection ID: ", universeCollectionId);
-    if (confirm("Are you sure you want to delete this collection?")) {
-      const request = {
-        id: universeCollectionId,
-      };
-      console.log("Request: ", request);
-
-      try {
-        const response = await fetch(buildPath(`collection-universe/delete-universe`), {
-          method: "DELETE",
-          body: JSON.stringify(request),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${JWT}`,
-          },
-        });
-
-        if (response.ok) {
-          console.log("Collection deleted successfully");
-          navigate("/collections");
-        } else {
-          console.error("Error deleting collection:", response);
-        }
-      } catch (error) {
-        console.error("Error deleting collection:", error);
-      }
-    }
-    else{
-      return;
-    } 
-  };
-
-  useEffect(() => {
-    if (specificTag) {
-      const initialFormData = specificTag.attributes.reduce(
-        (
-          acc: { [x: string]: any },
-          attr: { name: string | number; value: any }
-        ) => {
-          acc[attr.name] = attr.value;
-          return acc;
-        },
-        {} as Record<string, string>
-      );
-      setFormData(initialFormData);
-    }
-  }, [specificTag]);
-
   const [searchTags, setSearchTags] = useState<
     { attribute: string; term: string }[]
   >([]);
+
+  const handleSearch = async (
+    searchTags: { attribute: string; term: string }[]
+  ) => {
+    setSearchTags(searchTags);
+    setSearchResults([]);
+    fetchSearchNextPage();
+  };
 
   const {
     data: searchResultsData,
@@ -650,15 +658,88 @@ export default function HomePage() {
 
   const _searchResults = searchResultsData?.pages.flat() || [];
 
-  const handleSearch = async (
-    searchTags: { attribute: string; term: string }[]
+  const [jumpSearchTags, setJumpSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
+
+  const [jumpSearchResults, setJumpSearchResults] = useState<any[]>([]);
+  const [jumpPageNumber, setJumpPageNumber] = useState<number>();
+
+  const handleJump = async (
+    jumpTags: { attribute: string; term: string }[]
   ) => {
-    setSearchTags(searchTags);
-    // Reset the results and current page
+    setJumpSearchTags(jumpTags);
     setSearchResults([]);
-    // Refetch with new search tags
-    fetchSearchNextPage();
+
+    try {
+      const data = await fetchUniverseJumpResults(
+        jumpTags,
+        userId,
+        universeCollectionId!
+      );
+
+      setJumpSearchResults(data.collectables);
+      setJumpPageNumber(data.page);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
   };
+
+  const fetchJumpPage = async (direction: "next" | "prev") => {
+    try {
+      const newPage =
+        direction === "next"
+          ? (jumpPageNumber ?? 1) + 1
+          : (jumpPageNumber ?? 1) - 1;
+      const data = await fetchUniverseJumpResults(
+        jumpSearchTags,
+        userId,
+        universeCollectionId!
+      );
+
+      if (direction === "next") {
+        setJumpSearchResults((prevResults) => [
+          ...prevResults,
+          ...data.collectables,
+        ]);
+      } else {
+        setJumpSearchResults((prevResults) => [
+          ...data.collectables,
+          ...prevResults,
+        ]);
+      }
+
+      setJumpPageNumber(newPage);
+    } catch (error) {
+      console.error("Error fetching jump results:", error);
+    }
+  };
+
+  const handleLoadFromJumpPage = async (jumpPageNumber: number) => {
+    try {
+      const data = await fetchUniverseCollectables(
+        universeCollectionId!,
+        jumpPageNumber,
+        ITEMS_PER_PAGE
+      );
+      setJumpSearchResults((prevResults) => [...prevResults, ...data]);
+      setJumpPageNumber((prevPage) => (prevPage ?? 1) + 1);
+    } catch (error) {
+      console.error("Error fetching additional pages:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (jumpNextEntry?.isIntersecting) {
+      handleLoadFromJumpPage(jumpPageNumber! + 1);
+    }
+  }, [jumpNextEntry]);
+
+  // useEffect(() => {
+  //   if (jumpPrevEntry?.isIntersecting && jumpPageNumber > 1) {
+  //     fetchJumpPage("prev");
+  //   }
+  // }, [jumpPrevEntry]);
 
   return (
     <>
@@ -688,6 +769,7 @@ export default function HomePage() {
                   resetDropdown={resetDropdown}
                   setResetDropdown={setResetDropdown}
                   onSearch={handleSearch}
+                  onJump={handleJump}
                 />
               )}
 
@@ -948,7 +1030,13 @@ export default function HomePage() {
                 {/* switch between grid and list */}
                 {view === "list" ? (
                   <div className="flex flex-wrap -mx-4">
-                    {(_searchResults.length > 0
+                    {/* {(_searchResults.length > 0
+                      ? _searchResults
+                      : collectables
+                    ).map((item) => ( */}
+                    {(jumpSearchResults.length > 0
+                      ? jumpSearchResults
+                      : _searchResults.length > 0
                       ? _searchResults
                       : collectables
                     ).map((item) => (
@@ -983,12 +1071,12 @@ export default function HomePage() {
                           <div className="h-24 w-24">
                             <img
                               src={
-                                item.attributes.find(
+                                item.attributes?.find(
                                   (attr: any) => attr.name === "image"
                                 )?.value || "/placeholder.jpg"
                               }
                               alt={
-                                item.attributes.find(
+                                item.attributes?.find(
                                   (attr: any) => attr.name === "name"
                                 )?.value || "No Name"
                               }
@@ -1040,7 +1128,13 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                    {(_searchResults.length > 0
+                    {/* {(_searchResults.length > 0
+                      ? _searchResults
+                      : collectables
+                    ).map((item) => ( */}
+                    {(jumpSearchResults.length > 0
+                      ? jumpSearchResults
+                      : _searchResults.length > 0
                       ? _searchResults
                       : collectables
                     ).map((item) => (
@@ -1074,12 +1168,12 @@ export default function HomePage() {
                             </div>
                             <img
                               src={
-                                item.attributes.find(
+                                item.attributes?.find(
                                   (attr: any) => attr.name === "image"
                                 )?.value || "/placeholder.jpg"
                               }
                               alt={
-                                item.attributes.find(
+                                item.attributes?.find(
                                   (attr: any) => attr.name === "name"
                                 )?.value || "No Name"
                               }
@@ -1143,6 +1237,10 @@ export default function HomePage() {
                 >
                   {isFetchingSearchResults && <p>Loading more items...</p>}
                 </div>
+                <div
+                  ref={jumpNextRef}
+                  className="loading-indicator text-center p-4"
+                ></div>
               </div>
             )}
             {/* send data to modal */}
