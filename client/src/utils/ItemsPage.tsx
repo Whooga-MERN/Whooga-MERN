@@ -336,3 +336,51 @@ export const removeFromWishlist = async (
     throw e;
   }
 };
+
+export const fetchUniverseJumpResults = async (
+  searchTerm: { attribute: string; term: string }[],
+  userId: string,
+  universeCollectionId: string
+) => {
+  if (!userId || !universeCollectionId || searchTerm.length === 0) {
+    console.error("Missing userId, collectionId, or search tags", {
+      userId,
+      universeCollectionId,
+      searchTerm,
+    });
+    throw new Error("Missing a request parameter");
+  }
+
+  const queryParams = searchTerm
+    .map(
+      ({ attribute, term }) =>
+        `attributeToSearch=${encodeURIComponent(
+          attribute.replace(/\s+/g, "_").toLowerCase()
+        )}&searchTerm=${encodeURIComponent(term)}`
+    )
+    .join("&");
+
+  const url = buildPath(
+    `universe-collectable/jump?collectionUniverseId=${universeCollectionId}&${queryParams}&itemsPerPage=12`
+  );
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 404) {
+      console.log("No matching collectables found.");
+      return [];
+    }
+
+    const jsonResponse = await response.json();
+    return jsonResponse;
+  } catch (e) {
+    console.error(`Error thrown when fetching jump search results: ${e}`);
+    throw e;
+  }
+};

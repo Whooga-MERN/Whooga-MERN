@@ -9,6 +9,7 @@ interface SearchBarProps {
   resetDropdown: boolean;
   setResetDropdown: (value: boolean) => void;
   onSearch: (tags: { attribute: string; term: string }[]) => void;
+  onJump: (tags: { attribute: string; term: string }[]) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -17,6 +18,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   resetDropdown,
   setResetDropdown,
   onSearch,
+  onJump,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>(attributes[0]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -75,6 +77,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
     onSearch(searchTags);
   };
 
+  const handleJump = () => {
+    if (searchTags.length === 0) {
+      alert("Please add at least one search tag.");
+      return;
+    }
+    onJump(searchTags);
+  };
+
   return (
     <div className="flex flex-col justify-center mt-8">
       <div className="relative items-center">
@@ -110,7 +120,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </button>
         <button
           className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
-          onClick={handleSearch}
+          onClick={handleJump}
         >
           Jump
           <FaMagnifyingGlass />
