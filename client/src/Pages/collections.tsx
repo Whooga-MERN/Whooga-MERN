@@ -151,14 +151,14 @@ export default function Collections() {
         "hiddenAttributes",
         JSON.stringify(collection.hiddenAttributes)
       );
-      console.log("sending CID: ", collection.collection_id);
+      console.log("sending CID: ", collection.id);
       localStorage.setItem(
-        "collectionUniverseId",
-        collection.collectionUniverseId
+        "collectionId",
+        collection.id
       );
       console.log("sending stored UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionName", collection.name);
-      navigate(`/items/${collectionUniverseId}`);
+      navigate(`/items/${collection.collectionUniverseId}`);
       console.log("clicked collection");
     } else {
       console.error("Collection not found");
