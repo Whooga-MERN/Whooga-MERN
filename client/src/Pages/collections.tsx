@@ -135,8 +135,8 @@ export default function Collections() {
     }
   }, [isUserIdFetched, userId, JWT]);
 
-  function handleClick(collectionId: number) {
-    const collection = collections.find((col) => col.id === collectionId);
+  function handleClick(collectionUniverseId: number) {
+    const collection = collections.find((col) => col.id === collectionUniverseId);
     console.log("collection upon being clicked: ", collection);
     if (collection) {
       localStorage.setItem(
@@ -151,14 +151,14 @@ export default function Collections() {
         "hiddenAttributes",
         JSON.stringify(collection.hiddenAttributes)
       );
-      console.log("sending UCID: ", collection.collectionUniverseId);
+      console.log("sending CID: ", collection.collection_id);
       localStorage.setItem(
         "collectionUniverseId",
         collection.collectionUniverseId
       );
       console.log("sending stored UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionName", collection.name);
-      navigate(`/items/${collectionId}`);
+      navigate(`/items/${collectionUniverseId}`);
       console.log("clicked collection");
     } else {
       console.error("Collection not found");
@@ -253,7 +253,7 @@ export default function Collections() {
                   <div key={collections.collection_id}>
                     <div
                       className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                      onClick={() => handleClick(collections.collection_id)}
+                      onClick={() => handleClick(collections.collectionUniverseId)}
                     >
                       <div
                         style={{
