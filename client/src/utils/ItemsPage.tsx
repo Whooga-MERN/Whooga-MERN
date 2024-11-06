@@ -62,7 +62,7 @@ export const fetchUniverseCollectables = async (
 
     const jsonResponse = await response.json();
 
-    const collectables = jsonResponse
+    const collectables = jsonResponse.collectables
       .map((item: any) => ({
         universeCollectableId: item.universe_collectable_id,
         attributes: item.attributes.map((attr: any) => ({
