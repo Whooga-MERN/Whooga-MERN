@@ -209,14 +209,14 @@ export const fetchOwnedSearchResults = async (
   console.log("search", searchterm);
   console.log("collectionId", collectionId);
   console.log("page", page);
-  // if (!userId || !collectionId || searchterm.length === 0) {
-  //   console.error("Missing userId, collectionId, or search tags", {
-  //     userId,
-  //     collectionId,
-  //     searchterm,
-  //   });
-  //   throw new Error("Missing a request parameter");
-  // }
+  if (!userId || !collectionId || searchterm.length === 0) {
+    console.error("Missing userId, collectionId, or search tags", {
+      userId,
+      collectionId,
+      searchterm,
+    });
+    throw new Error("Missing a request parameter");
+  }
 
   const queryParams = searchterm
     .map(

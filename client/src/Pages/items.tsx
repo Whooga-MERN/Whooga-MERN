@@ -61,6 +61,13 @@ const color = [
 ];
 
 export default function HomePage() {
+  useEffect(() => {
+    setSearchResults([]);
+    setJumpSearchResults([]);
+    console.log("refresh: ", jumpSearchResults);
+    setResetDropdown(true);
+  }, []);
+
   // add collectible form modal open handler
   const openModal = () => {
     setIsModalOpen(true);
@@ -536,6 +543,9 @@ export default function HomePage() {
 
   const handleClearSearch = () => {
     setSearchResults([]);
+    console.log("search result: ", searchResults);
+    setJumpSearchResults([]);
+    console.log("jump results: ", jumpSearchResults);
     setResetDropdown(true);
     setNoSearchResults(false);
   };
@@ -555,6 +565,8 @@ export default function HomePage() {
     setEnabled(enabled);
     handleClearSearch();
     setCurrentPage(1);
+    setJumpSearchResults([]);
+    setSearchResults([]);
   };
 
   const {
@@ -664,12 +676,18 @@ export default function HomePage() {
 
   const [jumpSearchResults, setJumpSearchResults] = useState<any[]>([]);
   const [jumpPageNumber, setJumpPageNumber] = useState<number>();
+  const [showLoadPreviousButton, setShowLoadPreviousButton] = useState(false);
+  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [loadedPages, setLoadedPages] = useState(new Set<number>());
 
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
   ) => {
     setJumpSearchTags(jumpTags);
-    setSearchResults([]);
+    setJumpSearchResults([]);
+    setShowLoadPreviousButton(true);
+    setHasMoreItems(true);
+    setLoadedPages(new Set());
 
     try {
       const data = await fetchUniverseJumpResults(
@@ -677,45 +695,19 @@ export default function HomePage() {
         userId,
         universeCollectionId!
       );
-
       setJumpSearchResults(data.collectables);
       setJumpPageNumber(data.page);
+      setLoadedPages(new Set([data.page]));
     } catch (error) {
       console.error("Fetch error:", error);
     }
   };
 
-  const fetchJumpPage = async (direction: "next" | "prev") => {
-    try {
-      const newPage =
-        direction === "next"
-          ? (jumpPageNumber ?? 1) + 1
-          : (jumpPageNumber ?? 1) - 1;
-      const data = await fetchUniverseJumpResults(
-        jumpSearchTags,
-        userId,
-        universeCollectionId!
-      );
-
-      if (direction === "next") {
-        setJumpSearchResults((prevResults) => [
-          ...prevResults,
-          ...data.collectables,
-        ]);
-      } else {
-        setJumpSearchResults((prevResults) => [
-          ...data.collectables,
-          ...prevResults,
-        ]);
-      }
-
-      setJumpPageNumber(newPage);
-    } catch (error) {
-      console.error("Error fetching jump results:", error);
-    }
-  };
-
   const handleLoadFromJumpPage = async (jumpPageNumber: number) => {
+    if (loadedPages.has(jumpPageNumber)) {
+      return;
+    }
+
     try {
       const data = await fetchUniverseCollectables(
         universeCollectionId!,
@@ -723,9 +715,41 @@ export default function HomePage() {
         ITEMS_PER_PAGE
       );
       setJumpSearchResults((prevResults) => [...prevResults, ...data]);
+      setLoadedPages((prevLoaded) => new Set(prevLoaded).add(jumpPageNumber));
       setJumpPageNumber((prevPage) => (prevPage ?? 1) + 1);
     } catch (error) {
       console.error("Error fetching additional pages:", error);
+    }
+  };
+
+  const handleLoadPreviousPage = async () => {
+    if (jumpPageNumber === 1) {
+      setShowLoadPreviousButton(false);
+      setJumpSearchResults([]);
+      console.log(
+        "page: ",
+        jumpPageNumber,
+        " reached. array: ",
+        jumpSearchResults
+      );
+      return;
+    }
+    const previousPage = Math.max(jumpPageNumber! - 1, 1);
+    if (loadedPages.has(previousPage)) {
+      return;
+    }
+    try {
+      const data = await fetchUniverseCollectables(
+        universeCollectionId!,
+        previousPage,
+        ITEMS_PER_PAGE
+      );
+      setJumpSearchResults((prevResults) => [...data, ...prevResults]);
+      setLoadedPages((prevLoaded) => new Set(prevLoaded).add(previousPage));
+      console.log(jumpSearchResults);
+      setJumpPageNumber(previousPage);
+    } catch (error) {
+      console.error("Error fetching previous page items:", error);
     }
   };
 
@@ -735,11 +759,12 @@ export default function HomePage() {
     }
   }, [jumpNextEntry]);
 
-  // useEffect(() => {
-  //   if (jumpPrevEntry?.isIntersecting && jumpPageNumber > 1) {
-  //     fetchJumpPage("prev");
-  //   }
-  // }, [jumpPrevEntry]);
+  const handleReset = () => {
+    setSearchResults([]);
+    setJumpSearchResults([]);
+    setResetDropdown(true);
+    setNoSearchResults(false);
+  };
 
   return (
     <>
@@ -765,8 +790,9 @@ export default function HomePage() {
                 <SearchBar
                   attributes={favoriteAttributes}
                   onSearchResults={handleSearchResults}
-                  onResetSearch={() => setSearchResults([])}
+                  // onResetSearch={() => setSearchResults([])}
                   resetDropdown={resetDropdown}
+                  onResetSearch={handleReset}
                   setResetDropdown={setResetDropdown}
                   onSearch={handleSearch}
                   onJump={handleJump}
@@ -1014,12 +1040,13 @@ export default function HomePage() {
           <div className="w-full p-2">
             <div className="text-xl py-4 text-right pr-10">
               Total items in the collection:{" "}
-              {_searchResults.length > 0
-                ? _searchResults.length
-                : enabled
-                ? ownedCollectables.length
-                : universeCollectables.length}
             </div>
+
+            {showLoadPreviousButton && (
+              <button onClick={handleLoadPreviousPage}>
+                Load Previous Items
+              </button>
+            )}
 
             {noSearchResults ? (
               <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
@@ -1030,10 +1057,6 @@ export default function HomePage() {
                 {/* switch between grid and list */}
                 {view === "list" ? (
                   <div className="flex flex-wrap -mx-4">
-                    {/* {(_searchResults.length > 0
-                      ? _searchResults
-                      : collectables
-                    ).map((item) => ( */}
                     {(jumpSearchResults.length > 0
                       ? jumpSearchResults
                       : _searchResults.length > 0
@@ -1041,7 +1064,7 @@ export default function HomePage() {
                       : collectables
                     ).map((item) => (
                       <div
-                        key={item.universeCollectableId}
+                        key={item.universe_collectable_id || item.collection_id}
                         className="w-full md:w-1/2 px-4 mb-6"
                       >
                         <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
@@ -1128,17 +1151,15 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                    {/* {(_searchResults.length > 0
+                    {(_searchResults.length > 0
                       ? _searchResults
-                      : collectables
-                    ).map((item) => ( */}
-                    {(jumpSearchResults.length > 0
+                      : jumpSearchResults.length > 0
                       ? jumpSearchResults
-                      : _searchResults.length > 0
-                      ? _searchResults
                       : collectables
                     ).map((item) => (
-                      <div key={item.universeCollectableId}>
+                      <div
+                        key={item.universe_collectable_id || item.collection_id}
+                      >
                         <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                           <div className="h-22 w-30">
                             <div className="absolute top-2 right-2 flex space-x-2">
