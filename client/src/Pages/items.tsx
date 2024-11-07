@@ -489,14 +489,14 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
-    console.log("collectionUID: ", collectionUID);
-    setUniverseCollectionId(collectionUID);
+    var collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
+    console.log("collectionID: ", collectionIDInStorage);
+    setUniverseCollectionId(collectionIDInStorage);
     const collectionName = localStorage.getItem("collectionName") ?? "";
     setUniverseCollectionName(collectionName);
     const collectionIds = localStorage.getItem("collectionIds") ?? "";
 
-    if (collectionIds.includes(collectionUID)) {
+    if (universeCollectionId && collectionIds.includes(universeCollectionId)) {
       setIsCollectionOwned(true);
     }
   }, []);
