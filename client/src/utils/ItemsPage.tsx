@@ -99,6 +99,7 @@ export const fetchOwnedCollectables = async (
     const url = buildPath(
       `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
     );
+    console.log(url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -131,6 +132,7 @@ export const fetchOwnedCollectables = async (
         return nameAttr && nameAttr.value && nameAttr.value.trim() !== "";
       });
 
+    console.log("collectables: ", collectables);
     return collectables;
   } catch (e) {
     console.error(`Error thrown when fetching universe collectables: ${e}`);
