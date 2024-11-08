@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _ from "lodash";
+import _, { get } from "lodash";
 
 import {
   FaListUl,
@@ -61,12 +61,169 @@ const color = [
 ];
 
 export default function HomePage() {
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [resetDropdown, setResetDropdown] = useState(true);
+  const [jumpSearchResults, setJumpSearchResults] = useState<any[]>([]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
+    null
+  );
+  const [isCollectionOwned, setIsCollectionOwned] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
+  const [showEdit, setShowEdit] = useState(false); // edit collectible
+  const [selectedSort, setSelectedSort] = useState<string>("");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [view, setView] = useState<"list" | "grid">("grid");
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
+  const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
+
+  const [userId, setUserId] = useState<any>(null);
+  const [JWT, setJWT] = useState<string>("");
+  const { universeCollectionId } = useParams<{ universeCollectionId: string }>();
+  const [collectionId, setCollectionId] = useState< string >();
+  const [collectionIds, setCollectionIds] = useState<string[]>([]);
+  const [customAttributes, setCustomAttributes] = useState<string[]>([]);
+  const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
+  const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
+  const [universeCollectionName, setUniverseCollectionName] = useState("");
+  const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
+  const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
+
+  const [error, setError] = useState<string | null>(null);
+  const [enabled, setEnabled] = useState(false);
+  
+  const [noSearchResults, setNoSearchResults] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTags, setSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
+  const [jumpSearchTags, setJumpSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
+
+  const [jumpPageNumber, setJumpPageNumber] = useState<number>();
+  const [showLoadPreviousButton, setShowLoadPreviousButton] = useState(false);
+  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [loadedPages, setLoadedPages] = useState(new Set<number>());
+  const navigate = useNavigate();
+
+useEffect(() => {
+    const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
+    console.log("collectionID: ", collectionIDInStorage);
+    setCollectionId(collectionIDInStorage);
+}, []);
+
   useEffect(() => {
+    // gather items from local storage
+    const getItemsFromStorage = async () => {
+      const collectionName = localStorage.getItem("collectionName") ?? "";
+      const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
+      const savedWishlist = localStorage.getItem("wishlistIds");
+
+      setUniverseCollectionName(collectionName);
+      setCollectionIds(JSON.parse(storedCollectionIds));
+      if (universeCollectionId && JSON.parse(storedCollectionIds).includes(universeCollectionId)) {
+        setIsCollectionOwned(true);
+      }
+      if (savedWishlist) {
+        setWishlistIds(JSON.parse(savedWishlist));
+      }
+    };
+    getItemsFromStorage();
     setSearchResults([]);
     setJumpSearchResults([]);
     console.log("refresh: ", jumpSearchResults);
     setResetDropdown(true);
+
+    // fetch user details and token
+    const fetchUserDetails = async () => {
+      try {
+        const user = await fetchUserLoginDetails();
+        setUserId(user || "");
+      } catch (error) {
+        console.error("Error Fetching User");
+      }
+    };
+    fetchUserDetails();
+
+    const fetchToken = async () => {
+      try {
+        const token = await fetchJWT();
+        setJWT(token || "");
+      } catch (error) {
+        console.error("Error fetching JWT");
+      }
+    };
+    fetchToken();
+
+    // get attributes, needs to be changed to fetch from API
+    const getAttributes = async () => {
+      const storedCustomeAttributes = localStorage.getItem("customAttributes");
+      const storedFavoriteAttributes =
+        localStorage.getItem("favoriteAttributes");
+      const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
+      if (storedCustomeAttributes) {
+        setCustomAttributes(JSON.parse(storedCustomeAttributes));
+      }
+      if (storedFavoriteAttributes) {
+        setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
+      }
+      if (storedHiddenAttributes) {
+        setHiddenAttributes(JSON.parse(storedHiddenAttributes));
+      }
+    };
+    getAttributes();    
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
+  }, [wishlistIds]);
+
+  useEffect(() => {
+    if (specificTag) {
+      const initialFormData = specificTag.attributes.reduce(
+        (
+          acc: { [x: string]: any },
+          attr: { name: string | number; value: any }
+        ) => {
+          acc[attr.name] = attr.value;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      setFormData(initialFormData);
+    }
+  }, [specificTag]);
+
+  // -------------------------- show universecollectables and search ------------------
+
+  useEffect(() => {
+    const getUniverseCollectionId = async () => {
+      if (collectionId) {
+        console.log("collectionId in getUniverseCollectionId: ", collectionId);
+          const ownedCollectables = await fetchOwnedCollectables(
+            collectionId,
+            initialPage,
+            ITEMS_PER_PAGE
+          );
+          setOwnedCollectables(ownedCollectables);
+
+          if (universeCollectionId) {
+            const collectables = await fetchUniverseCollectables(
+              universeCollectionId,
+              initialPage,
+              ITEMS_PER_PAGE
+            );
+            setUniverseCollectables(collectables);
+          }
+        };
+    };
+
+    getUniverseCollectionId();
+  }, [collectionId]);
 
   // add collectible form modal open handler
   const openModal = () => {
@@ -127,13 +284,6 @@ export default function HomePage() {
     }
   };
 
-  const [isCollectionOwned, setIsCollectionOwned] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
-  const [showEdit, setShowEdit] = useState(false); // edit collectible
-  const [selectedSort, setSelectedSort] = useState<string>("");
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [view, setView] = useState<"list" | "grid">("grid");
-
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
   };
@@ -181,18 +331,6 @@ export default function HomePage() {
   //   });
 
   // -------------- handle star click-------------------
-  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
-
-  useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlistIds");
-    if (savedWishlist) {
-      setWishlistIds(JSON.parse(savedWishlist));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
-  }, [wishlistIds]);
 
   const handleStarClick = (
     universeCollectableId: number,
@@ -218,12 +356,6 @@ export default function HomePage() {
   };
 
   //--------------------- handle form field ------------------------
-  const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isNewCollectableWishlist, setIsNewCollectableWishlist] =
-    useState<boolean>(false);
-  const [isPublished, setIsPublished] = useState(false);
-
   // handle form field change
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -354,64 +486,7 @@ export default function HomePage() {
     console.log("FormData Contents:", formDataEntries);
   };
 
-  // --------------------- get user information -----------------
-  const [userId, setUserId] = useState<any>(null);
-  const [JWT, setJWT] = useState<string>("");
-  const { collectionId } = useParams<{ collectionId: string }>();
-  const [customAttributes, setCustomAttributes] = useState<string[]>([]);
-  const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
-  const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
-
-  useEffect(() => {
-    // user.loginId to get email, get attributes, and get JWT
-    const fetchUserDetails = async () => {
-      try {
-        const user = await fetchUserLoginDetails();
-        setUserId(user || "");
-      } catch (error) {
-        console.error("Error Fetching User");
-      }
-    };
-    fetchUserDetails();
-
-    const fetchToken = async () => {
-      try {
-        const token = await fetchJWT();
-        setJWT(token || "");
-      } catch (error) {
-        console.error("Error fetching JWT");
-      }
-    };
-    fetchToken();
-
-    const getAttributes = async () => {
-      const storedCustomeAttributes = localStorage.getItem("customAttributes");
-      const storedFavoriteAttributes =
-        localStorage.getItem("favoriteAttributes");
-      const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
-      if (storedCustomeAttributes) {
-        setCustomAttributes(JSON.parse(storedCustomeAttributes));
-      }
-      if (storedFavoriteAttributes) {
-        setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
-      }
-      if (storedHiddenAttributes) {
-        setHiddenAttributes(JSON.parse(storedHiddenAttributes));
-      }
-    };
-    getAttributes();
-  }, []);
-
-  if (!collectionId) {
-    return <div>Error: Collection ID is missing!</div>;
-  }
-
   // ------------------------ open card for details -----------------------------------
-  const [showModal, setShowModal] = useState(false);
-  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
-    null
-  );
-
   const handleOpenModal = (item: Record<string, any>) => {
     setSpecificTag(item);
     setShowModal(true);
@@ -458,80 +533,6 @@ export default function HomePage() {
     }
   };
 
-  useEffect(() => {
-    if (specificTag) {
-      const initialFormData = specificTag.attributes.reduce(
-        (
-          acc: { [x: string]: any },
-          attr: { name: string | number; value: any }
-        ) => {
-          acc[attr.name] = attr.value;
-          return acc;
-        },
-        {} as Record<string, string>
-      );
-      setFormData(initialFormData);
-    }
-  }, [specificTag]);
-
-  // -------------------------- show universecollectables and search ------------------
-  const [universeCollectionId, setUniverseCollectionId] = useState<
-    string | null
-  >(null);
-  const [universeCollectionName, setUniverseCollectionName] = useState("");
-  const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
-  const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [enabled, setEnabled] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [resetDropdown, setResetDropdown] = useState(false);
-  const [noSearchResults, setNoSearchResults] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    var collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
-    console.log("collectionID: ", collectionIDInStorage);
-    setUniverseCollectionId(collectionIDInStorage);
-    const collectionName = localStorage.getItem("collectionName") ?? "";
-    setUniverseCollectionName(collectionName);
-    const collectionIds = localStorage.getItem("collectionIds") ?? "";
-
-    if (universeCollectionId && collectionIds.includes(universeCollectionId)) {
-      setIsCollectionOwned(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    const getUniverseCollectionId = async () => {
-      try {
-        if (collectionId) {
-          const ownedCollectables = await fetchOwnedCollectables(
-            collectionId,
-            initialPage,
-            ITEMS_PER_PAGE
-          );
-          setOwnedCollectables(ownedCollectables);
-
-          if (universeCollectionId) {
-            const collectables = await fetchUniverseCollectables(
-              universeCollectionId,
-              initialPage,
-              ITEMS_PER_PAGE
-            );
-            setUniverseCollectables(collectables);
-          }
-        } else {
-          console.error("universeCollectionId is null");
-        }
-      } catch (e) {
-        setError("Error fetching universe collection ID");
-        console.error(e);
-      }
-    };
-
-    getUniverseCollectionId();
-  }, [collectionId, universeCollectionId]);
-
   const handleSearchResults = (results: any[]) => {
     if (results.length === 0) {
       setNoSearchResults(true);
@@ -559,8 +560,7 @@ export default function HomePage() {
   const { ref: jumpNextRef, entry: jumpNextEntry } = useIntersection({
     threshold: 1,
   });
-  const [currentPage, setCurrentPage] = useState(1);
-
+  
   const handleToggleChange = (enabled: boolean) => {
     setEnabled(enabled);
     handleClearSearch();
@@ -610,10 +610,6 @@ export default function HomePage() {
 
   const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
 
-  const [searchTags, setSearchTags] = useState<
-    { attribute: string; term: string }[]
-  >([]);
-
   const handleSearch = async (
     searchTags: { attribute: string; term: string }[]
   ) => {
@@ -630,7 +626,7 @@ export default function HomePage() {
   } = useInfiniteQuery({
     queryKey: ["searchResults", searchTags, enabled],
     queryFn: ({ pageParam = 1 }) => {
-      if (enabled) {
+      if (enabled && collectionId) {
         return fetchOwnedSearchResults(
           searchTags,
           userId,
@@ -669,16 +665,6 @@ export default function HomePage() {
   }, [searchEntry, hasNextSearchPage, fetchSearchNextPage]);
 
   const _searchResults = searchResultsData?.pages.flat() || [];
-
-  const [jumpSearchTags, setJumpSearchTags] = useState<
-    { attribute: string; term: string }[]
-  >([]);
-
-  const [jumpSearchResults, setJumpSearchResults] = useState<any[]>([]);
-  const [jumpPageNumber, setJumpPageNumber] = useState<number>();
-  const [showLoadPreviousButton, setShowLoadPreviousButton] = useState(false);
-  const [hasMoreItems, setHasMoreItems] = useState(true);
-  const [loadedPages, setLoadedPages] = useState(new Set<number>());
 
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
