@@ -82,8 +82,10 @@ export default function HomePage() {
 
   const [userId, setUserId] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
-  const { universeCollectionId } = useParams<{ universeCollectionId: string }>();
-  const [collectionId, setCollectionId] = useState< string >();
+  const { universeCollectionId } = useParams<{
+    universeCollectionId: string;
+  }>();
+  const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
@@ -94,7 +96,7 @@ export default function HomePage() {
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
-  
+
   const [noSearchResults, setNoSearchResults] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTags, setSearchTags] = useState<
@@ -110,11 +112,15 @@ export default function HomePage() {
   const [loadedPages, setLoadedPages] = useState(new Set<number>());
   const navigate = useNavigate();
 
-useEffect(() => {
+  useEffect(() => {
+    console.log("universeCollectionId:", universeCollectionId);
+  }, [universeCollectionId]);
+
+  useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
     console.log("collectionID: ", collectionIDInStorage);
     setCollectionId(collectionIDInStorage);
-}, []);
+  }, []);
 
   useEffect(() => {
     // gather items from local storage
@@ -125,7 +131,10 @@ useEffect(() => {
 
       setUniverseCollectionName(collectionName);
       setCollectionIds(JSON.parse(storedCollectionIds));
-      if (universeCollectionId && JSON.parse(storedCollectionIds).includes(universeCollectionId)) {
+      if (
+        universeCollectionId &&
+        JSON.parse(storedCollectionIds).includes(universeCollectionId)
+      ) {
         setIsCollectionOwned(true);
       }
       if (savedWishlist) {
@@ -175,7 +184,7 @@ useEffect(() => {
         setHiddenAttributes(JSON.parse(storedHiddenAttributes));
       }
     };
-    getAttributes();    
+    getAttributes();
   }, []);
 
   useEffect(() => {
@@ -202,24 +211,26 @@ useEffect(() => {
 
   useEffect(() => {
     const getUniverseCollectionId = async () => {
+      console.log("UID: ", universeCollectionId);
+      console.log("ID: ", collectionId);
       if (collectionId) {
         console.log("collectionId in getUniverseCollectionId: ", collectionId);
-          const ownedCollectables = await fetchOwnedCollectables(
-            collectionId,
+        const ownedCollectables = await fetchOwnedCollectables(
+          collectionId,
+          initialPage,
+          ITEMS_PER_PAGE
+        );
+        setOwnedCollectables(ownedCollectables);
+
+        if (universeCollectionId) {
+          const collectables = await fetchUniverseCollectables(
+            universeCollectionId,
             initialPage,
             ITEMS_PER_PAGE
           );
-          setOwnedCollectables(ownedCollectables);
-
-          if (universeCollectionId) {
-            const collectables = await fetchUniverseCollectables(
-              universeCollectionId,
-              initialPage,
-              ITEMS_PER_PAGE
-            );
-            setUniverseCollectables(collectables);
-          }
-        };
+          setUniverseCollectables(collectables);
+        }
+      }
     };
 
     getUniverseCollectionId();
@@ -560,7 +571,7 @@ useEffect(() => {
   const { ref: jumpNextRef, entry: jumpNextEntry } = useIntersection({
     threshold: 1,
   });
-  
+
   const handleToggleChange = (enabled: boolean) => {
     setEnabled(enabled);
     handleClearSearch();
@@ -570,7 +581,7 @@ useEffect(() => {
   };
 
   const {
-    data: collectablesDate,
+    data: collectablesData,
     fetchNextPage: fetchCollectablesNextPage,
     hasNextPage: hasMoreCollectables,
     isFetchingNextPage: isFetchingCollectables,
@@ -588,8 +599,16 @@ useEffect(() => {
       }
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+    getNextPageParam: (lastPage, allPages) => {
+      if (
+        !lastPage ||
+        !Array.isArray(lastPage) ||
+        lastPage.length < ITEMS_PER_PAGE
+      ) {
+        return undefined;
+      }
+      return allPages.length + 1;
+    },
     refetchOnWindowFocus: false,
   });
 
@@ -608,7 +627,7 @@ useEffect(() => {
     }
   }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
 
-  const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
+  const collectables = collectablesData?.pages.flatMap((page) => page) ?? [];
 
   const handleSearch = async (
     searchTags: { attribute: string; term: string }[]
@@ -665,6 +684,12 @@ useEffect(() => {
   }, [searchEntry, hasNextSearchPage, fetchSearchNextPage]);
 
   const _searchResults = searchResultsData?.pages.flat() || [];
+
+  useEffect(() => {
+    if (searchResultsData) {
+      console.log("searchResultsData:", _searchResults);
+    }
+  }, [_searchResults]);
 
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
@@ -1043,97 +1068,99 @@ useEffect(() => {
                 {/* switch between grid and list */}
                 {view === "list" ? (
                   <div className="flex flex-wrap -mx-4">
-                    {(jumpSearchResults.length > 0
-                      ? jumpSearchResults
-                      : _searchResults.length > 0
+                    {(_searchResults.length > 0
                       ? _searchResults
+                      : jumpSearchResults.length > 0
+                      ? jumpSearchResults
                       : collectables
-                    ).map((item) => (
-                      <div
-                        key={item.universe_collectable_id || item.collection_id}
-                        className="w-full md:w-1/2 px-4 mb-6"
-                      >
-                        <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                          <button
-                            className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                            onClick={() =>
-                              handleStarClick(
-                                item.universeCollectableId,
-                                collectionId
-                              )
-                            }
-                          >
-                            {wishlistIds.includes(
-                              item.universeCollectableId
-                            ) ? (
-                              <FontAwesomeIcon
-                                icon={faSolidStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            ) : (
-                              <FontAwesomeIcon
-                                icon={faRegularStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            )}
-                          </button>
-                          <div className="h-24 w-24">
-                            <img
-                              src={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "image"
-                                )?.value || "/placeholder.jpg"
+                    )
+                      .filter((item) => item?.universeCollectableId)
+                      .map((item) => (
+                        <div
+                          key={item.universeCollectableId || item.collectionId}
+                          className="w-full md:w-1/2 px-4 mb-6"
+                        >
+                          <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                            <button
+                              className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                              onClick={() =>
+                                handleStarClick(
+                                  item.universeCollectionId!,
+                                  collectionId
+                                )
                               }
-                              alt={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "name"
-                                )?.value || "No Name"
-                              }
-                              width={100}
-                              height={100}
-                              className="rounded-md shadow-sm object-cover"
-                              onClick={() => handleOpenModal(item)}
-                            />
-                          </div>
+                            >
+                              {wishlistIds.includes(
+                                item.universeCollectableId
+                              ) ? (
+                                <FontAwesomeIcon
+                                  icon={faSolidStar}
+                                  style={{ color: "#EDC307" }}
+                                />
+                              ) : (
+                                <FontAwesomeIcon
+                                  icon={faRegularStar}
+                                  style={{ color: "#EDC307" }}
+                                />
+                              )}
+                            </button>
+                            <div className="h-24 w-24">
+                              <img
+                                src={
+                                  item.attributes?.find(
+                                    (attr: any) => attr.name === "image"
+                                  )?.value || "/placeholder.jpg"
+                                }
+                                alt={
+                                  item.attributes?.find(
+                                    (attr: any) => attr.name === "name"
+                                  )?.value || "No Name"
+                                }
+                                width={100}
+                                height={100}
+                                className="rounded-md shadow-sm object-cover"
+                                onClick={() => handleOpenModal(item)}
+                              />
+                            </div>
 
-                          <div className="flex-1">
-                            {item.attributes
-                              .filter(
-                                (attribute: any) =>
-                                  attribute.name !== "image" &&
-                                  attribute.name !== "owned"
-                              )
-                              .slice(0, 3)
-                              .map((attribute: any, index: number) => (
-                                <p
-                                  key={attribute.slug || attribute.name}
-                                  className={
-                                    index === 0
-                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                      : "text-md font-semibold pl-4 capitalize truncate"
-                                  }
-                                >
-                                  {`${attribute.value}`}
-                                </p>
-                              ))}
-                          </div>
-                          <div className="flex space-x-4">
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => openEdit(item)}
-                            >
-                              <FaRegEdit />
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => handleDelete(item)}
-                            >
-                              <FaRegTrashCan />
-                            </button>
+                            <div className="flex-1">
+                              {item.attributes
+                                .filter(
+                                  (attribute: any) =>
+                                    attribute.name !== "image" &&
+                                    attribute.name !== "owned"
+                                )
+                                .slice(0, 3)
+                                .map((attribute: any, index: number) => (
+                                  <p
+                                    key={attribute.slug || attribute.name}
+                                    className={
+                                      index === 0
+                                        ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                        : "text-md font-semibold pl-4 capitalize truncate"
+                                    }
+                                  >
+                                    {`${attribute.value}`}
+                                  </p>
+                                ))}
+                            </div>
+                            <div className="flex space-x-4">
+                              <button
+                                className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                onClick={() => openEdit(item)}
+                              >
+                                <FaRegEdit />
+                              </button>
+                              <button
+                                className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                onClick={() => handleDelete(item)}
+                              >
+                                <FaRegTrashCan />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 ) : (
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
@@ -1144,7 +1171,11 @@ useEffect(() => {
                       : collectables
                     ).map((item) => (
                       <div
-                        key={item.universe_collectable_id || item.collection_id}
+                        key={
+                          item.universeCollectableId ||
+                          item.collectionId ||
+                          Math.random()
+                        }
                       >
                         <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                           <div className="h-22 w-30">
