@@ -197,7 +197,7 @@ router.get('/get-favorite-attributes', async (req, res) => {
   } catch (error) {
     console.log("Failed to fetch favorite attributes");
     console.log(error);
-    res.status(400).res("Failed to fetch favorite attributes");
+    res.status(400).send("Failed to fetch favorite attributes");
   }
 });
 
