@@ -3,10 +3,86 @@ const {db, pool} = require('../config/db');
 const {collections, collectionUniverses, users, universeCollectables, collectableAttributes} = require('../config/schema');
 const express = require('express');
 const {eq, and, inArray} = require('drizzle-orm');
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const Papa = require("papaparse");
+const fs = require('fs');
 //const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
 //router.use(authenticateJWTToken);
+
+const uploadsDir = path.join(__dirname, "../temporary_image_storage");
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir); 
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        console.log(file);
+        cb(null, uploadsDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
+
+const cpUpload = upload.fields([
+    { name: 'collectableImages', maxCount: 200_000 }
+]);
+
+const bulkUpdateUpload = upload.fields([
+  { name: 'collectableImages', maxCount: 4000 }, // Adjust maxCount as needed
+  { name: 'originalCSV', maxCount: 1 },
+  { name: 'editedCSV', maxCount: 1 }
+]);
+
+const parseCSV = (filePath) => {
+  const file = fs.readFileSync(filePath, "utf8");
+  return Papa.parse(file, { header: true }).data;
+};
+
+const diffCSVData = (csvData1, csvData2) => {
+  const changes = [];
+
+  // Iterate over each row in csvData1
+  csvData1.forEach((row1) => {
+    // Find the corresponding row in csvData2 by a unique identifier, like 'id'
+    const row2 = csvData2.find((r) => r.id === row1.id); // Adjust if the identifier is different
+    if (!row2) {
+      console.log("Row id values do not match");
+      changes.push({ id: row1.id, change: "Row missing in edited file" });
+      return;
+    }
+
+    // Check for differences in each field
+    Object.keys(row1).forEach((key) => {
+      if (row1[key] !== row2[key]) {
+        changes.push({
+          id: row1.id,
+          field: key,
+          oldValue: row1[key],
+          newValue: row2[key],
+        });
+      }
+    });
+  });
+
+  // // Find rows in csvData2 that are missing from csvData1
+  // csvData2.forEach((row2) => {
+  //   const row1 = csvData1.find((r) => r.id === row2.id);
+  //   if (!row1) {
+  //     changes.push({ id: row2.id, change: "Row missing in original file" });
+  //   }
+  // });
+
+  return changes;
+};
 
 
 router.post('/copy-universe', async (req, res) => {
@@ -294,6 +370,123 @@ router.get('/user/:user_id', async (req, res) => {
     res.status(500).send({ error: 'Error fetching items' });
   }
 })
+
+router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
+  const { collectionUniverseId } = req.body;
+
+  if (!collectionUniverseId) {
+    console.log("collectionUniverseId not given");
+    return res.status(404).send("collectionUniverseId not given");
+  }
+
+  const urlCollectableImages = [];
+  console.log("collectionUniverseId:", collectionUniverseId);
+
+  try {
+    const collectableImages = req.files.collectableImages || [];
+    const originalCSV = req.files.originalCSV ? req.files.originalCSV[0] : null;
+    const editedCSV = req.files.editedCSV ? req.files.editedCSV[0] : null;
+
+    if (collectableImages && collectableImages.length > 0) {
+      console.log("uploading images");
+      const uploadPromises = collectableImages.map(file => {
+          const fileContent = fs.readFileSync(file.path);
+          const uniqueFilename = `${uuidv4()}-${file.originalname}`;
+          const params = {
+              Bucket: process.env.S3_BUCKET_NAME, // Use the bucket name directly
+              Key: uniqueFilename, // Use the unique filename
+              Body: fileContent,
+              ContentType: file.mimetype
+          };
+          return s3Client.send(new PutObjectCommand(params)).then(() => {
+              // Delete the file from the server after uploading to S3
+              const originalName = file.originalname;
+              if(fs.existsSync(file.path))
+                  fs.unlinkSync(file.path);
+
+              const objectUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${uniqueFilename}`;
+              urlCollectableImages.push({ url: objectUrl, originalName: originalName });
+          }).catch(error => {
+              console.error(`Error uploading ${file.filename} to S3:`, error);
+              throw new Error(`Failed to upload ${file.filename}`);
+          });
+      });
+      await Promise.all(uploadPromises);
+    }
+
+    urlCollectableImages.forEach(image => {
+      console.log("URL", image.url);
+      console.log("Original Name:", image.originalName);
+    });
+
+    // console.log("Uploaded images:", collectableImages);
+    // console.log("Original CSV:", originalCSV);
+    // console.log("Edited CSV:", editedCSV);
+
+    const originalCSVData = await parseCSV(originalCSV.path);
+    console.log("originalCSVData: ", originalCSVData);
+
+    const editedCSVData = await parseCSV(editedCSV.path);
+    console.log("editedCSVData: ", editedCSVData);
+
+    fs.unlinkSync(originalCSV.path);
+    fs.unlinkSync(editedCSV.path);
+
+    const csvDifferences = await diffCSVData(originalCSVData, editedCSVData);
+    console.log("csvDifferences: ", csvDifferences);
+
+// Function to update values based on differences
+  await db.transaction(async (trx) => {
+    const updatePromises = csvDifferences.map(async (diff) => {
+      console.log("diff.field: ", diff.field, "   diff.newValue: ", diff.newValue);
+      console.log("diff.id: ", diff.id);
+  
+      let result; 
+      if(diff.field != 'image') {
+        result = await trx
+        .update(collectableAttributes)
+        .set({
+          value: diff.newValue
+        })
+        .where(
+          and(
+            eq(collectableAttributes.universe_collectable_id, diff.id),
+            eq(collectableAttributes.name, diff.field)
+          )  
+        )
+        .execute();
+      } else {
+        const imageObject = urlCollectableImages.find(image => image.originalName === diff.newValue);
+        console.log("imageObject: ", imageObject.url);
+        result = await trx
+        .update(collectableAttributes)
+        .set({
+          value: imageObject.url
+        })
+        .where(
+          and(
+            eq(collectableAttributes.universe_collectable_id, diff.id),
+            eq(collectableAttributes.name, diff.field)
+          )  
+        )
+        .execute();
+      }
+  
+      return result;
+    });
+  
+    await Promise.all(updatePromises);
+    console.log('Successfully updated values based on CSV differences');
+        
+  
+      res.status(200).send("Updated Successfully");
+  })
+  
+  } catch (error) {
+    console.log(error);
+    res.status(400).send("Error while bulk updating");
+  }
+});
 
 // UPDATE
 router.put('/:id', async (req, res) => {

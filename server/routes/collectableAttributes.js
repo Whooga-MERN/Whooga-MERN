@@ -176,6 +176,32 @@ router.get('/masked-attributes/:collectionId', async (req, res) => {
   }
 });
 
+router.get('/get-favorite-attributes', async (req, res) => {
+  const { collectionId } = req.query;
+  console.log(collectionId);
+  if(!collectionId)
+  {
+    console.log("Invalid or no input for collectionId");
+    return res.status(400).json({ message: "Invalid or no input for collectionId"});
+  }
+
+  try {
+    console.log("Fetching Favorite Attributes");
+    const favoriteAttributesQuery = await db
+    .select({ favoriteAttributes: collections.favorite_attributes})
+    .from(collections)
+    .where(eq(collectionId,collections.collection_id));
+    console.log("Finished Fetching Favorite Attributes");
+
+    res.status(200).json(favoriteAttributesQuery);
+  } catch (error) {
+    console.log("Failed to fetch favorite attributes");
+    console.log(error);
+    res.status(400).res("Failed to fetch favorite attributes");
+  }
+});
+
+
 router.put('/update-favorite-attributes', async (req, res) => {
   const { collectionId, favoriteAttributes } = req.body;
  
