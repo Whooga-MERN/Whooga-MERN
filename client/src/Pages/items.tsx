@@ -208,14 +208,35 @@ export default function HomePage() {
         const data = await response.json();
         console.log("Attributes: ", data);
         setMaskedAttributes(data);
-        // setCustomAttributes(data.customAttributes);
-        // setFavoriteAttributes(data.favoriteAttributes);
-        // setHiddenAttributes(data.hiddenAttributes);
       } else {
         console.error("Error fetching attributes:", response);
       }
     };
     getAttributes();
+
+    const getFavoriteAttributes = async () => {
+      const favReponse = await fetch(
+        buildPath(`collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (favReponse.ok) {
+        const data = await favReponse.json();
+        console.log("Favorite Attributes: ", data[0].favoriteAttributes);
+        setFavoriteAttributes(data[0].favoriteAttributes);
+        const allAttributes = data[0].favoriteAttributes.concat(maskedAttributes.filter((attr) => !data[0].favoriteAttributes.includes(attr)));
+        console.log("All Attributes: ", allAttributes);
+        setMaskedAttributes(allAttributes);
+      } else {
+        console.error("Error fetching favorite attributes:", favReponse);
+      }
+    };
+    getFavoriteAttributes();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -891,7 +912,7 @@ export default function HomePage() {
                        to={`/bulk-upload/${collectionId}`}>Bulk Upload</Link></li>
 
                        <li><Link className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                       to={`/`}>Bulk Edit</Link></li>
+                       to={`/bulk-edit/${collectionId}`}>Bulk Edit</Link></li>
 
                        <li><a className="text-lg hover:bg-red-400 hover:text-black"
                        onClick={deleteCollection}>Delete Collection</a></li>
