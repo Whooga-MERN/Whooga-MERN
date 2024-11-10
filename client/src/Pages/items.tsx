@@ -69,7 +69,7 @@ export default function HomePage() {
   const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
     null
   );
-  const [isCollectionOwned, setIsCollectionOwned] = useState(true);
+  const [isCollectionOwned, setIsCollectionOwned] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
   const [selectedSort, setSelectedSort] = useState<string>("");
@@ -87,6 +87,7 @@ export default function HomePage() {
   }>();
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
+  const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
@@ -131,15 +132,25 @@ export default function HomePage() {
 
       setUniverseCollectionName(collectionName);
       setCollectionIds(JSON.parse(storedCollectionIds));
+      console.log("Collection IDs: ", JSON.parse(storedCollectionIds));
+      console.log("Collection ID: ", collectionId);
+      console.log("Universe Collection ID: ", universeCollectionId);
       if (
         universeCollectionId &&
-        JSON.parse(storedCollectionIds).includes(universeCollectionId)
+        JSON.parse(storedCollectionIds).some(
+          ([colId, uniId]: [string, string]) => {
+        console.log("Comparing:", colId, uniId);
+        console.log("Types:", typeof colId, typeof uniId, typeof collectionId, typeof universeCollectionId);
+        return colId.toString() === collectionId && uniId.toString() === universeCollectionId;
+      }
+        )
       ) {
         setIsCollectionOwned(true);
       }
       if (savedWishlist) {
         setWishlistIds(JSON.parse(savedWishlist));
       }
+      console.log("Collection owned?: ", isCollectionOwned);
     };
     getItemsFromStorage();
     setSearchResults([]);
@@ -170,22 +181,42 @@ export default function HomePage() {
 
     // get attributes, needs to be changed to fetch from API
     const getAttributes = async () => {
-      const storedCustomeAttributes = localStorage.getItem("customAttributes");
-      const storedFavoriteAttributes =
-        localStorage.getItem("favoriteAttributes");
-      const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
-      if (storedCustomeAttributes) {
-        setCustomAttributes(JSON.parse(storedCustomeAttributes));
-      }
-      if (storedFavoriteAttributes) {
-        setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
-      }
-      if (storedHiddenAttributes) {
-        setHiddenAttributes(JSON.parse(storedHiddenAttributes));
+      // const storedCustomeAttributes = localStorage.getItem("customAttributes");
+      // const storedFavoriteAttributes =
+      //   localStorage.getItem("favoriteAttributes");
+      // const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
+      // if (storedCustomeAttributes) {
+      //   setCustomAttributes(JSON.parse(storedCustomeAttributes));
+      // }
+      // if (storedFavoriteAttributes) {
+      //   setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
+      // }
+      // if (storedHiddenAttributes) {
+      //   setHiddenAttributes(JSON.parse(storedHiddenAttributes));
+      // }
+
+      const response = await fetch(
+        buildPath(`collectable-attributes/masked-attributes/${collectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Attributes: ", data);
+        setMaskedAttributes(data);
+        // setCustomAttributes(data.customAttributes);
+        // setFavoriteAttributes(data.favoriteAttributes);
+        // setHiddenAttributes(data.hiddenAttributes);
+      } else {
+        console.error("Error fetching attributes:", response);
       }
     };
     getAttributes();
-  }, []);
+  }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
     localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
@@ -340,6 +371,36 @@ export default function HomePage() {
   //         return 0;
   //     }
   //   });
+
+  const handleAddToMyCollections = async () => {
+    console.log("Add to My Collections clicked");
+    console.log("Collection ID: ", universeCollectionId);
+    const request = {
+      collectionUniverseId: universeCollectionId,
+      userEmail: userId.loginId,
+    };
+    console.log("Request: ", request);
+
+    try {
+      const response = await fetch(buildPath(`collection-universe/copy-universe`), {
+        method: "POST",
+        body: JSON.stringify(request),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log("Collection added successfully");
+        setIsCollectionOwned(true);
+      } else {
+        console.error("Error adding collection:", response);
+      }
+    } catch (error) {
+      console.error("Error adding collection:", error);
+    }
+  };
 
   // -------------- handle star click-------------------
 
@@ -812,42 +873,56 @@ export default function HomePage() {
 
               {/* icon button for view hidden lg:block md:block*/}
               <div className="hidden lg:block md:block pt-3 mt-3">
+                  <button className="pr-5" onClick={() => setView("list")}>
+                    <FaListUl />
+                  </button>
+                  <button className="pr-16" onClick={() => setView("grid")}>
+                    <BsFillGridFill />
+                  </button>
                 {isCollectionOwned ? (
-                  <div>
-                    <button className="pr-5" onClick={() => setView("list")}>
-                      <FaListUl />
-                    </button>
-                    <button className="pr-16" onClick={() => setView("grid")}>
-                      <BsFillGridFill />
-                    </button>
-                    <button
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                      onClick={openModal}
-                    >
-                      New Collectible
-                      <IoIosAdd />
-                    </button>
-                    <Link
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
-                      to={`/bulk-upload/${collectionId}`}
-                    >
-                      Bulk Upload
-                      <IoIosAdd />
-                    </Link>
-                    <button
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
-                      onClick={deleteCollection}
-                    >
-                      Delete Collection
-                    </button>
+                  <div className="dropdown">
+                    <div tabIndex={0} role="button" className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit">Edit Collection</div>
+                    <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+
+                      <li><a className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       onClick={openModal}>Add Collectable</a></li>
+
+                      <li><Link className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       to={`/bulk-upload/${collectionId}`}>Bulk Upload</Link></li>
+
+                       <li><Link className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       to={`/`}>Bulk Edit</Link></li>
+
+                       <li><a className="text-lg hover:bg-red-400 hover:text-black"
+                       onClick={deleteCollection}>Delete Collection</a></li>
+                    </ul>
                   </div>
+
+                  //   <button
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                  //     onClick={openModal}
+                  //   >
+                  //     New Collectible
+                  //     <IoIosAdd />
+                  //   </button>
+                  //   <Link
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
+                  //     to={`/bulk-upload/${collectionId}`}
+                  //   >
+                  //     Bulk Upload
+                  //     <IoIosAdd />
+                  //   </Link>
+                  //   <button
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
+                  //     onClick={deleteCollection}
+                  //   >
+                  //     Delete Collection
+                  //   </button>
+                  // </div>
                 ) : (
                   <button
                     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    onClick={() => {
-                      // create onClick to call API to add to the user's collections
-                      console.log("Add to My Collections clicked");
-                    }}
+                    onClick={handleAddToMyCollections}
                   >
                     Add to My Collections
                     <IoIosAdd />

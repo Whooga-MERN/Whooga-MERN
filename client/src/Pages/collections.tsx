@@ -124,8 +124,9 @@ export default function Collections() {
         );
 
         const collectionIds = data.map(
-          (col: { collection_id: string }) => col.collection_id
+          (col: { collection_id: string, collection_universe_id: string }) => [col.collection_id, col.collection_universe_id]
         );
+        console.log("collectionIds: ", collectionIds);
         localStorage.setItem("collectionIds", JSON.stringify(collectionIds));
 
         //console.log("Collections as collection:", collections);
