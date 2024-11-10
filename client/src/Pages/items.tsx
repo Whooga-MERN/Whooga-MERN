@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _ from "lodash";
+import _, { get } from "lodash";
 
 import {
   FaListUl,
@@ -32,6 +32,7 @@ import {
   fetchOwnedSearchResults,
   addToWishlist,
   removeFromWishlist,
+  fetchUniverseJumpResults,
 } from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
@@ -60,6 +61,212 @@ const color = [
 ];
 
 export default function HomePage() {
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [resetDropdown, setResetDropdown] = useState(true);
+  const [jumpSearchResults, setJumpSearchResults] = useState<any[]>([]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
+    null
+  );
+  const [isCollectionOwned, setIsCollectionOwned] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
+  const [showEdit, setShowEdit] = useState(false); // edit collectible
+  const [selectedSort, setSelectedSort] = useState<string>("");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [view, setView] = useState<"list" | "grid">("grid");
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
+  const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
+
+  const [userId, setUserId] = useState<any>(null);
+  const [JWT, setJWT] = useState<string>("");
+  const { universeCollectionId } = useParams<{
+    universeCollectionId: string;
+  }>();
+  const [collectionId, setCollectionId] = useState<string>();
+  const [collectionIds, setCollectionIds] = useState<string[]>([]);
+  const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
+  const [customAttributes, setCustomAttributes] = useState<string[]>([]);
+  const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
+  const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
+  const [universeCollectionName, setUniverseCollectionName] = useState("");
+  const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
+  const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
+
+  const [error, setError] = useState<string | null>(null);
+  const [enabled, setEnabled] = useState(false);
+
+  const [noSearchResults, setNoSearchResults] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTags, setSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
+  const [jumpSearchTags, setJumpSearchTags] = useState<
+    { attribute: string; term: string }[]
+  >([]);
+
+  const [jumpPageNumber, setJumpPageNumber] = useState<number>();
+  const [showLoadPreviousButton, setShowLoadPreviousButton] = useState(false);
+  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [loadedPages, setLoadedPages] = useState(new Set<number>());
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("universeCollectionId:", universeCollectionId);
+  }, [universeCollectionId]);
+
+  useEffect(() => {
+    const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
+    console.log("collectionID: ", collectionIDInStorage);
+    setCollectionId(collectionIDInStorage);
+  }, []);
+
+  useEffect(() => {
+    // gather items from local storage
+    const getItemsFromStorage = async () => {
+      const collectionName = localStorage.getItem("collectionName") ?? "";
+      const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
+      const savedWishlist = localStorage.getItem("wishlistIds");
+
+      setUniverseCollectionName(collectionName);
+      setCollectionIds(JSON.parse(storedCollectionIds));
+      console.log("Collection IDs: ", JSON.parse(storedCollectionIds));
+      console.log("Collection ID: ", collectionId);
+      console.log("Universe Collection ID: ", universeCollectionId);
+      if (
+        universeCollectionId &&
+        JSON.parse(storedCollectionIds).some(
+          ([colId, uniId]: [string, string]) => {
+        console.log("Comparing:", colId, uniId);
+        console.log("Types:", typeof colId, typeof uniId, typeof collectionId, typeof universeCollectionId);
+        return colId.toString() === collectionId && uniId.toString() === universeCollectionId;
+      }
+        )
+      ) {
+        setIsCollectionOwned(true);
+      }
+      if (savedWishlist) {
+        setWishlistIds(JSON.parse(savedWishlist));
+      }
+      console.log("Collection owned?: ", isCollectionOwned);
+    };
+    getItemsFromStorage();
+    setSearchResults([]);
+    setJumpSearchResults([]);
+    console.log("refresh: ", jumpSearchResults);
+    setResetDropdown(true);
+
+    // fetch user details and token
+    const fetchUserDetails = async () => {
+      try {
+        const user = await fetchUserLoginDetails();
+        setUserId(user || "");
+      } catch (error) {
+        console.error("Error Fetching User");
+      }
+    };
+    fetchUserDetails();
+
+    const fetchToken = async () => {
+      try {
+        const token = await fetchJWT();
+        setJWT(token || "");
+      } catch (error) {
+        console.error("Error fetching JWT");
+      }
+    };
+    fetchToken();
+
+    // get attributes, needs to be changed to fetch from API
+    const getAttributes = async () => {
+      // const storedCustomeAttributes = localStorage.getItem("customAttributes");
+      // const storedFavoriteAttributes =
+      //   localStorage.getItem("favoriteAttributes");
+      // const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
+      // if (storedCustomeAttributes) {
+      //   setCustomAttributes(JSON.parse(storedCustomeAttributes));
+      // }
+      // if (storedFavoriteAttributes) {
+      //   setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
+      // }
+      // if (storedHiddenAttributes) {
+      //   setHiddenAttributes(JSON.parse(storedHiddenAttributes));
+      // }
+
+      const response = await fetch(
+        buildPath(`collectable-attributes/masked-attributes/${collectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Attributes: ", data);
+        setMaskedAttributes(data);
+        // setCustomAttributes(data.customAttributes);
+        // setFavoriteAttributes(data.favoriteAttributes);
+        // setHiddenAttributes(data.hiddenAttributes);
+      } else {
+        console.error("Error fetching attributes:", response);
+      }
+    };
+    getAttributes();
+  }, [collectionId, universeCollectionId]);
+
+  useEffect(() => {
+    localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
+  }, [wishlistIds]);
+
+  useEffect(() => {
+    if (specificTag) {
+      const initialFormData = specificTag.attributes.reduce(
+        (
+          acc: { [x: string]: any },
+          attr: { name: string | number; value: any }
+        ) => {
+          acc[attr.name] = attr.value;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      setFormData(initialFormData);
+    }
+  }, [specificTag]);
+
+  // -------------------------- show universecollectables and search ------------------
+
+  useEffect(() => {
+    const getUniverseCollectionId = async () => {
+      console.log("UID: ", universeCollectionId);
+      console.log("ID: ", collectionId);
+      if (collectionId) {
+        console.log("collectionId in getUniverseCollectionId: ", collectionId);
+        const ownedCollectables = await fetchOwnedCollectables(
+          collectionId,
+          initialPage,
+          ITEMS_PER_PAGE
+        );
+        setOwnedCollectables(ownedCollectables);
+
+        if (universeCollectionId) {
+          const collectables = await fetchUniverseCollectables(
+            universeCollectionId,
+            initialPage,
+            ITEMS_PER_PAGE
+          );
+          setUniverseCollectables(collectables);
+        }
+      }
+    };
+
+    getUniverseCollectionId();
+  }, [collectionId]);
+
   // add collectible form modal open handler
   const openModal = () => {
     setIsModalOpen(true);
@@ -119,13 +326,6 @@ export default function HomePage() {
     }
   };
 
-  const [isCollectionOwned, setIsCollectionOwned] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
-  const [showEdit, setShowEdit] = useState(false); // edit collectible
-  const [selectedSort, setSelectedSort] = useState<string>("");
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [view, setView] = useState<"list" | "grid">("grid");
-
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedSort(e.target.value);
   };
@@ -172,19 +372,37 @@ export default function HomePage() {
   //     }
   //   });
 
-  // -------------- handle star click-------------------
-  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
+  const handleAddToMyCollections = async () => {
+    console.log("Add to My Collections clicked");
+    console.log("Collection ID: ", universeCollectionId);
+    const request = {
+      collectionUniverseId: universeCollectionId,
+      userEmail: userId.loginId,
+    };
+    console.log("Request: ", request);
 
-  useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlistIds");
-    if (savedWishlist) {
-      setWishlistIds(JSON.parse(savedWishlist));
+    try {
+      const response = await fetch(buildPath(`collection-universe/copy-universe`), {
+        method: "POST",
+        body: JSON.stringify(request),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log("Collection added successfully");
+        setIsCollectionOwned(true);
+      } else {
+        console.error("Error adding collection:", response);
+      }
+    } catch (error) {
+      console.error("Error adding collection:", error);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
-  }, [wishlistIds]);
+  // -------------- handle star click-------------------
 
   const handleStarClick = (
     universeCollectableId: number,
@@ -210,12 +428,6 @@ export default function HomePage() {
   };
 
   //--------------------- handle form field ------------------------
-  const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isNewCollectableWishlist, setIsNewCollectableWishlist] =
-    useState<boolean>(false);
-  const [isPublished, setIsPublished] = useState(false);
-
   // handle form field change
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -346,198 +558,7 @@ export default function HomePage() {
     console.log("FormData Contents:", formDataEntries);
   };
 
-  // --------------------- get user information -----------------
-  const [userId, setUserId] = useState<any>(null);
-  const [JWT, setJWT] = useState<string>("");
-  const { collectionId } = useParams<{ collectionId: string }>();
-  const [customAttributes, setCustomAttributes] = useState<string[]>([]);
-  const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
-  const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
-
-  useEffect(() => {
-    // user.loginId to get email, get attributes, and get JWT
-    const fetchUserDetails = async () => {
-      try {
-        const user = await fetchUserLoginDetails();
-        setUserId(user || "");
-      } catch (error) {
-        console.error("Error Fetching User");
-      }
-    };
-    fetchUserDetails();
-
-    const fetchToken = async () => {
-      try {
-        const token = await fetchJWT();
-        setJWT(token || "");
-      } catch (error) {
-        console.error("Error fetching JWT");
-      }
-    };
-    fetchToken();
-
-    const getAttributes = async () => {
-      const storedCustomeAttributes = localStorage.getItem("customAttributes");
-      const storedFavoriteAttributes =
-        localStorage.getItem("favoriteAttributes");
-      const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
-      if (storedCustomeAttributes) {
-        setCustomAttributes(JSON.parse(storedCustomeAttributes));
-      }
-      if (storedFavoriteAttributes) {
-        setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
-      }
-      if (storedHiddenAttributes) {
-        setHiddenAttributes(JSON.parse(storedHiddenAttributes));
-      }
-    };
-    getAttributes();
-  }, []);
-
-  if (!collectionId) {
-    return <div>Error: Collection ID is missing!</div>;
-  }
-
-  // -------------------------- show universecollectables and search ------------------
-  const [universeCollectionId, setUniverseCollectionId] = useState<
-    string | null
-  >(null);
-  const [universeCollectionName, setUniverseCollectionName] = useState("");
-  const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
-  const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [enabled, setEnabled] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [resetDropdown, setResetDropdown] = useState(false);
-  const [noSearchResults, setNoSearchResults] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    var collectionUID = localStorage.getItem("collectionUniverseId") ?? "";
-    console.log("collectionUID: ", collectionUID);
-    setUniverseCollectionId(collectionUID);
-    const collectionName = localStorage.getItem("collectionName") ?? "";
-    setUniverseCollectionName(collectionName);
-    const collectionIds = localStorage.getItem("collectionIds") ?? "";
-
-    if (collectionIds.includes(collectionUID)) {
-      setIsCollectionOwned(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    const getUniverseCollectionId = async () => {
-      try {
-        if (collectionId) {
-          const ownedCollectables = await fetchOwnedCollectables(
-            collectionId,
-            initialPage,
-            ITEMS_PER_PAGE
-          );
-          setOwnedCollectables(ownedCollectables);
-
-          if (universeCollectionId) {
-            const collectables = await fetchUniverseCollectables(
-              universeCollectionId,
-              initialPage,
-              ITEMS_PER_PAGE
-            );
-            setUniverseCollectables(collectables);
-          }
-        } else {
-          console.error("universeCollectionId is null");
-        }
-      } catch (e) {
-        setError("Error fetching universe collection ID");
-        console.error(e);
-      }
-    };
-
-    getUniverseCollectionId();
-  }, [collectionId, universeCollectionId]);
-
-  const handleSearchResults = (results: any[]) => {
-    if (results.length === 0) {
-      setNoSearchResults(true);
-    } else {
-      setNoSearchResults(false);
-      setSearchResults(results);
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearchResults([]);
-    setResetDropdown(true);
-    setNoSearchResults(false);
-  };
-
-  const { ref: collectableRef, entry: collectableEntry } = useIntersection({
-    threshold: 1,
-  });
-  const { ref: searchRef, entry: searchEntry } = useIntersection({
-    threshold: 1,
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const handleToggleChange = (enabled: boolean) => {
-    setEnabled(enabled);
-    handleClearSearch();
-    setCurrentPage(1);
-  };
-
-  const {
-    data: collectablesDate,
-    fetchNextPage: fetchCollectablesNextPage,
-    hasNextPage: hasMoreCollectables,
-    isFetchingNextPage: isFetchingCollectables,
-  } = useInfiniteQuery({
-    queryKey: ["collectables", collectionId, universeCollectionId, enabled],
-    queryFn: ({ pageParam = 1 }) => {
-      if (enabled) {
-        return fetchOwnedCollectables(collectionId!, pageParam, ITEMS_PER_PAGE);
-      } else if (universeCollectionId) {
-        return fetchUniverseCollectables(
-          universeCollectionId,
-          pageParam,
-          ITEMS_PER_PAGE
-        );
-      }
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
-    refetchOnWindowFocus: false,
-  });
-
-  useEffect(() => {
-    if (collectableEntry?.isIntersecting && hasMoreCollectables) {
-      fetchCollectablesNextPage().then((result) => {
-        const newPages = result.data;
-
-        if (newPages) {
-          setCurrentPage((prevPage) => {
-            const nextPage = prevPage + 1;
-            return nextPage;
-          });
-        }
-      });
-    }
-  }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
-
-  const collectables = collectablesDate?.pages.flatMap((page) => page) ?? [];
-
-  // Error handler for search queries
-  const handleError = (error: any) => {
-    console.error("Search error:", error);
-    alert("An error occurred during the search. Please try again.");
-  };
-
   // ------------------------ open card for details -----------------------------------
-  const [showModal, setShowModal] = useState(false);
-  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
-    null
-  );
-
   const handleOpenModal = (item: Record<string, any>) => {
     setSpecificTag(item);
     setShowModal(true);
@@ -558,14 +579,17 @@ export default function HomePage() {
       console.log("Request: ", request);
 
       try {
-        const response = await fetch(buildPath(`collection-universe/delete-universe`), {
-          method: "DELETE",
-          body: JSON.stringify(request),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${JWT}`,
-          },
-        });
+        const response = await fetch(
+          buildPath(`collection-universe/delete-universe`),
+          {
+            method: "DELETE",
+            body: JSON.stringify(request),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
 
         if (response.ok) {
           console.log("Collection deleted successfully");
@@ -576,31 +600,103 @@ export default function HomePage() {
       } catch (error) {
         console.error("Error deleting collection:", error);
       }
-    }
-    else{
+    } else {
       return;
-    } 
+    }
   };
 
-  useEffect(() => {
-    if (specificTag) {
-      const initialFormData = specificTag.attributes.reduce(
-        (
-          acc: { [x: string]: any },
-          attr: { name: string | number; value: any }
-        ) => {
-          acc[attr.name] = attr.value;
-          return acc;
-        },
-        {} as Record<string, string>
-      );
-      setFormData(initialFormData);
+  const handleSearchResults = (results: any[]) => {
+    if (results.length === 0) {
+      setNoSearchResults(true);
+    } else {
+      setNoSearchResults(false);
+      setSearchResults(results);
     }
-  }, [specificTag]);
+  };
 
-  const [searchTags, setSearchTags] = useState<
-    { attribute: string; term: string }[]
-  >([]);
+  const handleClearSearch = () => {
+    setSearchResults([]);
+    console.log("search result: ", searchResults);
+    setJumpSearchResults([]);
+    console.log("jump results: ", jumpSearchResults);
+    setResetDropdown(true);
+    setNoSearchResults(false);
+  };
+
+  const { ref: collectableRef, entry: collectableEntry } = useIntersection({
+    threshold: 1,
+  });
+  const { ref: searchRef, entry: searchEntry } = useIntersection({
+    threshold: 1,
+  });
+  const { ref: jumpNextRef, entry: jumpNextEntry } = useIntersection({
+    threshold: 1,
+  });
+
+  const handleToggleChange = (enabled: boolean) => {
+    setEnabled(enabled);
+    handleClearSearch();
+    setCurrentPage(1);
+    setJumpSearchResults([]);
+    setSearchResults([]);
+  };
+
+  const {
+    data: collectablesData,
+    fetchNextPage: fetchCollectablesNextPage,
+    hasNextPage: hasMoreCollectables,
+    isFetchingNextPage: isFetchingCollectables,
+  } = useInfiniteQuery({
+    queryKey: ["collectables", collectionId, universeCollectionId, enabled],
+    queryFn: ({ pageParam = 1 }) => {
+      if (enabled) {
+        return fetchOwnedCollectables(collectionId!, pageParam, ITEMS_PER_PAGE);
+      } else if (universeCollectionId) {
+        return fetchUniverseCollectables(
+          universeCollectionId,
+          pageParam,
+          ITEMS_PER_PAGE
+        );
+      }
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (
+        !lastPage ||
+        !Array.isArray(lastPage) ||
+        lastPage.length < ITEMS_PER_PAGE
+      ) {
+        return undefined;
+      }
+      return allPages.length + 1;
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (collectableEntry?.isIntersecting && hasMoreCollectables) {
+      fetchCollectablesNextPage().then((result) => {
+        const newPages = result.data;
+
+        if (newPages) {
+          setCurrentPage((prevPage) => {
+            const nextPage = prevPage + 1;
+            return nextPage;
+          });
+        }
+      });
+    }
+  }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
+
+  const collectables = collectablesData?.pages.flatMap((page) => page) ?? [];
+
+  const handleSearch = async (
+    searchTags: { attribute: string; term: string }[]
+  ) => {
+    setSearchTags(searchTags);
+    setSearchResults([]);
+    fetchSearchNextPage();
+  };
 
   const {
     data: searchResultsData,
@@ -610,7 +706,7 @@ export default function HomePage() {
   } = useInfiniteQuery({
     queryKey: ["searchResults", searchTags, enabled],
     queryFn: ({ pageParam = 1 }) => {
-      if (enabled) {
+      if (enabled && collectionId) {
         return fetchOwnedSearchResults(
           searchTags,
           userId,
@@ -650,14 +746,96 @@ export default function HomePage() {
 
   const _searchResults = searchResultsData?.pages.flat() || [];
 
-  const handleSearch = async (
-    searchTags: { attribute: string; term: string }[]
+  useEffect(() => {
+    if (searchResultsData) {
+      console.log("searchResultsData:", _searchResults);
+    }
+  }, [_searchResults]);
+
+  const handleJump = async (
+    jumpTags: { attribute: string; term: string }[]
   ) => {
-    setSearchTags(searchTags);
-    // Reset the results and current page
+    setJumpSearchTags(jumpTags);
+    setJumpSearchResults([]);
+    setShowLoadPreviousButton(true);
+    setHasMoreItems(true);
+    setLoadedPages(new Set());
+
+    try {
+      const data = await fetchUniverseJumpResults(
+        jumpTags,
+        userId,
+        universeCollectionId!
+      );
+      setJumpSearchResults(data.collectables);
+      setJumpPageNumber(data.page);
+      setLoadedPages(new Set([data.page]));
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
+
+  const handleLoadFromJumpPage = async (jumpPageNumber: number) => {
+    if (loadedPages.has(jumpPageNumber)) {
+      return;
+    }
+
+    try {
+      const data = await fetchUniverseCollectables(
+        universeCollectionId!,
+        jumpPageNumber,
+        ITEMS_PER_PAGE
+      );
+      setJumpSearchResults((prevResults) => [...prevResults, ...data]);
+      setLoadedPages((prevLoaded) => new Set(prevLoaded).add(jumpPageNumber));
+      setJumpPageNumber((prevPage) => (prevPage ?? 1) + 1);
+    } catch (error) {
+      console.error("Error fetching additional pages:", error);
+    }
+  };
+
+  const handleLoadPreviousPage = async () => {
+    if (jumpPageNumber === 1) {
+      setShowLoadPreviousButton(false);
+      setJumpSearchResults([]);
+      console.log(
+        "page: ",
+        jumpPageNumber,
+        " reached. array: ",
+        jumpSearchResults
+      );
+      return;
+    }
+    const previousPage = Math.max(jumpPageNumber! - 1, 1);
+    if (loadedPages.has(previousPage)) {
+      return;
+    }
+    try {
+      const data = await fetchUniverseCollectables(
+        universeCollectionId!,
+        previousPage,
+        ITEMS_PER_PAGE
+      );
+      setJumpSearchResults((prevResults) => [...data, ...prevResults]);
+      setLoadedPages((prevLoaded) => new Set(prevLoaded).add(previousPage));
+      console.log(jumpSearchResults);
+      setJumpPageNumber(previousPage);
+    } catch (error) {
+      console.error("Error fetching previous page items:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (jumpNextEntry?.isIntersecting) {
+      handleLoadFromJumpPage(jumpPageNumber! + 1);
+    }
+  }, [jumpNextEntry]);
+
+  const handleReset = () => {
     setSearchResults([]);
-    // Refetch with new search tags
-    fetchSearchNextPage();
+    setJumpSearchResults([]);
+    setResetDropdown(true);
+    setNoSearchResults(false);
   };
 
   return (
@@ -684,51 +862,67 @@ export default function HomePage() {
                 <SearchBar
                   attributes={favoriteAttributes}
                   onSearchResults={handleSearchResults}
-                  onResetSearch={() => setSearchResults([])}
+                  // onResetSearch={() => setSearchResults([])}
                   resetDropdown={resetDropdown}
+                  onResetSearch={handleReset}
                   setResetDropdown={setResetDropdown}
                   onSearch={handleSearch}
+                  onJump={handleJump}
                 />
               )}
 
               {/* icon button for view hidden lg:block md:block*/}
               <div className="hidden lg:block md:block pt-3 mt-3">
+                  <button className="pr-5" onClick={() => setView("list")}>
+                    <FaListUl />
+                  </button>
+                  <button className="pr-16" onClick={() => setView("grid")}>
+                    <BsFillGridFill />
+                  </button>
                 {isCollectionOwned ? (
-                  <div>
-                    <button className="pr-5" onClick={() => setView("list")}>
-                      <FaListUl />
-                    </button>
-                    <button className="pr-16" onClick={() => setView("grid")}>
-                      <BsFillGridFill />
-                    </button>
-                    <button
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                      onClick={openModal}
-                    >
-                      New Collectible
-                      <IoIosAdd />
-                    </button>
-                    <Link
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
-                      to={`/bulk-upload/${collectionId}`}
-                    >
-                      Bulk Upload
-                      <IoIosAdd />
-                    </Link>
-                    <button
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
-                      onClick={deleteCollection}
-                    >
-                      Delete Collection
-                    </button>
+                  <div className="dropdown">
+                    <div tabIndex={0} role="button" className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit">Edit Collection</div>
+                    <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+
+                      <li><a className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       onClick={openModal}>Add Collectable</a></li>
+
+                      <li><Link className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       to={`/bulk-upload/${collectionId}`}>Bulk Upload</Link></li>
+
+                       <li><Link className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       to={`/`}>Bulk Edit</Link></li>
+
+                       <li><a className="text-lg hover:bg-red-400 hover:text-black"
+                       onClick={deleteCollection}>Delete Collection</a></li>
+                    </ul>
                   </div>
+
+                  //   <button
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                  //     onClick={openModal}
+                  //   >
+                  //     New Collectible
+                  //     <IoIosAdd />
+                  //   </button>
+                  //   <Link
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
+                  //     to={`/bulk-upload/${collectionId}`}
+                  //   >
+                  //     Bulk Upload
+                  //     <IoIosAdd />
+                  //   </Link>
+                  //   <button
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
+                  //     onClick={deleteCollection}
+                  //   >
+                  //     Delete Collection
+                  //   </button>
+                  // </div>
                 ) : (
                   <button
                     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    onClick={() => {
-                      // create onClick to call API to add to the user's collections
-                      console.log("Add to My Collections clicked");
-                    }}
+                    onClick={handleAddToMyCollections}
                   >
                     Add to My Collections
                     <IoIosAdd />
@@ -932,12 +1126,13 @@ export default function HomePage() {
           <div className="w-full p-2">
             <div className="text-xl py-4 text-right pr-10">
               Total items in the collection:{" "}
-              {_searchResults.length > 0
-                ? _searchResults.length
-                : enabled
-                ? ownedCollectables.length
-                : universeCollectables.length}
             </div>
+
+            {showLoadPreviousButton && (
+              <button onClick={handleLoadPreviousPage}>
+                Load Previous Items
+              </button>
+            )}
 
             {noSearchResults ? (
               <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
@@ -950,101 +1145,113 @@ export default function HomePage() {
                   <div className="flex flex-wrap -mx-4">
                     {(_searchResults.length > 0
                       ? _searchResults
+                      : jumpSearchResults.length > 0
+                      ? jumpSearchResults
                       : collectables
-                    ).map((item) => (
-                      <div
-                        key={item.universeCollectableId}
-                        className="w-full md:w-1/2 px-4 mb-6"
-                      >
-                        <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                          <button
-                            className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                            onClick={() =>
-                              handleStarClick(
-                                item.universeCollectableId,
-                                collectionId
-                              )
-                            }
-                          >
-                            {wishlistIds.includes(
-                              item.universeCollectableId
-                            ) ? (
-                              <FontAwesomeIcon
-                                icon={faSolidStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            ) : (
-                              <FontAwesomeIcon
-                                icon={faRegularStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            )}
-                          </button>
-                          <div className="h-24 w-24">
-                            <img
-                              src={
-                                item.attributes.find(
-                                  (attr: any) => attr.name === "image"
-                                )?.value || "/placeholder.jpg"
+                    )
+                      .filter((item) => item?.universeCollectableId)
+                      .map((item) => (
+                        <div
+                          key={item.universeCollectableId || item.collectionId}
+                          className="w-full md:w-1/2 px-4 mb-6"
+                        >
+                          <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                            <button
+                              className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                              onClick={() =>
+                                handleStarClick(
+                                  item.universeCollectionId!,
+                                  collectionId
+                                )
                               }
-                              alt={
-                                item.attributes.find(
-                                  (attr: any) => attr.name === "name"
-                                )?.value || "No Name"
-                              }
-                              width={100}
-                              height={100}
-                              className="rounded-md shadow-sm object-cover"
-                              onClick={() => handleOpenModal(item)}
-                            />
-                          </div>
+                            >
+                              {wishlistIds.includes(
+                                item.universeCollectableId
+                              ) ? (
+                                <FontAwesomeIcon
+                                  icon={faSolidStar}
+                                  style={{ color: "#EDC307" }}
+                                />
+                              ) : (
+                                <FontAwesomeIcon
+                                  icon={faRegularStar}
+                                  style={{ color: "#EDC307" }}
+                                />
+                              )}
+                            </button>
+                            <div className="h-24 w-24">
+                              <img
+                                src={
+                                  item.attributes?.find(
+                                    (attr: any) => attr.name === "image"
+                                  )?.value || "/placeholder.jpg"
+                                }
+                                alt={
+                                  item.attributes?.find(
+                                    (attr: any) => attr.name === "name"
+                                  )?.value || "No Name"
+                                }
+                                width={100}
+                                height={100}
+                                className="rounded-md shadow-sm object-cover"
+                                onClick={() => handleOpenModal(item)}
+                              />
+                            </div>
 
-                          <div className="flex-1">
-                            {item.attributes
-                              .filter(
-                                (attribute: any) =>
-                                  attribute.name !== "image" &&
-                                  attribute.name !== "owned"
-                              )
-                              .slice(0, 3)
-                              .map((attribute: any, index: number) => (
-                                <p
-                                  key={attribute.slug || attribute.name}
-                                  className={
-                                    index === 0
-                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                      : "text-md font-semibold pl-4 capitalize truncate"
-                                  }
-                                >
-                                  {`${attribute.value}`}
-                                </p>
-                              ))}
-                          </div>
-                          <div className="flex space-x-4">
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => openEdit(item)}
-                            >
-                              <FaRegEdit />
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => handleDelete(item)}
-                            >
-                              <FaRegTrashCan />
-                            </button>
+                            <div className="flex-1">
+                              {item.attributes
+                                .filter(
+                                  (attribute: any) =>
+                                    attribute.name !== "image" &&
+                                    attribute.name !== "owned"
+                                )
+                                .slice(0, 3)
+                                .map((attribute: any, index: number) => (
+                                  <p
+                                    key={attribute.slug || attribute.name}
+                                    className={
+                                      index === 0
+                                        ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                        : "text-md font-semibold pl-4 capitalize truncate"
+                                    }
+                                  >
+                                    {`${attribute.value}`}
+                                  </p>
+                                ))}
+                            </div>
+                            <div className="flex space-x-4">
+                              <button
+                                className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                onClick={() => openEdit(item)}
+                              >
+                                <FaRegEdit />
+                              </button>
+                              <button
+                                className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                onClick={() => handleDelete(item)}
+                              >
+                                <FaRegTrashCan />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 ) : (
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                     {(_searchResults.length > 0
                       ? _searchResults
+                      : jumpSearchResults.length > 0
+                      ? jumpSearchResults
                       : collectables
                     ).map((item) => (
-                      <div key={item.universeCollectableId}>
+                      <div
+                        key={
+                          item.universeCollectableId ||
+                          item.collectionId ||
+                          Math.random()
+                        }
+                      >
                         <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                           <div className="h-22 w-30">
                             <div className="absolute top-2 right-2 flex space-x-2">
@@ -1074,12 +1281,12 @@ export default function HomePage() {
                             </div>
                             <img
                               src={
-                                item.attributes.find(
+                                item.attributes?.find(
                                   (attr: any) => attr.name === "image"
                                 )?.value || "/placeholder.jpg"
                               }
                               alt={
-                                item.attributes.find(
+                                item.attributes?.find(
                                   (attr: any) => attr.name === "name"
                                 )?.value || "No Name"
                               }
@@ -1143,6 +1350,10 @@ export default function HomePage() {
                 >
                   {isFetchingSearchResults && <p>Loading more items...</p>}
                 </div>
+                <div
+                  ref={jumpNextRef}
+                  className="loading-indicator text-center p-4"
+                ></div>
               </div>
             )}
             {/* send data to modal */}

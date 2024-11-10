@@ -62,7 +62,7 @@ export const fetchUniverseCollectables = async (
 
     const jsonResponse = await response.json();
 
-    const collectables = jsonResponse
+    const collectables = jsonResponse.collectables
       .map((item: any) => ({
         universeCollectableId: item.universe_collectable_id,
         attributes: item.attributes.map((attr: any) => ({
@@ -99,6 +99,7 @@ export const fetchOwnedCollectables = async (
     const url = buildPath(
       `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
     );
+    console.log(url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -131,6 +132,7 @@ export const fetchOwnedCollectables = async (
         return nameAttr && nameAttr.value && nameAttr.value.trim() !== "";
       });
 
+    console.log("collectables: ", collectables);
     return collectables;
   } catch (e) {
     console.error(`Error thrown when fetching universe collectables: ${e}`);
@@ -209,14 +211,14 @@ export const fetchOwnedSearchResults = async (
   console.log("search", searchterm);
   console.log("collectionId", collectionId);
   console.log("page", page);
-  // if (!userId || !collectionId || searchterm.length === 0) {
-  //   console.error("Missing userId, collectionId, or search tags", {
-  //     userId,
-  //     collectionId,
-  //     searchterm,
-  //   });
-  //   throw new Error("Missing a request parameter");
-  // }
+  if (!userId || !collectionId || searchterm.length === 0) {
+    console.error("Missing userId, collectionId, or search tags", {
+      userId,
+      collectionId,
+      searchterm,
+    });
+    throw new Error("Missing a request parameter");
+  }
 
   const queryParams = searchterm
     .map(
@@ -333,6 +335,54 @@ export const removeFromWishlist = async (
     return responseText;
   } catch (e) {
     console.error(`Error thrown when removing item from wishlist: ${e}`);
+    throw e;
+  }
+};
+
+export const fetchUniverseJumpResults = async (
+  searchTerm: { attribute: string; term: string }[],
+  userId: string,
+  universeCollectionId: string
+) => {
+  if (!userId || !universeCollectionId || searchTerm.length === 0) {
+    console.error("Missing userId, collectionId, or search tags", {
+      userId,
+      universeCollectionId,
+      searchTerm,
+    });
+    throw new Error("Missing a request parameter");
+  }
+
+  const queryParams = searchTerm
+    .map(
+      ({ attribute, term }) =>
+        `attributeToSearch=${encodeURIComponent(
+          attribute.replace(/\s+/g, "_").toLowerCase()
+        )}&searchTerm=${encodeURIComponent(term)}`
+    )
+    .join("&");
+
+  const url = buildPath(
+    `universe-collectable/jump?collectionUniverseId=${universeCollectionId}&${queryParams}&itemsPerPage=12`
+  );
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 404) {
+      console.log("No matching collectables found.");
+      return [];
+    }
+
+    const jsonResponse = await response.json();
+    return jsonResponse;
+  } catch (e) {
+    console.error(`Error thrown when fetching jump search results: ${e}`);
     throw e;
   }
 };
