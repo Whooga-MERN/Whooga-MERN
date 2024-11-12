@@ -190,6 +190,30 @@ export default function HomePage() {
       }
     };
     getAttributes();
+
+    const getFavoriteAttributes = async () => {
+      const favReponse = await fetch(
+        buildPath(`collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (favReponse.ok) {
+        const data = await favReponse.json();
+        console.log("Favorite Attributes: ", data[0].favoriteAttributes);
+        setFavoriteAttributes(data[0].favoriteAttributes);
+        const allAttributes = data[0].favoriteAttributes.concat(maskedAttributes.filter((attr) => !data[0].favoriteAttributes.includes(attr)));
+        console.log("All Attributes: ", allAttributes);
+        setMaskedAttributes(allAttributes);
+      } else {
+        console.error("Error fetching favorite attributes:", favReponse);
+      }
+    };
+    getFavoriteAttributes();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -785,114 +809,89 @@ export default function HomePage() {
                   <button className="pr-16" onClick={() => setView("grid")}>
                     <BsFillGridFill />
                   </button>
-                  {isCollectionOwned ? (
-                    <div className="dropdown">
-                      <div
-                        tabIndex={0}
-                        role="button"
-                        className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                      >
-                        Edit Collection
-                      </div>
-                      <ul
-                        tabIndex={0}
-                        className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-                      >
-                        <li>
-                          <a
-                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            onClick={openModal}
-                          >
-                            Add Collectable
-                          </a>
-                        </li>
 
-                        <li>
-                          <Link
-                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            to={`/bulk-upload/${collectionId}`}
-                          >
-                            Bulk Upload
-                          </Link>
-                        </li>
+                {isCollectionOwned ? (
+                  <div className="dropdown">
+                    <div tabIndex={0} role="button" className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit">Edit Collection</div>
+                    <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
 
-                        <li>
-                          <Link
-                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            to={`/`}
-                          >
-                            Bulk Edit
-                          </Link>
-                        </li>
+                      <li><a className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       onClick={openModal}>Add Collectable</a></li>
 
-                        <li>
-                          <a
-                            className="text-lg hover:bg-red-400 hover:text-black"
-                            onClick={deleteCollection}
-                          >
-                            Delete Collection
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  ) : (
-                    <button
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                      onClick={handleAddToMyCollections}
-                    >
-                      Add to My Collections
-                      <IoIosAdd />
-                    </button>
-                  )}
+                      <li><Link className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       to={`/bulk-upload/${collectionId}`}>Bulk Upload</Link></li>
 
-                  {isModalOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
-                        <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
-                          Create New Collectible
-                        </h2>
+                       <li><Link className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                       to={`/bulk-edit/${collectionId}`}>Bulk Edit</Link></li>
 
-                        <form onSubmit={handleSubmit}>
-                          {favoriteAttributes
-                            .concat(customAttributes)
-                            .concat("owned", "image")
-                            .filter((attr) => attr !== null)
-                            .map((attribute, index) => (
-                              <div key={index} className="mb-4 lg:max-w-lg">
-                                {attribute !== "image" ? (
-                                  attribute === "owned" ? (
-                                    <div className="flex items-center mb-3">
-                                      <input
-                                        type="checkbox"
-                                        id="publishCollection"
-                                        onChange={(e) =>
-                                          handleOwnedChange(e.target.checked)
-                                        }
-                                        className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
-                                      />
-                                      <label
-                                        htmlFor="publishCollection"
-                                        className="text-gray-700 dark:text-gray-300 text-sm font-bold"
-                                      >
-                                        Is Owned
-                                      </label>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                        {attribute.charAt(0).toUpperCase() +
-                                          attribute.slice(1)}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        name={attribute}
-                                        placeholder={`${attribute}`}
-                                        value={formData[attribute] || ""}
-                                        onChange={handleChange}
-                                        className="border rounded w-full py-2 px-3 text-gray-700"
-                                      />
-                                    </>
-                                  )
+                       <li><a className="text-lg hover:bg-red-400 hover:text-black"
+                       onClick={deleteCollection}>Delete Collection</a></li>
+                    </ul>
+                  </div>
+
+                  //   <button
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                  //     onClick={openModal}
+                  //   >
+                  //     New Collectible
+                  //     <IoIosAdd />
+                  //   </button>
+                  //   <Link
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
+                  //     to={`/bulk-upload/${collectionId}`}
+                  //   >
+                  //     Bulk Upload
+                  //     <IoIosAdd />
+                  //   </Link>
+                  //   <button
+                  //     className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
+                  //     onClick={deleteCollection}
+                  //   >
+                  //     Delete Collection
+                  //   </button>
+                  // </div>
+                ) : (
+                  <button
+                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                    onClick={handleAddToMyCollections}
+                  >
+                    Add to My Collections
+                    <IoIosAdd />
+                  </button>
+                )}
+
+                {isModalOpen && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                      <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                        Create New Collectible
+                      </h2>
+
+                      <form onSubmit={handleSubmit}>
+                        {favoriteAttributes
+                          .concat(customAttributes)
+                          .concat("owned", "image")
+                          .filter((attr) => attr !== null)
+                          .map((attribute, index) => (
+                            <div key={index} className="mb-4 lg:max-w-lg">
+                              {attribute !== "image" ? (
+                                attribute === "owned" ? (
+                                  <div className="flex items-center mb-3">
+                                    <input
+                                      type="checkbox"
+                                      id="publishCollection"
+                                      onChange={(e) =>
+                                        handleOwnedChange(e.target.checked)
+                                      }
+                                      className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                    />
+                                    <label
+                                      htmlFor="publishCollection"
+                                      className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                    >
+                                      Is Owned
+                                    </label>
+                                  </div>
                                 ) : (
                                   <>
                                     <label
