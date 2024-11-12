@@ -1,6 +1,6 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {collections, collectionUniverses, users, universeCollectables, collectableAttributes} = require('../config/schema');
+const {collections, collectionUniverses, users, universeCollectables, collectableAttributes, collectables} = require('../config/schema');
 const express = require('express');
 const {eq, and, inArray} = require('drizzle-orm');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
@@ -435,18 +435,30 @@ router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
     const csvDifferences = await diffCSVData(originalCSVData, editedCSVData);
     console.log("csvDifferences: ", csvDifferences);
 
+    console.log("Searching for collection Id");
+    collectionIdQuery = await db.
+      select({ collectionId: collections.collection_id})
+      .from(collections)
+      .where(eq(collections.collection_universe_id, collectionUniverseId))
+      .execute();
+    const collectionId = collectionIdQuery[0].collectionId;
+    console.log("Finished Searching for collection Id");
+    console.log("collectionId: ", collectionId);
+
 // Function to update values based on differences
   await db.transaction(async (trx) => {
     const updatePromises = csvDifferences.map(async (diff) => {
       console.log("diff.field: ", diff.field, "   diff.newValue: ", diff.newValue);
       console.log("diff.id: ", diff.id);
-  
       let result; 
-      if(diff.field != 'image') {
+  
+      if(diff.field === 'image') {
+        const imageObject = urlCollectableImages.find(image => image.originalName === diff.newValue);
+        console.log("imageObject: ", imageObject.url);
         result = await trx
         .update(collectableAttributes)
         .set({
-          value: diff.newValue
+          value: imageObject.url
         })
         .where(
           and(
@@ -455,13 +467,41 @@ router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
           )  
         )
         .execute();
-      } else {
-        const imageObject = urlCollectableImages.find(image => image.originalName === diff.newValue);
-        console.log("imageObject: ", imageObject.url);
+      } else if (diff.field === 'owned') {
+        const ownedBool = diff.newValue === 'T';
+        if(!ownedBool) {
+          console.log("Marking as unowned ", diff.id)
+          await trx
+            .delete(collectables)
+            .where(eq(diff.id, collectables.universe_collectable_id))
+            .execute();
+          console.log("Marked as unowned ", diff.id);
+        } else {
+          console.log("Marking as owned: ", diff.id);
+          await trx
+            .insert(collectables)
+            .values({
+              collection_id: collectionId,
+              universe_collectable_id: diff.id
+            })
+            .execute();
+            console.log("Marked as owned ", diff.id);
+        }
+
+      } else if(diff.field === 'isPublished') {
+        const isPublishedBool = diff.newValue === 'T';
+        console.log("Setting is_published to ", isPublishedBool, " for: ", diff.id);
+        await trx
+          .update(universeCollectables)
+          .set({ is_published: isPublishedBool })
+          .where(eq(diff.id, universeCollectables.universe_collectable_id))
+          .execute();
+      }
+      else {
         result = await trx
         .update(collectableAttributes)
         .set({
-          value: imageObject.url
+          value: diff.newValue
         })
         .where(
           and(
