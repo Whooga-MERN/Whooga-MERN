@@ -1,6 +1,6 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const {db, pool} = require('../config/db');
-const {universeCollectables, collectableAttributes} = require('../config/schema');
+const {universeCollectables, collectableAttributes, collectables} = require('../config/schema');
 const express = require('express');
 const { eq, and, inArray, or, ilike } = require('drizzle-orm');
 
@@ -68,28 +68,36 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
   const { universe_collection_id } = req.params;
 
   try {
-    const collectables = await db
+    const fetchedUniverseCollectables = await db
       .select()
       .from(universeCollectables)
       .where(eq(universeCollectables.collection_universe_id, universe_collection_id));
 
-    if (collectables.length === 0) {
+    if (fetchedUniverseCollectables.length === 0) {
       return res.status(404).send({ error: 'No collectables found in this collection' });
     }
-    const collectableIds = collectables.map(c => c.universe_collectable_id);
+    const collectableIds = fetchedUniverseCollectables.map(c => c.universe_collectable_id);
+
+    const ownedCollectables = await db
+      .select()
+      .from(collectables)
+      .where(inArray(collectables.universe_collectable_id,collectableIds));
+
+    const ownedSet = new Set(ownedCollectables.map(row => row.universe_collectable_id));
 
     const attributes = await db
       .select()
       .from(collectableAttributes)
       .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
 
-    const collectablesWithAttributes = collectables.map(collectable => {
+    const collectablesWithAttributes = fetchedUniverseCollectables.map(collectable => {
       const relatedAttributes = attributes.filter(
         attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
       );
 
       return {
         ...collectable,
+        owned: ownedSet.has(collectable.universe_collectable_id),
         attributes: relatedAttributes.map(attr => ({
           collectable_attribute_id: attr.collectable_attribute_id,
           name: attr.name,
@@ -99,7 +107,9 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
         }))
       };
     });
-    res.json(collectablesWithAttributes);
+
+    console.log(collectableAttributes);
+    res.status(200).json(collectablesWithAttributes);
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error fetching collectables and attributes' });
@@ -116,19 +126,19 @@ router.get('/universe-collection-paginated/:universe_collection_id', async (req,
       const offset = (page - 1) * itemsPerPage;
 
       // Fetch the collectables for the specified universe collection with pagination
-      const collectables = await db
+      const fetchedUniverseCollectables = await db
           .select()
           .from(universeCollectables)
           .where(eq(universeCollectables.collection_universe_id, universe_collection_id))
           .limit(itemsPerPage)
           .offset(offset);
 
-      if (collectables.length === 0) {
+      if (fetchedUniverseCollectables.length === 0) {
           return res.status(404).send({ error: 'No collectables found in this collection' });
       }
 
       // Get the list of collectable IDs for attribute fetching
-      const collectableIds = collectables.map(c => c.universe_collectable_id);
+      const collectableIds = fetchedUniverseCollectables.map(c => c.universe_collectable_id);
 
       // Fetch attributes for the paginated collectables
       const attributes = await db
@@ -137,7 +147,7 @@ router.get('/universe-collection-paginated/:universe_collection_id', async (req,
           .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
 
       // Map the collectables with their respective attributes
-      const collectablesWithAttributes = collectables.map(collectable => {
+      const collectablesWithAttributes = fetchedUniverseCollectables.map(collectable => {
           const relatedAttributes = attributes.filter(
               attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
           );
