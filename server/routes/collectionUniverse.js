@@ -57,7 +57,7 @@ const diffCSVData = (csvData1, csvData2) => {
     if (!row2) {
       console.log("Row id values do not match");
       changes.push({ id: row1.id, change: "Row missing in edited file" });
-      return;
+      return null;
     }
 
     // Check for differences in each field
@@ -433,6 +433,8 @@ router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
     fs.unlinkSync(editedCSV.path);
 
     const csvDifferences = await diffCSVData(originalCSVData, editedCSVData);
+    if(csvDifferences == null)
+      return res.status(400).send("There is a row missing in the edited csv");
     console.log("csvDifferences: ", csvDifferences);
 
     console.log("Searching for collection Id");
