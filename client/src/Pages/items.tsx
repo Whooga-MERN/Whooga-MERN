@@ -108,18 +108,13 @@ export default function HomePage() {
   >([]);
 
   const [jumpPageNumber, setJumpPageNumber] = useState<number>();
-  const [showLoadPreviousButton, setShowLoadPreviousButton] = useState(false);
-  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [nextPageNumber, setNextPageNumber] = useState<number>();
+  const [prevPageNumber, setPrevPageNumber] = useState<number>();
   const [loadedPages, setLoadedPages] = useState(new Set<number>());
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("universeCollectionId:", universeCollectionId);
-  }, [universeCollectionId]);
-
-  useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
-    console.log("collectionID: ", collectionIDInStorage);
     setCollectionId(collectionIDInStorage);
   }, []);
 
@@ -132,17 +127,15 @@ export default function HomePage() {
 
       setUniverseCollectionName(collectionName);
       setCollectionIds(JSON.parse(storedCollectionIds));
-      console.log("Collection IDs: ", JSON.parse(storedCollectionIds));
-      console.log("Collection ID: ", collectionId);
-      console.log("Universe Collection ID: ", universeCollectionId);
       if (
         universeCollectionId &&
         JSON.parse(storedCollectionIds).some(
           ([colId, uniId]: [string, string]) => {
-        console.log("Comparing:", colId, uniId);
-        console.log("Types:", typeof colId, typeof uniId, typeof collectionId, typeof universeCollectionId);
-        return colId.toString() === collectionId && uniId.toString() === universeCollectionId;
-      }
+            return (
+              colId.toString() === collectionId &&
+              uniId.toString() === universeCollectionId
+            );
+          }
         )
       ) {
         setIsCollectionOwned(true);
@@ -150,12 +143,10 @@ export default function HomePage() {
       if (savedWishlist) {
         setWishlistIds(JSON.parse(savedWishlist));
       }
-      console.log("Collection owned?: ", isCollectionOwned);
     };
     getItemsFromStorage();
     setSearchResults([]);
     setJumpSearchResults([]);
-    console.log("refresh: ", jumpSearchResults);
     setResetDropdown(true);
 
     // fetch user details and token
@@ -181,20 +172,6 @@ export default function HomePage() {
 
     // get attributes, needs to be changed to fetch from API
     const getAttributes = async () => {
-      // const storedCustomeAttributes = localStorage.getItem("customAttributes");
-      // const storedFavoriteAttributes =
-      //   localStorage.getItem("favoriteAttributes");
-      // const storedHiddenAttributes = localStorage.getItem("hiddenAttributes");
-      // if (storedCustomeAttributes) {
-      //   setCustomAttributes(JSON.parse(storedCustomeAttributes));
-      // }
-      // if (storedFavoriteAttributes) {
-      //   setFavoriteAttributes(JSON.parse(storedFavoriteAttributes));
-      // }
-      // if (storedHiddenAttributes) {
-      //   setHiddenAttributes(JSON.parse(storedHiddenAttributes));
-      // }
-
       const response = await fetch(
         buildPath(`collectable-attributes/masked-attributes/${collectionId}`),
         {
@@ -202,11 +179,11 @@ export default function HomePage() {
           headers: {
             Authorization: `Bearer ${JWT}`,
           },
-        });
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Attributes: ", data);
         setMaskedAttributes(data);
       } else {
         console.error("Error fetching attributes:", response);
@@ -263,10 +240,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const getUniverseCollectionId = async () => {
-      console.log("UID: ", universeCollectionId);
-      console.log("ID: ", collectionId);
       if (collectionId) {
-        console.log("collectionId in getUniverseCollectionId: ", collectionId);
         const ownedCollectables = await fetchOwnedCollectables(
           collectionId,
           initialPage,
@@ -310,9 +284,6 @@ export default function HomePage() {
   };
 
   const handleDelete = async (item: Record<string, any>) => {
-    console.log("Delete button clicked");
-    console.log("Item to delete:", item.universeCollectableId);
-
     if (confirm("Are you sure you want to delete this item?")) {
       const request = {
         universeCollectableId: item.universeCollectableId,
@@ -334,7 +305,6 @@ export default function HomePage() {
 
         if (response.ok) {
           console.log("Item deleted successfully");
-          //navigate(`/items/${collectionId}`);
           window.location.reload();
         } else {
           console.error("Error deleting item:", response);
@@ -347,55 +317,7 @@ export default function HomePage() {
     }
   };
 
-  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedSort(e.target.value);
-  };
-
-  // handle color checkbox changes
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const color = e.target.value;
-    setSelectedColors(
-      (prevSelectedColors) =>
-        prevSelectedColors.includes(color)
-          ? prevSelectedColors.filter((c) => c !== color) // remove if already selected
-          : [...prevSelectedColors, color] // add if not selected
-    );
-  };
-
-  // handle filter and sort
-  // const processedTags = [...tags]
-  //   .filter((tag) => {
-  //     if (selectedColors.length > 0) {
-  //       // check array
-  //       return tag.color.some((color) =>
-  //         selectedColors.includes(color.toLowerCase())
-  //       );
-  //     }
-  //     return true;
-  //   })
-  //   .sort((a, b) => {
-  //     const dateA = new Date(a.createAt);
-  //     const dateB = new Date(b.createAt);
-  //     const tagNumA = parseInt(a.tagNum.replace("#", ""));
-  //     const tagNumB = parseInt(b.tagNum.replace("#", ""));
-
-  //     switch (selectedSort) {
-  //       case "yearLowToHigh":
-  //         return dateA.getTime() - dateB.getTime();
-  //       case "yearHighToLow":
-  //         return dateB.getTime() - dateA.getTime();
-  //       case "tagLowToHigh":
-  //         return tagNumA - tagNumB;
-  //       case "tagHighToLow":
-  //         return tagNumB - tagNumA;
-  //       default:
-  //         return 0;
-  //     }
-  //   });
-
   const handleAddToMyCollections = async () => {
-    console.log("Add to My Collections clicked");
-    console.log("Collection ID: ", universeCollectionId);
     const request = {
       collectionUniverseId: universeCollectionId,
       userEmail: userId.loginId,
@@ -403,14 +325,17 @@ export default function HomePage() {
     console.log("Request: ", request);
 
     try {
-      const response = await fetch(buildPath(`collection-universe/copy-universe`), {
-        method: "POST",
-        body: JSON.stringify(request),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-      });
+      const response = await fetch(
+        buildPath(`collection-universe/copy-universe`),
+        {
+          method: "POST",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
 
       if (response.ok) {
         console.log("Collection added successfully");
@@ -653,6 +578,9 @@ export default function HomePage() {
   const { ref: jumpNextRef, entry: jumpNextEntry } = useIntersection({
     threshold: 1,
   });
+  const { ref: jumpPrevRef, entry: jumpPrevEntry } = useIntersection({
+    threshold: 1,
+  });
 
   const handleToggleChange = (enabled: boolean) => {
     setEnabled(enabled);
@@ -767,19 +695,11 @@ export default function HomePage() {
 
   const _searchResults = searchResultsData?.pages.flat() || [];
 
-  useEffect(() => {
-    if (searchResultsData) {
-      console.log("searchResultsData:", _searchResults);
-    }
-  }, [_searchResults]);
-
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
   ) => {
     setJumpSearchTags(jumpTags);
     setJumpSearchResults([]);
-    setShowLoadPreviousButton(true);
-    setHasMoreItems(true);
     setLoadedPages(new Set());
 
     try {
@@ -790,57 +710,39 @@ export default function HomePage() {
       );
       setJumpSearchResults(data.collectables);
       setJumpPageNumber(data.page);
+      setNextPageNumber(data.page + 1);
+      setPrevPageNumber(data.page - 1);
       setLoadedPages(new Set([data.page]));
     } catch (error) {
       console.error("Fetch error:", error);
     }
   };
 
-  const handleLoadFromJumpPage = async (jumpPageNumber: number) => {
-    if (loadedPages.has(jumpPageNumber)) {
-      return;
-    }
-
+  const handleLoadFromJumpPage = async () => {
+    if (!nextPageNumber || loadedPages.has(nextPageNumber)) return;
     try {
       const data = await fetchUniverseCollectables(
         universeCollectionId!,
-        jumpPageNumber,
+        nextPageNumber,
         ITEMS_PER_PAGE
       );
       setJumpSearchResults((prevResults) => [...prevResults, ...data]);
-      setLoadedPages((prevLoaded) => new Set(prevLoaded).add(jumpPageNumber));
-      setJumpPageNumber((prevPage) => (prevPage ?? 1) + 1);
+      setNextPageNumber((prev) => prev! + 1);
     } catch (error) {
       console.error("Error fetching additional pages:", error);
     }
   };
 
-  const handleLoadPreviousPage = async () => {
-    if (jumpPageNumber === 1) {
-      setShowLoadPreviousButton(false);
-      setJumpSearchResults([]);
-      console.log(
-        "page: ",
-        jumpPageNumber,
-        " reached. array: ",
-        jumpSearchResults
-      );
-      return;
-    }
-    const previousPage = Math.max(jumpPageNumber! - 1, 1);
-    if (loadedPages.has(previousPage)) {
-      return;
-    }
+  const handleLoadPreviousJumpPage = async () => {
+    if (!prevPageNumber || loadedPages.has(prevPageNumber)) return;
     try {
       const data = await fetchUniverseCollectables(
         universeCollectionId!,
-        previousPage,
+        prevPageNumber,
         ITEMS_PER_PAGE
       );
       setJumpSearchResults((prevResults) => [...data, ...prevResults]);
-      setLoadedPages((prevLoaded) => new Set(prevLoaded).add(previousPage));
-      console.log(jumpSearchResults);
-      setJumpPageNumber(previousPage);
+      setPrevPageNumber((prev) => prev! - 1);
     } catch (error) {
       console.error("Error fetching previous page items:", error);
     }
@@ -848,9 +750,15 @@ export default function HomePage() {
 
   useEffect(() => {
     if (jumpNextEntry?.isIntersecting) {
-      handleLoadFromJumpPage(jumpPageNumber! + 1);
+      handleLoadFromJumpPage();
     }
   }, [jumpNextEntry]);
+
+  useEffect(() => {
+    if (jumpPrevEntry?.isIntersecting) {
+      handleLoadPreviousJumpPage();
+    }
+  }, [jumpPrevEntry]);
 
   const handleReset = () => {
     setSearchResults([]);
@@ -862,44 +770,46 @@ export default function HomePage() {
   return (
     <>
       <div>
-        <Header />
-        <div className="w-full mx-auto pt-16">
-          <div className="mx-auto pl-10">
-            {/* collection option */}
-            <div className="flex items-center gap-4">
-              <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-8 py-3">
-                {universeCollectionName}
-              </p>
-              <OwnedToggle
-                enabled={enabled}
-                setEnabled={setEnabled}
-                onToggle={handleToggleChange}
-              />
-            </div>
-
-            <div className="flex md:items-center justify-center gap-8 py-9 max-md:px-4">
-              {/* Search bar */}
-              {universeCollectionId && (
-                <SearchBar
-                  attributes={favoriteAttributes}
-                  onSearchResults={handleSearchResults}
-                  // onResetSearch={() => setSearchResults([])}
-                  resetDropdown={resetDropdown}
-                  onResetSearch={handleReset}
-                  setResetDropdown={setResetDropdown}
-                  onSearch={handleSearch}
-                  onJump={handleJump}
+        <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 w-full">
+          <Header />
+          <div className="w-full mx-auto pt-16">
+            <div className="mx-auto pl-10">
+              {/* collection option */}
+              <div className="flex items-center gap-4">
+                <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-8 py-3">
+                  {universeCollectionName}
+                </p>
+                <OwnedToggle
+                  enabled={enabled}
+                  setEnabled={setEnabled}
+                  onToggle={handleToggleChange}
                 />
-              )}
+              </div>
 
-              {/* icon button for view hidden lg:block md:block*/}
-              <div className="hidden lg:block md:block pt-3 mt-3">
+              <div className="sticky flex md:items-center justify-center gap-8 py-9 max-md:px-4">
+                {/* Search bar */}
+                {universeCollectionId && (
+                  <SearchBar
+                    attributes={maskedAttributes}
+                    onSearchResults={handleSearchResults}
+                    // onResetSearch={() => setSearchResults([])}
+                    resetDropdown={resetDropdown}
+                    onResetSearch={handleReset}
+                    setResetDropdown={setResetDropdown}
+                    onSearch={handleSearch}
+                    onJump={handleJump}
+                  />
+                )}
+
+                {/* icon button for view hidden lg:block md:block*/}
+                <div className="hidden lg:block md:block pt-3 mt-3">
                   <button className="pr-5" onClick={() => setView("list")}>
                     <FaListUl />
                   </button>
                   <button className="pr-16" onClick={() => setView("grid")}>
                     <BsFillGridFill />
                   </button>
+
                 {isCollectionOwned ? (
                   <div className="dropdown">
                     <div tabIndex={0} role="button" className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit">Edit Collection</div>
@@ -984,96 +894,80 @@ export default function HomePage() {
                                   </div>
                                 ) : (
                                   <>
-                                    <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                      {attribute.charAt(0).toUpperCase() +
-                                        attribute.slice(1)}
+                                    <label
+                                      htmlFor="cover-photo"
+                                      className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                    >
+                                      Upload Photo
                                     </label>
-                                    <input
-                                      type="text"
-                                      name={attribute}
-                                      placeholder={`${attribute}`}
-                                      value={formData[attribute] || ""}
-                                      onChange={handleChange}
-                                      className="border rounded w-full py-2 px-3 text-gray-700"
-                                    />
-                                  </>
-                                )
-                              ) : (
-                                <>
-                                  <label
-                                    htmlFor="cover-photo"
-                                    className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                                  >
-                                    Upload Photo
-                                  </label>
-                                  <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                                    <div className="text-center">
-                                      <PhotoIcon
-                                        aria-hidden="true"
-                                        className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                      />
-                                      <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                        <label
-                                          htmlFor="file-upload"
-                                          className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                                        >
-                                          <span>Upload a photo</span>
-                                          <input
-                                            id="file-upload"
-                                            name="file-upload"
-                                            type="file"
-                                            className="sr-only"
-                                            onChange={handleFileChange}
-                                          />
-                                        </label>
-                                        <p>or drag and drop</p>
+                                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                      <div className="text-center">
+                                        <PhotoIcon
+                                          aria-hidden="true"
+                                          className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                        />
+                                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                          <label
+                                            htmlFor="file-upload"
+                                            className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                          >
+                                            <span>Upload a photo</span>
+                                            <input
+                                              id="file-upload"
+                                              name="file-upload"
+                                              type="file"
+                                              className="sr-only"
+                                              onChange={handleFileChange}
+                                            />
+                                          </label>
+                                          <p>or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs leading-5 text-gray-600">
+                                          PNG, JPG
+                                        </p>
                                       </div>
-                                      <p className="text-xs leading-5 text-gray-600">
-                                        PNG, JPG
-                                      </p>
                                     </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ))}
-                        <div className="flex items-center mb-3">
-                          <input
-                            type="checkbox"
-                            id="publishCollection"
-                            checked={isPublished}
-                            onChange={handlePublishChange}
-                            className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
-                          />
-                          <label
-                            htmlFor="publishCollection"
-                            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                          >
-                            Publish Collectable
-                          </label>
-                        </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          <div className="flex items-center mb-3">
+                            <input
+                              type="checkbox"
+                              id="publishCollection"
+                              checked={isPublished}
+                              onChange={handlePublishChange}
+                              className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                            />
+                            <label
+                              htmlFor="publishCollection"
+                              className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                            >
+                              Publish Collectable
+                            </label>
+                          </div>
 
-                        <div className="flex justify-end space-x-4 mt-8">
-                          <button
-                            type="button"
-                            onClick={closeModal}
-                            className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
-                          >
-                            Create
-                          </button>
-                        </div>
-                      </form>
+                          <div className="flex justify-end space-x-4 mt-8">
+                            <button
+                              type="button"
+                              onClick={closeModal}
+                              className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Create
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* <div className="dropdown">
+                  {/* <div className="dropdown">
                   <div
                     tabIndex={0}
                     role="button"
@@ -1105,7 +999,7 @@ export default function HomePage() {
                   </ul>
                 </div> */}
 
-                {/* <div className="dropdown">
+                  {/* <div className="dropdown">
                   <div
                     tabIndex={0}
                     role="button"
@@ -1138,10 +1032,23 @@ export default function HomePage() {
                     </div>
                   </ul>
                 </div> */}
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* <div className="h-[400px]">
+          <div
+            ref={jumpPrevRef}
+            className="loading-indicator text-center p-4 bg-black"
+          ></div>
+        </div> */}
+        <div
+          ref={jumpPrevRef}
+          className="loading-indicator text-center p-2 bg-black"
+        ></div>
+
         <div className="w-full flex flex-col md:flex-row">
           {/* collectibles */}
           <div className="w-full p-2">
@@ -1149,11 +1056,11 @@ export default function HomePage() {
               Total items in the collection:{" "}
             </div>
 
-            {showLoadPreviousButton && (
+            {/* {showLoadPreviousButton && (
               <button onClick={handleLoadPreviousPage}>
                 Load Previous Items
               </button>
-            )}
+            )} */}
 
             {noSearchResults ? (
               <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
@@ -1169,94 +1076,92 @@ export default function HomePage() {
                       : jumpSearchResults.length > 0
                       ? jumpSearchResults
                       : collectables
-                    )
-                      .filter((item) => item?.universeCollectableId)
-                      .map((item) => (
-                        <div
-                          key={item.universeCollectableId || item.collectionId}
-                          className="w-full md:w-1/2 px-4 mb-6"
-                        >
-                          <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                            <button
-                              className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                              onClick={() =>
-                                handleStarClick(
-                                  item.universeCollectionId!,
-                                  collectionId
-                                )
-                              }
-                            >
-                              {wishlistIds.includes(
-                                item.universeCollectableId
-                              ) ? (
-                                <FontAwesomeIcon
-                                  icon={faSolidStar}
-                                  style={{ color: "#EDC307" }}
-                                />
-                              ) : (
-                                <FontAwesomeIcon
-                                  icon={faRegularStar}
-                                  style={{ color: "#EDC307" }}
-                                />
-                              )}
-                            </button>
-                            <div className="h-24 w-24">
-                              <img
-                                src={
-                                  item.attributes?.find(
-                                    (attr: any) => attr.name === "image"
-                                  )?.value || "/placeholder.jpg"
-                                }
-                                alt={
-                                  item.attributes?.find(
-                                    (attr: any) => attr.name === "name"
-                                  )?.value || "No Name"
-                                }
-                                width={100}
-                                height={100}
-                                className="rounded-md shadow-sm object-cover"
-                                onClick={() => handleOpenModal(item)}
+                    ).map((item) => (
+                      <div
+                        key={item.universeCollectableId}
+                        className="w-full md:w-1/2 px-4 mb-6"
+                      >
+                        <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                          <button
+                            className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                            onClick={() =>
+                              handleStarClick(
+                                item.universeCollectionId!,
+                                collectionId
+                              )
+                            }
+                          >
+                            {wishlistIds.includes(
+                              item.universeCollectableId
+                            ) ? (
+                              <FontAwesomeIcon
+                                icon={faSolidStar}
+                                style={{ color: "#EDC307" }}
                               />
-                            </div>
+                            ) : (
+                              <FontAwesomeIcon
+                                icon={faRegularStar}
+                                style={{ color: "#EDC307" }}
+                              />
+                            )}
+                          </button>
+                          <div className="h-24 w-24">
+                            <img
+                              src={
+                                item.attributes?.find(
+                                  (attr: any) => attr.name === "image"
+                                )?.value || "/placeholder.jpg"
+                              }
+                              alt={
+                                item.attributes?.find(
+                                  (attr: any) => attr.name === "name"
+                                )?.value || "No Name"
+                              }
+                              width={100}
+                              height={100}
+                              className="rounded-md shadow-sm object-cover"
+                              onClick={() => handleOpenModal(item)}
+                            />
+                          </div>
 
-                            <div className="flex-1">
-                              {item.attributes
-                                .filter(
-                                  (attribute: any) =>
-                                    attribute.name !== "image" &&
-                                    attribute.name !== "owned"
-                                )
-                                .slice(0, 3)
-                                .map((attribute: any, index: number) => (
-                                  <p
-                                    key={attribute.slug || attribute.name}
-                                    className={
-                                      index === 0
-                                        ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                        : "text-md font-semibold pl-4 capitalize truncate"
-                                    }
-                                  >
-                                    {`${attribute.value}`}
-                                  </p>
-                                ))}
-                            </div>
-                            <div className="flex space-x-4">
-                              <button
-                                className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={() => openEdit(item)}
-                              >
-                                <FaRegEdit />
-                              </button>
-                              <button
-                                className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={() => handleDelete(item)}
-                              >
-                                <FaRegTrashCan />
-                              </button>
-                            </div>
+                          <div className="flex-1">
+                            {item.attributes
+                              .filter(
+                                (attribute: any) =>
+                                  attribute.name !== "image" &&
+                                  attribute.name !== "owned"
+                              )
+                              .slice(0, 3)
+                              .map((attribute: any, index: number) => (
+                                <p
+                                  key={attribute.slug || attribute.name}
+                                  className={
+                                    index === 0
+                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                      : "text-md font-semibold pl-4 capitalize truncate"
+                                  }
+                                >
+                                  {`${attribute.value}`}
+                                </p>
+                              ))}
+                          </div>
+                          <div className="flex space-x-4">
+                            <button
+                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                              onClick={() => openEdit(item)}
+                            >
+                              <FaRegEdit />
+                            </button>
+                            <button
+                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                              onClick={() => handleDelete(item)}
+                            >
+                              <FaRegTrashCan />
+                            </button>
                           </div>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
@@ -1266,13 +1171,7 @@ export default function HomePage() {
                       ? jumpSearchResults
                       : collectables
                     ).map((item) => (
-                      <div
-                        key={
-                          item.universeCollectableId ||
-                          item.collectionId ||
-                          Math.random()
-                        }
-                      >
+                      <div key={item.universeCollectableId}>
                         <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                           <div className="h-22 w-30">
                             <div className="absolute top-2 right-2 flex space-x-2">
