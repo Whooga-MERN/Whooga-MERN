@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { buildPath } from "../utils/utils";
 
 function BulkEdit() {
+    const [attributes, setAttributes] = useState<string[]>([]);
     const [collectionName, setCollectionName] = useState<string>('');
     const { universeCollectionId } = useParams<{ universeCollectionId: string }>();
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -30,41 +31,50 @@ function BulkEdit() {
             console.log("response items: ", data);
             if (Array.isArray(data)) {
                 var headers = ['id', 'owned', 'image', 'isPublished'];
+                var csvRows = [];
                 for (let i = 0; i < data[0].attributes.length; i++) {
                     if (data[0].attributes[i].name !== "image") {
                         headers.push(data[0].attributes[i].name);
                     }
                 }
                 console.log("headers: ", headers);
-
-                const objectsArray = data.map((item: any) => {
-                    const obj: Record<string, any> = {
-                        id: item.universe_collectable_id,
-                        owned: item.owned ? "T" : "F",
-                        image: item.attributes.find((attr: { name: string }) => attr.name === 'image').value,
-                        isPublished: item.is_published ? "T" : "F"
-                    };
+                
+                for (let i = 0; i < data.length; i++) {
+                    var row = [
+                        data[i].universe_collectable_id,
+                        data[i].owned ? "T" : "F",
+                        data[i].attributes.find(
+                            (attr: { name: string }) => attr.name === 'image'
+                        ).value,
+                        data[i].is_published ? "T" : "F"];
 
                     for (let j = 4; j < headers.length; j++) {
-                        const attribute = item.attributes.find((attr: { name: string }) => attr.name === headers[j]);
-                        obj[headers[j]] = attribute ? attribute.value : null;
+                        row.push(data[i].attributes.find(
+                            (attr: { name: string }) => attr.name === headers[j]
+                        ).value);
                     }
+                    console.log("row: ", row);
+                    csvRows.push(row);
+                }
 
-                    return obj;
+                var csvContent: string[] = [];
+                csvContent.push(headers.join(","));
+                csvRows.forEach(row => {
+                    csvContent.push(row.join(","));
                 });
-
-                console.log("objectsArray: ", objectsArray);
-                localStorage.setItem('bulkEditOriginalCSV', JSON.stringify(objectsArray));
-
-                const csvString = [
-                    headers.join(','), // header row first
-                    ...objectsArray.map(obj => headers.map(header => obj[header]).join(',')) // data rows
-                ].join('\n');
-
+                const csvString = csvContent.join("\n");
+                console.log("csvContent after join: ", csvString);
+                for (let i = 0; i < csvContent.length - 1; i++) {
+                    csvContent[i] = csvContent[i] + "\n";
+                    console.log("csvContent in loop: ", csvContent[i]);
+                }
+                localStorage.setItem('bulkEditOriginalCSV', JSON.stringify(csvContent));
                 const blob = new Blob([csvString], { type: 'text/csv' });
+                console.log("blob: ", blob);
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
+                console.log("helo" + collectionName);
                 a.download = collectionName + '_collection.csv';
                 a.click();
                 setIsLoading(false);

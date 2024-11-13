@@ -11,10 +11,10 @@ import { set } from "lodash";
 const BulkEditStep2 = () => {
   const { universeCollectionId } = useParams<{ universeCollectionId: string }>();
   const [collectionName, setCollectionName] = useState<string>("");
-  const [originalEditCSV, setOriginalEditCSV] = useState<string[]>([]);
+  const [originalEditCSV, setOriginalEditCSV] = useState<string>("");
   const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
   const [haveImages, setHaveImages] = useState<boolean>(false);
-  const [jsonData, setJsonData] = useState<any[]>([]);
+  const [jsonData, setJsonData] = useState<string>("");
   const [images, setImages] = useState<File[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [JWT, setJWT] = useState<string>("");
@@ -50,8 +50,8 @@ const BulkEditStep2 = () => {
       const storedOriginalCSV = await localStorage.getItem("bulkEditOriginalCSV") ?? "";
 
       setCollectionName(storedCollectionName);
-      await setOriginalEditCSV(storedOriginalCSV ? JSON.parse(storedOriginalCSV) : []);
-      console.log("Original CSV:", originalEditCSV);
+      await setOriginalEditCSV(JSON.parse(storedOriginalCSV).join(""));
+      console.log("Original CSV:", JSON.parse(storedOriginalCSV).join(""));
     };
     fetchStoredData();
     
@@ -69,11 +69,12 @@ const BulkEditStep2 = () => {
     setIsInputEmpty(false);
 
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const contents = e.target?.result as string;
-      const jsonItems = CSVToJSON(contents);
-      setJsonData(jsonItems);
-      console.log("JSON Items:", jsonItems);
+    reader.onload = async (e) => {
+      var contents = e.target?.result as string;
+      contents = await csvToString(file);
+      //const jsonItems = CSVToJSON(contents);
+      setJsonData(contents);
+      console.log("JSON Items:", contents);
     };
     reader.readAsText(file);
   };
@@ -112,6 +113,10 @@ const BulkEditStep2 = () => {
     });
   };
 
+async function csvToString(file: File): Promise<string> {
+  return await file.text();
+}
+
   useEffect(() => {
     console.log("CSV TO JSON: \n", jsonData);
   }, [jsonData]);
@@ -129,9 +134,11 @@ const BulkEditStep2 = () => {
       formData.append("collectableImages", image);
     });
     console.log("Original CSV getting put in form:", originalEditCSV);
-    formData.append("originalCSV", JSON.stringify(originalEditCSV));
-    formData.append("editedCSV", JSON.stringify(jsonData));
-    
+    const originalCSVBlob = new Blob([originalEditCSV], { type: 'text/csv' });
+    const editedCSVBlob = new Blob([jsonData], { type: 'text/csv' });
+
+    formData.append("originalCSV", originalCSVBlob, "original.csv");
+    formData.append("editedCSV", editedCSVBlob, "edited.csv");    
 
     logFormData(formData);
 
@@ -154,7 +161,20 @@ const BulkEditStep2 = () => {
     } catch (error) {
       console.error("Error submitting form:", error);
     }
+
+    //downloadFile(originalCSVBlob, "original.csv");
   };
+
+    const downloadFile = (blob: Blob, filename: string) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
   
     const logFormData = (formData: FormData) => {
         const formDataEntries: Record<string, any> = {};
