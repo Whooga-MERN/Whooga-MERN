@@ -430,8 +430,10 @@ router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
     const editedCSVData = await parseCSV(editedCSV.path);
     console.log("editedCSVData: ", editedCSVData);
 
-    fs.unlinkSync(originalCSV.path);
-    fs.unlinkSync(editedCSV.path);
+    if(fs.existsSync(originalCSV.path))
+      fs.unlinkSync(originalCSV.path);
+    if(fs.existsSync(editedCSV.path))
+      fs.unlinkSync(editedCSV.path);
 
     const csvDifferences = await diffCSVData(originalCSVData, editedCSVData);
     if (csvDifferences == null)
