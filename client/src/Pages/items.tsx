@@ -777,7 +777,7 @@ export default function HomePage() {
       <div>
         <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
-          <div className="w-full mx-auto pt-16">
+          <div className="w-full mx-auto pt-8">
             <div className="mx-auto pl-10">
               {/* collection option */}
               <div className="flex items-center gap-4">
@@ -791,7 +791,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="sticky flex md:items-center justify-center gap-8 py-9 max-md:px-4">
+              <div className="sticky flex md:items-center justify-center gap-8 py-4 max-md:px-4">
                 {/* Search bar */}
                 {universeCollectionId && (
                   <SearchBar
