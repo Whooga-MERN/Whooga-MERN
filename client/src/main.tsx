@@ -174,7 +174,7 @@ createRoot(document.getElementById("root")!).render(
             }
           />
           <Route
-            path="/bulk-edit/:collectionId"
+            path="/bulk-edit/:universeCollectionId"
             element={
               <ProtectedRoute>
                 <BulkEdit />
@@ -182,7 +182,7 @@ createRoot(document.getElementById("root")!).render(
             }
           />
           <Route
-            path="/bulk-edit-step-2/:collectionId"
+            path="/bulk-edit-step-2/:universeCollectionId"
             element={
               <ProtectedRoute>
                 <BulkEditStep2 />

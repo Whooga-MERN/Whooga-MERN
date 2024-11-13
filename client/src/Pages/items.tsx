@@ -170,7 +170,6 @@ export default function HomePage() {
     };
     fetchToken();
 
-    // get attributes, needs to be changed to fetch from API
     const getAttributes = async () => {
       const response = await fetch(
         buildPath(`collectable-attributes/masked-attributes/${collectionId}`),
@@ -835,7 +834,7 @@ export default function HomePage() {
                         <li>
                           <Link
                             className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            to={`/bulk-edit/${collectionId}`}
+                            to={`/bulk-edit/${universeCollectionId}`}
                           >
                             Bulk Edit
                           </Link>

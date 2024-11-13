@@ -9,10 +9,9 @@ import { set } from "lodash";
 
 
 const BulkEditStep2 = () => {
-  const { collectionId } = useParams<{ collectionId: string }>();
+  const { universeCollectionId } = useParams<{ universeCollectionId: string }>();
   const [collectionName, setCollectionName] = useState<string>("");
-  const [isPublished, setIsPublished] = useState<boolean>(false);
-  const [collectionUniverseId, setCollectionUniverseId] = useState<string>("");
+  const [originalEditCSV, setOriginalEditCSV] = useState<string[]>([]);
   const [isInputEmpty, setIsInputEmpty] = useState<boolean>(false);
   const [haveImages, setHaveImages] = useState<boolean>(false);
   const [jsonData, setJsonData] = useState<any[]>([]);
@@ -46,12 +45,16 @@ const BulkEditStep2 = () => {
     };
     fetchUserDetails();
 
-    const storedCollectionName = localStorage.getItem("collectionName") ?? "";
-    const storedIsPublished = localStorage.getItem("isPublished") ?? "";
-    const storedCollectionUniverseId = localStorage.getItem("collectionUniverseId") ?? "";
+    const fetchStoredData = async () => {
+      const storedCollectionName = localStorage.getItem("collectionName") ?? "";
+      const storedOriginalCSV = await localStorage.getItem("bulkEditOriginalCSV") ?? "";
 
-    setCollectionName(storedCollectionName);
-    setCollectionUniverseId(storedCollectionUniverseId);
+      setCollectionName(storedCollectionName);
+      await setOriginalEditCSV(storedOriginalCSV ? JSON.parse(storedOriginalCSV) : []);
+      console.log("Original CSV:", originalEditCSV);
+    };
+    fetchStoredData();
+    
   }, []);
 
   const onFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,24 +120,24 @@ const BulkEditStep2 = () => {
     setIsUploading(true);
     event?.preventDefault();
     const formData = new FormData();
-    if (collectionId) {
-      formData.append("collectionId", collectionId);
+    if (universeCollectionId) {
+      formData.append("collectionUniverseId", universeCollectionId);
     } else {
       console.error("Collection ID is undefined");
     }
-    formData.append ("collectionUniverseId", collectionUniverseId);
-    formData.append("csvJsonData", JSON.stringify(jsonData));
-    formData.append("isPublished", isPublished.toString());
     images.forEach((image, index) => {
       formData.append("collectableImages", image);
     });
+    console.log("Original CSV getting put in form:", originalEditCSV);
+    formData.append("originalCSV", JSON.stringify(originalEditCSV));
+    formData.append("editedCSV", JSON.stringify(jsonData));
+    
 
     logFormData(formData);
 
     try {
-      // const response = await fetch('http://localhost:3000/upload-csv', {
-      const response = await fetch(buildPath(`upload-csv/existing-universe`), {
-        method: "POST",
+      const response = await fetch(buildPath(`collection-universe/bulk-update`), {
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${JWT}`,
         },
@@ -151,10 +154,6 @@ const BulkEditStep2 = () => {
     } catch (error) {
       console.error("Error submitting form:", error);
     }
-  };
-
-  const handlePublishChange = () => {
-    setIsPublished(!isPublished);
   };
   
     const logFormData = (formData: FormData) => {
@@ -257,25 +256,6 @@ const BulkEditStep2 = () => {
               </p>
             </div>
           )}
-        </div>
-
-        {/* Publish Collection */}
-        <div className="flex items-center mt-6">
-            
-            <label
-            htmlFor="publishCollection"
-            className="mr-1 font-semibold text-lg"
-            >
-            Publish Items
-            </label>
-            <p className="text-gray-500 text-md mr-2">(Make these items public)</p>
-            <input
-            type="checkbox"
-            id="publishCollection"
-            checked={isPublished}
-            onChange={handlePublishChange}
-            className="h-5 w-5 text-primary border-gray-300 rounded"
-            />
         </div>
 
         {/* Upload Button */}

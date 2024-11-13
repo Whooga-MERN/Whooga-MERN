@@ -145,10 +145,6 @@ export default function Collections() {
         JSON.stringify(collection.customAttributes)
       );
       localStorage.setItem(
-        "favoriteAttributes",
-        JSON.stringify(collection.favoriteAttributes)
-      );
-      localStorage.setItem(
         "hiddenAttributes",
         JSON.stringify(collection.hiddenAttributes)
       );

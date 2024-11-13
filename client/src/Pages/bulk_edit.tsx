@@ -5,56 +5,81 @@ import { useNavigate, useParams } from "react-router-dom";
 import { buildPath } from "../utils/utils";
 
 function BulkEdit() {
-    const [attributes, setAttributes] = useState<string[]>([]);
     const [collectionName, setCollectionName] = useState<string>('');
-    const { collectionId } = useParams<{ collectionId: string }>();
-    const [collectionUniverseId, setCollectionUniverseId] = useState<string>('');
+    const { universeCollectionId } = useParams<{ universeCollectionId: string }>();
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchData = async () => {
-            const storedCustomAttributes = localStorage.getItem('customAttributes');
             const storedCollectionName = localStorage.getItem('collectionName') ?? '';
-            const storedCollectionUniverseId = localStorage.getItem('collectionUniverseId') ?? '';
-            setCollectionName(storedCollectionName);
-            setCollectionUniverseId(storedCollectionUniverseId);
-
-            try {
-                const response = await fetch(buildPath(`collectable-attributes/masked-attributes/` + collectionId));
-                const data = await response.json();
-                console.log("response: ", data);
-                if (Array.isArray(data)) {
-                    setAttributes(data);
-                } else {
-                    console.error("Unexpected response format:", data);
-                }
-            }
-            catch (error) {
-                console.error("Error deleting universe collectable: ", error);
-            }
+            setCollectionName(storedCollectionName);        
         };
 
         fetchData();
 
-    }, []);
+    }, [universeCollectionId]);
 
     const navigate = useNavigate();
 
-    const onClickDownload = () => {
-        var allTags = ["owned", "image"];
-        allTags = allTags.concat(attributes);
-        const csvContent = allTags.join(",");
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        console.log("blob: ", blob);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        console.log("helo" + collectionName);
-        a.download = collectionName + '_collection_template.csv';
-        a.click();
+    const onClickDownload = async () => {
+        console.log("universeCollectionId: ", universeCollectionId);
+        setIsLoading(true);
+        try {
+            const response = await fetch(buildPath(`universe-collectable/universe-collection/${universeCollectionId}`));
+            const data = await response.json();
+            console.log("response items: ", data);
+            if (Array.isArray(data)) {
+                var headers = ['id', 'owned', 'image', 'isPublished'];
+                for (let i = 0; i < data[0].attributes.length; i++) {
+                    if (data[0].attributes[i].name !== "image") {
+                        headers.push(data[0].attributes[i].name);
+                    }
+                }
+                console.log("headers: ", headers);
+
+                const objectsArray = data.map((item: any) => {
+                    const obj: Record<string, any> = {
+                        id: item.universe_collectable_id,
+                        owned: item.owned ? "T" : "F",
+                        image: item.attributes.find((attr: { name: string }) => attr.name === 'image').value,
+                        isPublished: item.is_published ? "T" : "F"
+                    };
+
+                    for (let j = 4; j < headers.length; j++) {
+                        const attribute = item.attributes.find((attr: { name: string }) => attr.name === headers[j]);
+                        obj[headers[j]] = attribute ? attribute.value : null;
+                    }
+
+                    return obj;
+                });
+
+                console.log("objectsArray: ", objectsArray);
+                localStorage.setItem('bulkEditOriginalCSV', JSON.stringify(objectsArray));
+
+                const csvString = [
+                    headers.join(','), // header row first
+                    ...objectsArray.map(obj => headers.map(header => obj[header]).join(',')) // data rows
+                ].join('\n');
+
+                const blob = new Blob([csvString], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = collectionName + '_collection.csv';
+                a.click();
+                setIsLoading(false);
+
+            } else {
+                console.error("Unexpected response format:", data);
+            }
+        }
+        catch (error) {
+            console.error("Error getting universe collectable: ", error);
+        }
     };
 
     const handleContinue = () => {
-        navigate('/bulk-edit-step-2/' + collectionId);
+        navigate('/bulk-edit-step-2/' + universeCollectionId);
     };
 
     return (
@@ -77,7 +102,7 @@ function BulkEdit() {
                     <label htmlFor="collectionName" className=" font-semibold text-4xl">Step 1</label>
                     <p className="font-semibold text-lg mt-10">Download your .csv template file:</p>
                     <div className="relative w-full pt-2 flex">
-                        <button className="btn btn-primary text-lg" onClick={onClickDownload}>Download template</button>
+                        <button className="btn btn-primary text-lg" onClick={onClickDownload}>{isLoading ? "Loading" : "Download template"}</button>
                     </div>
                 </div>
                 
