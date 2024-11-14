@@ -86,13 +86,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-center mt-8">
+    <div className="flex flex-col justify-center mt-8 ">
       <div className="relative items-center">
         {/* Dropdown Button */}
         <div className="absolute inset-y-0 left-0 flex items-center">
           <button
             id="dropdown-button"
-            className="flex-shrink-0 z-10 inline-flex items-center h-full px-4 text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200 dark:bg-yellow-100 dark:hover:bg-yellow-200 dark:text-black"
+            className="flex-shrink-0 z-50 inline-flex items-center h-full px-4  text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200 dark:bg-yellow-100 dark:hover:bg-yellow-200 dark:text-black"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
             {selectedOption}

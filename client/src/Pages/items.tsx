@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _, { get } from "lodash";
+import _, { divide, get } from "lodash";
 
 import {
   FaListUl,
@@ -23,6 +23,7 @@ import SearchBar from "../Components/searchBar";
 import OwnedToggle from "../Components/ownedToggle";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useIntersection } from "@mantine/hooks";
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { buildPath } from "../utils/utils";
 import {
@@ -37,7 +38,7 @@ import {
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 6;
 const initialPage = 1;
 
 const sortBy = [
@@ -119,14 +120,19 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    // gather items from local storage
+    // Gather user data from local storage
     const getItemsFromStorage = async () => {
+      // Getting the collection name and collection ids from local storage
       const collectionName = localStorage.getItem("collectionName") ?? "";
       const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
       const savedWishlist = localStorage.getItem("wishlistIds");
 
+      // Setting the collection name and collection ids
       setUniverseCollectionName(collectionName);
       setCollectionIds(JSON.parse(storedCollectionIds));
+
+      // Checking if the collection is owned
+      // If the collection is owned, set the state to true
       if (
         universeCollectionId &&
         JSON.parse(storedCollectionIds).some(
@@ -140,10 +146,14 @@ export default function HomePage() {
       ) {
         setIsCollectionOwned(true);
       }
+
+      // Setting the wishlist items
       if (savedWishlist) {
         setWishlistIds(JSON.parse(savedWishlist));
       }
     };
+
+
     getItemsFromStorage();
     setSearchResults([]);
     setJumpSearchResults([]);
@@ -254,12 +264,12 @@ export default function HomePage() {
         setOwnedCollectables(ownedCollectables);
 
         if (universeCollectionId) {
-          const collectables = await fetchUniverseCollectables(
+          const universe_collectables = await fetchUniverseCollectables(
             universeCollectionId,
             initialPage,
             ITEMS_PER_PAGE
           );
-          setUniverseCollectables(collectables);
+          setUniverseCollectables(universe_collectables);
         }
       }
     };
@@ -584,7 +594,7 @@ export default function HomePage() {
     threshold: 1,
   });
   const { ref: jumpPrevRef, entry: jumpPrevEntry } = useIntersection({
-    threshold: 1,
+    threshold: 0.1,
   });
 
   const handleToggleChange = (enabled: boolean) => {
@@ -642,7 +652,10 @@ export default function HomePage() {
     }
   }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
 
-  const collectables = collectablesData?.pages.flatMap((page) => page) ?? [];
+  // Used when mounting the page. This means no Search or Jump Results have been made yet. 
+  const _default_collectables = collectablesData?.pages.flatMap((page) => page) ?? [];
+
+  console.log("_default_collectables: ", _default_collectables);
 
   const handleSearch = async (
     searchTags: { attribute: string; term: string }[]
@@ -739,12 +752,15 @@ export default function HomePage() {
   };
 
   const handleLoadPreviousJumpPage = async () => {
+    // if there is no previous page or it has already been loaded, return
     if (!prevPageNumber || loadedPages.has(prevPageNumber)) return;
+
+    // fetch the previous page
     try {
       const data = await fetchUniverseCollectables(
         universeCollectionId!,
         prevPageNumber,
-        ITEMS_PER_PAGE
+         ITEMS_PER_PAGE
       );
       setJumpSearchResults((prevResults) => [...data, ...prevResults]);
       setPrevPageNumber((prev) => prev! - 1);
@@ -772,26 +788,36 @@ export default function HomePage() {
     setNoSearchResults(false);
   };
 
+  // =======================Using Virtualizer instead of UseIntersection====================
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollRef && scrollRef.current) {
+      scrollRef.current.scrollTop = 200; // Set initial scroll position to 100px
+    }
+  }, [jumpSearchResults]);
+
   return (
     <>
-      <div>
-        <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 w-full">
+      <div className="h-screen flex flex-col overflow-y-hidden">
+        <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full  relative">
           <Header />
           <div className="w-full mx-auto pt-8">
             <div className="mx-auto pl-10">
-              {/* collection option */}
-              <div className="flex items-center gap-4">
-                <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-8 py-3">
-                  {universeCollectionName}
-                </p>
-                <OwnedToggle
-                  enabled={enabled}
-                  setEnabled={setEnabled}
-                  onToggle={handleToggleChange}
-                />
-              </div>
 
-              <div className="sticky flex md:items-center justify-center gap-8 py-4 max-md:px-4">
+
+              <div className="flex md:items-center justify-center gap-48 pb-4 max-md:px-4  ">
+                {/* collection option */}
+                  <div className="flex items-center gap-4 ml-0">
+                    <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
+                      {universeCollectionName}
+                    </p>
+                    <OwnedToggle
+                      enabled={enabled}
+                      setEnabled={setEnabled}
+                      onToggle={handleToggleChange}
+                    />
+                  </div>
+
                 {/* Search bar */}
                 {universeCollectionId && (
                   <SearchBar
@@ -820,7 +846,7 @@ export default function HomePage() {
                     <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
 
                       <li><a className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                       onClick={openModal}>New Collectable</a></li>
+                        onClick={openModal}>New Collectable</a></li>
 
                         <li>
                           <Link
@@ -1008,376 +1034,771 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* <div className="h-[400px]">
-          <div
-            ref={jumpPrevRef}
-            className="loading-indicator text-center p-4 bg-black"
-          ></div>
-        </div> */}
-        <div
-          ref={jumpPrevRef}
-          className="loading-indicator text-center p-2"
-        ></div>
+        <div ref={scrollRef} className="flex-1 w-full overflow-y-auto p-4 relative transition-all duration-300 ease-in-out">
+           {/* Scrollable Content goes here */}
+          <div className="h-fit bg-gray-100">
+            {/* Add more content to enable scrolling */}
+            <div className=" border-2 border-dashed border-red-500 ">
 
-        <div className="w-full flex flex-col md:flex-row">
-          {/* collectibles */}
-          <div className="w-full p-2">
-            <div className="text-xl py-4 text-right pr-10">
-              Total items in the collection:{" "}
-            </div>
-
-            {/* {showLoadPreviousButton && (
-              <button onClick={handleLoadPreviousPage}>
-                Load Previous Items
-              </button>
-            )} */}
-
-            {noSearchResults ? (
-              <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
-                No match found :(
-              </div>
-            ) : (
-              <div className="w-full p-2">
-                {/* switch between grid and list */}
-                {view === "list" ? (
-                  <div className="flex flex-wrap -mx-4">
-                    {(_searchResults.length > 0
-                      ? _searchResults
-                      : jumpSearchResults.length > 0
-                      ? jumpSearchResults
-                      : collectables
-                    ).map((item) => (
-                      <div
-                        key={item.universeCollectableId}
-                        className="w-full md:w-1/2 px-4 mb-6"
-                      >
-                        <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                          <button
-                            className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                            onClick={() =>
-                              handleStarClick(
-                                item.universeCollectionId!,
-                                collectionId
-                              )
-                            }
-                          >
-                            {wishlistIds.includes(
-                              item.universeCollectableId
-                            ) ? (
-                              <FontAwesomeIcon
-                                icon={faSolidStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            ) : (
-                              <FontAwesomeIcon
-                                icon={faRegularStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            )}
-                          </button>
-                          <div className="h-24 w-24">
-                            <img
-                              src={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "image"
-                                )?.value || "/placeholder.jpg"
-                              }
-                              alt={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "name"
-                                )?.value || "No Name"
-                              }
-                              width={100}
-                              height={100}
-                              className="rounded-md shadow-sm object-cover"
-                              onClick={() => handleOpenModal(item)}
-                            />
-                          </div>
-
-                          <div className="flex-1">
-                            {item.attributes
-                              .filter(
-                                (attribute: any) =>
-                                  attribute.name !== "image" &&
-                                  attribute.name !== "owned"
-                              )
-                              .slice(0, 3)
-                              .map((attribute: any, index: number) => (
-                                <p
-                                  key={attribute.slug || attribute.name}
-                                  className={
-                                    index === 0
-                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                      : "text-md font-semibold pl-4 capitalize truncate"
-                                  }
-                                >
-                                  {`${attribute.value}`}
-                                </p>
-                              ))}
-                          </div>
-                          <div className="flex space-x-4">
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => openEdit(item)}
-                            >
-                              <FaRegEdit />
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => handleDelete(item)}
-                            >
-                              <FaRegTrashCan />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                    {(_searchResults.length > 0
-                      ? _searchResults
-                      : jumpSearchResults.length > 0
-                      ? jumpSearchResults
-                      : collectables
-                    ).map((item) => (
-                      <div key={item.universeCollectableId}>
-                        <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                          <div className="h-22 w-30">
-                            <div className="absolute top-2 right-2 flex space-x-2">
-                              <button
-                                className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                onClick={() =>
-                                  handleStarClick(
-                                    item.universeCollectableId,
-                                    collectionId
-                                  )
-                                }
-                              >
-                                {wishlistIds.includes(
-                                  item.universeCollectableId
-                                ) ? (
-                                  <FontAwesomeIcon
-                                    icon={faSolidStar}
-                                    style={{ color: "#EDC307" }}
-                                  />
-                                ) : (
-                                  <FontAwesomeIcon
-                                    icon={faRegularStar}
-                                    style={{ color: "#EDC307" }}
-                                  />
-                                )}
-                              </button>
-                            </div>
-                            <img
-                              src={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "image"
-                                )?.value || "/placeholder.jpg"
-                              }
-                              alt={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "name"
-                                )?.value || "No Name"
-                              }
-                              width={400}
-                              height={400}
-                              className="rounded-md shadow-sm object-cover pt-3"
-                              onClick={() => handleOpenModal(item)}
-                            />
-                          </div>
-
-                          <div className="space-y-1 p-4">
-                            {item.attributes
-                              .filter(
-                                (attribute: any) =>
-                                  attribute.name !== "image" &&
-                                  attribute.name !== "owned"
-                              )
-                              .slice(0, 3)
-                              .map((attribute: any, index: number) => (
-                                <p
-                                  key={attribute.slug || attribute.name}
-                                  className={
-                                    index === 0
-                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                      : "text-md font-semibold pl-4 capitalize truncate"
-                                  }
-                                >
-                                  {`${attribute.value}`}
-                                </p>
-                              ))}
-
-                            <div className="pt-3 pb-2 text-center">
-                              <button
-                                className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={() => openEdit(item)}
-                              >
-                                <FaRegEdit />
-                              </button>
-                              <button
-                                className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={() => handleDelete(item)}
-                              >
-                                <FaRegTrashCan />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              {/* <div className="h-[400px]">
                 <div
-                  ref={collectableRef}
-                  className="loading-indicator text-center p-4"
-                >
-                  {isFetchingCollectables && <p>Loading more items...</p>}
-                </div>
-                <div
-                  ref={searchRef}
-                  className="loading-indicator text-center p-4"
-                >
-                  {isFetchingSearchResults && <p>Loading more items...</p>}
-                </div>
-                <div
-                  ref={jumpNextRef}
-                  className="loading-indicator text-center p-4"
+                  ref={jumpPrevRef}
+                  className="loading-indicator text-center p-4 bg-black"
                 ></div>
-              </div>
-            )}
-            {/* send data to modal */}
-            {showModal && specificTag && (
-              <Modal
-                itemData={specificTag}
-                onClose={handleCloseModal}
-                isVisible={showModal}
-              />
-            )}
-            {showEdit && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
-                  <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
-                    Edit your Collectible
-                  </h2>
+              </div> */}
+              {/* <div
+                ref={jumpPrevRef}
+                className="loading-indicator text-center bg-red-700 p-2 mb-[70px]"
+              ></div> */}
 
-                  <form onSubmit={handleEditSubmit}>
-                    {maskedAttributes
-                      .concat("owned", "image")
-                      .filter((attr) => attr !== null)
-                      .map((attribute, index) => (
-                        <div key={index} className="mb-4 lg:max-w-lg">
-                          {attribute !== "image" ? (
-                            attribute === "owned" ? (
-                              <div className="flex items-center mb-3">
-                                <input
-                                  type="checkbox"
-                                  id="publishCollection"
-                                  onChange={(e) =>
-                                    handleOwnedChange(e.target.checked)
-                                  }
-                                  className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
-                                />
-                                <label
-                                  htmlFor="publishCollection"
-                                  className="text-gray-700 dark:text-gray-300 text-sm font-bold"
-                                >
-                                  Is Owned
-                                </label>
-                              </div>
-                            ) : (
-                              <>
-                                <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                  {attribute.charAt(0).toUpperCase() +
-                                    attribute.slice(1)}
-                                </label>
-                                <input
-                                  type="text"
-                                  name={attribute}
-                                  placeholder={`${attribute}`}
-                                  value={formData[attribute] || ""}
-                                  onChange={handleChange}
-                                  className="border rounded w-full py-2 px-3 text-gray-700"
-                                />
-                              </>
-                            )
-                          ) : (
-                            <>
-                              <label
-                                htmlFor="cover-photo"
-                                className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+              <div className="w-full flex flex-col md:flex-row border-2 border-dashed border-purple-500">
+                {/* collectibles */}
+                <div className="w-full p-2">
+                  {/* <div className="text-xl py-4 text-right pr-10">
+                    Total items in the collection:{" "}
+                  </div> */}
+
+                  {/* {showLoadPreviousButton && (
+                    <button onClick={handleLoadPreviousPage}>
+                      Load Previous Items
+                    </button>
+                  )} */}
+                  <div
+                    ref={jumpPrevRef}
+                    className="loading-indicator text-center bg-red-700 p-2 mb-[75px]"
+                  ></div>
+                    
+                  {noSearchResults ? (
+                    <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
+                      No match found :( 
+                    </div>
+                  ) : (     
+                    <div className="w-full p-2 border-2 border-dashed border-yellow-500">
+
+                      {/* Default Collectables Results i.e what is shown when mounting onto the page */}
+                      { 
+                      // If there are no search results and no jump search results, show the default collectables
+                      (_searchResults.length === 0 && jumpSearchResults.length === 0) && 
+                      
+                      // If the view is list, show the list view
+                      (view === "list" ? (
+                          <div className="flex flex-wrap -mx-4 ">
+                            {(_default_collectables).map((item) => (
+                              <div
+                                key={item.universeCollectableId}
+                                className="w-full md:w-1/2 px-4 mb-6"
                               >
-                                Upload Photo
-                              </label>
-                              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                                <div className="text-center">
-                                  <PhotoIcon
-                                    aria-hidden="true"
-                                    className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                  />
-                                  <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                    <label
-                                      htmlFor="file-upload"
-                                      className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                                    >
-                                      <span>Upload a photo</span>
-                                      <input
-                                        id="file-upload"
-                                        name="file-upload"
-                                        type="file"
-                                        className="sr-only"
-                                        onChange={handleFileChange}
+                                <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <button
+                                    className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                    onClick={() =>
+                                      handleStarClick(
+                                        item.universeCollectionId!,
+                                        collectionId
+                                      )
+                                    }
+                                  >
+                                    {wishlistIds.includes(
+                                      item.universeCollectableId
+                                    ) ? (
+                                      <FontAwesomeIcon
+                                        icon={faSolidStar}
+                                        style={{ color: "#EDC307" }}
                                       />
-                                    </label>
-                                    <p>or drag and drop</p>
+                                    ) : (
+                                      <FontAwesomeIcon
+                                        icon={faRegularStar}
+                                        style={{ color: "#EDC307" }}
+                                      />
+                                    )}
+                                  </button>
+                                  <div className="h-24 w-24">
+                                    <img
+                                      src={
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
+                                      }
+                                      alt={
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "name"
+                                        )?.value || "No Name"
+                                      }
+                                      width={100}
+                                      height={100}
+                                      className="rounded-md shadow-sm object-cover"
+                                      onClick={() => handleOpenModal(item)}
+                                    />
                                   </div>
-                                  <p className="text-xs leading-5 text-gray-600">
-                                    PNG, JPG
-                                  </p>
+
+                                  <div className="flex-1">
+                                    {item.attributes
+                                      .filter(
+                                        (attribute: any) =>
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
+                                      )
+                                      .slice(0, 3)
+                                      .map((attribute: any, index: number) => (
+                                        <p
+                                          key={attribute.slug || attribute.name}
+                                          className={
+                                            index === 0
+                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                              : "text-md font-semibold pl-4 capitalize truncate"
+                                          }
+                                        >
+                                          {`${attribute.value}`}
+                                        </p>
+                                      ))}
+                                  </div>
+                                  <div className="flex space-x-4">
+                                    <button
+                                      className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                      onClick={() => openEdit(item)}
+                                    >
+                                      <FaRegEdit />
+                                    </button>
+                                    <button
+                                      className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                      onClick={() => handleDelete(item)}
+                                    >
+                                      <FaRegTrashCan />
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
-                            </>
-                          )}
+                            ))}
+                          </div>
+                        ) : (
+                          // GRID VIEW 
+                          <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
+                            {(_default_collectables).map((item) => (
+                              <div key={item.universeCollectableId}>
+                                <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <div className="h-22 w-30">
+                                    <div className="absolute top-2 right-2 flex space-x-2">
+                                      <button
+                                        className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                        onClick={() =>
+                                          handleStarClick(
+                                            item.universeCollectableId,
+                                            collectionId
+                                          )
+                                        }
+                                      >
+                                        {wishlistIds.includes(
+                                          item.universeCollectableId
+                                        ) ? (
+                                          <FontAwesomeIcon
+                                            icon={faSolidStar}
+                                            style={{ color: "#EDC307" }}
+                                          />
+                                        ) : (
+                                          <FontAwesomeIcon
+                                            icon={faRegularStar}
+                                            style={{ color: "#EDC307" }}
+                                          />
+                                        )}
+                                      </button>
+                                    </div>
+                                    <img
+                                      src={
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
+                                      }
+                                      alt={
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "name"
+                                        )?.value || "No Name"
+                                      }
+                                      width={400}
+                                      height={400}
+                                      className="rounded-md shadow-sm object-cover pt-3"
+                                      onClick={() => handleOpenModal(item)}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1 p-4">
+                                    {item.attributes
+                                      .filter(
+                                        (attribute: any) =>
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
+                                      )
+                                      .slice(0, 3)
+                                      .map((attribute: any, index: number) => (
+                                        <p
+                                          key={attribute.slug || attribute.name}
+                                          className={
+                                            index === 0
+                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                              : "text-md font-semibold pl-4 capitalize truncate"
+                                          }
+                                        >
+                                          {`${attribute.value}`}
+                                        </p>
+                                      ))}
+
+                                    <div className="pt-3 pb-2 text-center">
+                                      <button
+                                        className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => openEdit(item)}
+                                      >
+                                        <FaRegEdit />
+                                      </button>
+                                      <button
+                                        className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => handleDelete(item)}
+                                      >
+                                        <FaRegTrashCan />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+
+                    
+                      {/* Search Results */}
+                      {
+                        // If there are search results, show the search results
+                        (_searchResults.length > 0) && 
+                        
+                        // If the view is list, show the list view
+                        (view === "list" ? (
+                               <div className="flex flex-wrap -mx-4 ">
+                                {(_searchResults).map((item) => (
+                                  <div
+                                    key={item.universeCollectableId}
+                                    className="w-full md:w-1/2 px-4 mb-6"
+                                  >
+                                    <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                      <button
+                                        className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                        onClick={() =>
+                                          handleStarClick(
+                                            item.universeCollectionId!,
+                                            collectionId
+                                          )
+                                        }
+                                      >
+                                        {wishlistIds.includes(
+                                          item.universeCollectableId
+                                        ) ? (
+                                          <FontAwesomeIcon
+                                            icon={faSolidStar}
+                                            style={{ color: "#EDC307" }}
+                                          />
+                                        ) : (
+                                          <FontAwesomeIcon
+                                            icon={faRegularStar}
+                                            style={{ color: "#EDC307" }}
+                                          />
+                                        )}
+                                      </button>
+                                      <div className="h-24 w-24">
+                                        <img
+                                          src={
+                                            item.attributes?.find(
+                                              (attr: any) => attr.name === "image"
+                                            )?.value || "/placeholder.jpg"
+                                          }
+                                          alt={
+                                            item.attributes?.find(
+                                              (attr: any) => attr.name === "name"
+                                            )?.value || "No Name"
+                                          }
+                                          width={100}
+                                          height={100}
+                                          className="rounded-md shadow-sm object-cover"
+                                          onClick={() => handleOpenModal(item)}
+                                        />
+                                      </div>
+
+                                      <div className="flex-1">
+                                        {item.attributes
+                                          .filter(
+                                            (attribute: any) =>
+                                              attribute.name !== "image" &&
+                                              attribute.name !== "owned"
+                                          )
+                                          .slice(0, 3)
+                                          .map((attribute: any, index: number) => (
+                                            <p
+                                              key={attribute.slug || attribute.name}
+                                              className={
+                                                index === 0
+                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                  : "text-md font-semibold pl-4 capitalize truncate"
+                                              }
+                                            >
+                                              {`${attribute.value}`}
+                                            </p>
+                                          ))}
+                                      </div>
+                                      <div className="flex space-x-4">
+                                        <button
+                                          className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => openEdit(item)}
+                                        >
+                                          <FaRegEdit />
+                                        </button>
+                                        <button
+                                          className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => handleDelete(item)}
+                                        >
+                                          <FaRegTrashCan />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                          // GRID VIEW 
+                          <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
+                            {(_searchResults).map((item) => (
+                              <div key={item.universeCollectableId}>
+                                <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <div className="h-22 w-30">
+                                    <div className="absolute top-2 right-2 flex space-x-2">
+                                      <button
+                                        className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                        onClick={() =>
+                                          handleStarClick(
+                                            item.universeCollectableId,
+                                            collectionId
+                                          )
+                                        }
+                                      >
+                                        {wishlistIds.includes(
+                                          item.universeCollectableId
+                                        ) ? (
+                                          <FontAwesomeIcon
+                                            icon={faSolidStar}
+                                            style={{ color: "#EDC307" }}
+                                          />
+                                        ) : (
+                                          <FontAwesomeIcon
+                                            icon={faRegularStar}
+                                            style={{ color: "#EDC307" }}
+                                          />
+                                        )}
+                                      </button>
+                                    </div>
+                                    <img
+                                      src={
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
+                                      }
+                                      alt={
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "name"
+                                        )?.value || "No Name"
+                                      }
+                                      width={400}
+                                      height={400}
+                                      className="rounded-md shadow-sm object-cover pt-3"
+                                      onClick={() => handleOpenModal(item)}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1 p-4">
+                                    {item.attributes
+                                      .filter(
+                                        (attribute: any) =>
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
+                                      )
+                                      .slice(0, 3)
+                                      .map((attribute: any, index: number) => (
+                                        <p
+                                          key={attribute.slug || attribute.name}
+                                          className={
+                                            index === 0
+                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                              : "text-md font-semibold pl-4 capitalize truncate"
+                                          }
+                                        >
+                                          {`${attribute.value}`}
+                                        </p>
+                                      ))}
+
+                                    <div className="pt-3 pb-2 text-center">
+                                      <button
+                                        className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => openEdit(item)}
+                                      >
+                                        <FaRegEdit />
+                                      </button>
+                                      <button
+                                        className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => handleDelete(item)}
+                                      >
+                                        <FaRegTrashCan />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          )
+                        )
+                      }
+
+                      {/* Jump Results */}
+                      {
+                        // If there are jump search results, show the jump search results
+                        (jumpSearchResults.length > 0) && 
+
+                        // If the view is list, show the list view
+                        (view === "list" ? (
+                        <div className="flex flex-wrap -mx-4 ">
+                          {(jumpSearchResults).map((items) => (
+                            <div
+                              key={items.universeCollectableId}
+                              className="w-full md:w-1/2 px-4 mb-6"
+                            >
+                              <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                <button
+                                  className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                  onClick={() =>
+                                    handleStarClick(
+                                      items.universeCollectionId!,
+                                      collectionId
+                                    )
+                                  }
+                                >
+                                  {wishlistIds.includes(
+                                    items.universeCollectableId
+                                  ) ? (
+                                    <FontAwesomeIcon
+                                      icon={faSolidStar}
+                                      style={{ color: "#EDC307" }}
+                                    />
+                                  ) : (
+                                    <FontAwesomeIcon
+                                      icon={faRegularStar}
+                                      style={{ color: "#EDC307" }}
+                                    />
+                                  )}
+                                </button>
+                                <div className="h-24 w-24">
+                                  <img
+                                    src={
+                                      items.attributes?.find(
+                                        (attr: any) => attr.name === "image"
+                                      )?.value || "/placeholder.jpg"
+                                    }
+                                    alt={
+                                      items.attributes?.find(
+                                        (attr: any) => attr.name === "name"
+                                      )?.value || "No Name"
+                                    }
+                                    width={100}
+                                    height={100}
+                                    className="rounded-md shadow-sm object-cover"
+                                    onClick={() => handleOpenModal(items)}
+                                  />
+                                </div>
+
+                                <div className="flex-1">
+                                  {items.attributes
+                                    .filter(
+                                      (attribute: any) =>
+                                        attribute.name !== "image" &&
+                                        attribute.name !== "owned"
+                                    )
+                                    .slice(0, 3)
+                                    .map((attribute: any, index: number) => (
+                                      <p
+                                        key={attribute.slug || attribute.name}
+                                        className={
+                                          index === 0
+                                            ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                            : "text-md font-semibold pl-4 capitalize truncate"
+                                        }
+                                      >
+                                        {`${attribute.value}`}
+                                      </p>
+                                    ))}
+                                </div>
+                                <div className="flex space-x-4">
+                                  <button
+                                    className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                    onClick={() => openEdit(items)}
+                                  >
+                                    <FaRegEdit />
+                                  </button>
+                                  <button
+                                    className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                    onClick={() => handleDelete(items)}
+                                  >
+                                    <FaRegTrashCan />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        // GRID VIEW 
+                        <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
+                          {(jumpSearchResults).map((items) => (
+                            <div key={items.universeCollectableId}>
+                              <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                <div className="h-22 w-30">
+                                  <div className="absolute top-2 right-2 flex space-x-2">
+                                    <button
+                                      className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                      onClick={() =>
+                                        handleStarClick(
+                                          items.universeCollectableId,
+                                          collectionId
+                                        )
+                                      }
+                                    >
+                                      {wishlistIds.includes(
+                                        items.universeCollectableId
+                                      ) ? (
+                                        <FontAwesomeIcon
+                                          icon={faSolidStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      ) : (
+                                        <FontAwesomeIcon
+                                          icon={faRegularStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      )}
+                                    </button>
+                                  </div>
+                                  <img
+                                    src={
+                                      items.attributes?.find(
+                                        (attr: any) => attr.name === "image"
+                                      )?.value || "/placeholder.jpg"
+                                    }
+                                    alt={
+                                      items.attributes?.find(
+                                        (attr: any) => attr.name === "name"
+                                      )?.value || "No Name"
+                                    }
+                                    width={400}
+                                    height={400}
+                                    className="rounded-md shadow-sm object-cover pt-3"
+                                    onClick={() => handleOpenModal(items)}
+                                  />
+                                </div>
+
+                                <div className="space-y-1 p-4">
+                                  {items.attributes
+                                    .filter(
+                                      (attribute: any) =>
+                                        attribute.name !== "image" &&
+                                        attribute.name !== "owned"
+                                    )
+                                    .slice(0, 3)
+                                    .map((attribute: any, index: number) => (
+                                      <p
+                                        key={attribute.slug || attribute.name}
+                                        className={
+                                          index === 0
+                                            ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                            : "text-md font-semibold pl-4 capitalize truncate"
+                                        }
+                                      >
+                                        {`${attribute.value}`}
+                                      </p>
+                                    ))}
+
+                                  <div className="pt-3 pb-2 text-center">
+                                    <button
+                                      className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                      onClick={() => openEdit(items)}
+                                    >
+                                      <FaRegEdit />
+                                    </button>
+                                    <button
+                                      className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                      onClick={() => handleDelete(items)}
+                                    >
+                                      <FaRegTrashCan />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ))}
-                    <div className="flex items-center mb-3">
-                      <input
-                        type="checkbox"
-                        id="publishCollection"
-                        checked={isPublished}
-                        onChange={handlePublishChange}
-                        className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
-                      />
-                      <label
-                        htmlFor="publishCollection"
-                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                      >
-                        Publish Collectable
-                      </label>
-                    </div>
 
-                    <div className="flex justify-end space-x-4 mt-8">
-                      <button
-                        type="button"
-                        onClick={closeEdit}
-                        className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+
+
+                      {/* DO NOT GO FURTHER */}
+                      <div
+                        ref={collectableRef}
+                        className="loading-indicator text-center p-4"
                       >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                        {isFetchingCollectables && <p>Loading more items...</p>}
+                      </div>
+                      <div
+                        ref={searchRef}
+                        className="loading-indicator text-center p-4"
                       >
-                        Save Changes
-                      </button>
+                        {isFetchingSearchResults && <p>Loading more items...</p>}
+                      </div>
+                      <div
+                        ref={jumpNextRef}
+                        className="loading-indicator text-center bg-green-500 p-4"
+                      ></div>
                     </div>
-                  </form>
+                  )}
+
+
+                  {/* Show All the details about an item in the modal*/}
+                  {showModal && specificTag && (
+                    <Modal
+                      itemData={specificTag}
+                      onClose={handleCloseModal}
+                      isVisible={showModal}
+                    />
+                  )}
+
+                  {/* Show Edit Collectable Form */}
+                  {showEdit && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                        <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                          Edit your Collectible
+                        </h2>
+
+                        <form onSubmit={handleEditSubmit}>
+                          {maskedAttributes
+                            .concat("owned", "image")
+                            .filter((attr) => attr !== null)
+                            .map((attribute, index) => (
+                              <div key={index} className="mb-4 lg:max-w-lg">
+                                {attribute !== "image" ? (
+                                  attribute === "owned" ? (
+                                    <div className="flex items-center mb-3">
+                                      <input
+                                        type="checkbox"
+                                        id="publishCollection"
+                                        onChange={(e) =>
+                                          handleOwnedChange(e.target.checked)
+                                        }
+                                        className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                      />
+                                      <label
+                                        htmlFor="publishCollection"
+                                        className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                      >
+                                        Is Owned
+                                      </label>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                        {attribute.charAt(0).toUpperCase() +
+                                          attribute.slice(1)}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name={attribute}
+                                        placeholder={`${attribute}`}
+                                        value={formData[attribute] || ""}
+                                        onChange={handleChange}
+                                        className="border rounded w-full py-2 px-3 text-gray-700"
+                                      />
+                                    </>
+                                  )
+                                ) : (
+                                  <>
+                                    <label
+                                      htmlFor="cover-photo"
+                                      className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                    >
+                                      Upload Photo
+                                    </label>
+                                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                      <div className="text-center">
+                                        <PhotoIcon
+                                          aria-hidden="true"
+                                          className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                        />
+                                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                          <label
+                                            htmlFor="file-upload"
+                                            className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                          >
+                                            <span>Upload a photo</span>
+                                            <input
+                                              id="file-upload"
+                                              name="file-upload"
+                                              type="file"
+                                              className="sr-only"
+                                              onChange={handleFileChange}
+                                            />
+                                          </label>
+                                          <p>or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs leading-5 text-gray-600">
+                                          PNG, JPG
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          <div className="flex items-center mb-3">
+                            <input
+                              type="checkbox"
+                              id="publishCollection"
+                              checked={isPublished}
+                              onChange={handlePublishChange}
+                              className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                            />
+                            <label
+                              htmlFor="publishCollection"
+                              className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                            >
+                              Publish Collectable
+                            </label>
+                          </div>
+
+                          <div className="flex justify-end space-x-4 mt-8">
+                            <button
+                              type="button"
+                              onClick={closeEdit}
+                              className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+              <Footer />
+            </div>
           </div>
         </div>
-        <Footer />
       </div>
     </>
   );
