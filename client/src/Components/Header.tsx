@@ -1,16 +1,70 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { themeChange } from "theme-change";
 import { Authenticator } from "@aws-amplify/ui-react";
+import fetchUserLoginDetails from "../fetchUserLoginDetails";
+import fetchJWT from "../fetchJWT";
+import { buildPath } from "../utils/utils";
 
 // On the Logged in page
 function Header() {
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [JWT, setJWT] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     themeChange(false);
     // 👆 false parameter is required for react project
+    const fetchUserDetails = async () => {
+      try {
+        const fetchUser = await fetchUserLoginDetails();
+        console.log("fetchUser: ", fetchUser);
+        setUser(fetchUser || "");
+      } catch (error) {
+        console.error("Error Fetching User");
+      }
+    }
+
+    const fetchToken = async () => {
+      try {
+        const token = await fetchJWT();
+        setJWT(token || "");
+      } catch (error) {
+        console.error("Error fetching JWT");
+      }
+    };
+
+    fetchUserDetails();
+    fetchToken();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (user && user.loginId) {
+        console.log("user: ", user);
+        console.log("user.loginId ", user.loginId);
+        const response = await fetch(
+          buildPath(`user/?user_email=${user.loginId}`), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+        );
+        //coin.png
+        const data = await response.json();
+        console.log(data);
+        if (data.length > 0) {
+          console.log("setting imageUrl");
+          console.log(data[0].user_profile_pic);
+          setImageUrl(data[0].user_profile_pic);
+        }
+      }
+    };
+    fetchData();
+  }, [user, JWT])
 
   return (
     <Authenticator>
@@ -78,7 +132,7 @@ function Header() {
                 className="btn btn-ghost btn-circle avatar border-black"
               >
                 <div className="w-10 rounded-full">
-                  <img alt="profile pic" src="/profilepic.jpeg" />
+                  <img alt="profile pic" src={imageUrl || "/coin.png"} />
                 </div>
               </div>
               <ul

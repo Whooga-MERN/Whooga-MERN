@@ -1,6 +1,6 @@
 {
-  "id": "d0999024-9bc7-4e50-a0a9-66b5328c5562",
-  "prevId": "da43a75a-51cb-4d80-b46d-29dd7030de23",
+  "id": "ddeb9eaa-9b0a-442e-8223-fe7ca44046ec",
+  "prevId": "d0776c87-2b26-4c19-90b8-eaf64aad1a67",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -54,7 +54,15 @@
           "name": "notification_opt_in",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": false
+        },
+        "accepted-terms": {
+          "name": "accepted-terms",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -111,19 +119,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "collections_user_id_users_user_id_fk": {
-          "name": "collections_user_id_users_user_id_fk",
-          "tableFrom": "collections",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
           "name": "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk",
           "tableFrom": "collections",
@@ -201,21 +196,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "collectionUniverses_user_id_users_user_id_fk": {
-          "name": "collectionUniverses_user_id_users_user_id_fk",
-          "tableFrom": "collectionUniverses",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -462,13 +443,13 @@
         },
         "text_vector": {
           "name": "text_vector",
-          "type": "vector(384)",
+          "type": "vector(768)",
           "primaryKey": false,
           "notNull": false
         },
         "image_vector": {
           "name": "image_vector",
-          "type": "vector(768)",
+          "type": "vector(512)",
           "primaryKey": false,
           "notNull": false
         }
@@ -528,13 +509,13 @@
         },
         "text_vector": {
           "name": "text_vector",
-          "type": "vector(384)",
+          "type": "vector(768)",
           "primaryKey": false,
           "notNull": false
         },
         "image_vector": {
           "name": "image_vector",
-          "type": "vector(768)",
+          "type": "vector(512)",
           "primaryKey": false,
           "notNull": false
         }

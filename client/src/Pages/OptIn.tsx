@@ -1,20 +1,69 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import fetchUserLoginDetails from "../fetchUserLoginDetails";
+import { buildPath } from "../utils/utils";
+import fetchJWT from "../fetchJWT";
 
 export default function OptIn() {
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [privacyPolicyAccepted, setPrivacyPolicyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [JWT, setJWT] = useState<string>("");
   const navigate = useNavigate();
+  
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const fetchUser = await fetchUserLoginDetails();
+        console.log("fetchUser: ", fetchUser);
+        setUser(fetchUser || "");
+      } catch (error) {
+        console.error("Error Fetching User");
+      }
+    }
+
+    const fetchToken = async () => {
+      try {
+        const token = await fetchJWT();
+        setJWT(token || "");
+      } catch (error) {
+        console.error("Error fetching JWT");
+      }
+    };
+
+    fetchUserDetails();
+    fetchToken();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
 
     // privacyPolicyAccepted && termsAccepted
     if (privacyPolicyAccepted) {
       // Send the preferences to the server if necessary
       // Redirect to the main app or profile page after opting in
+      try {
+        const response = await fetch(buildPath(`user/update-accepted-terms`),
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`
+          },
+          body: JSON.stringify({ userEmail: user.loginId, emailNotification: emailNotifications })
+        });
+
+        if(response.ok) {
+          console.log("Successfully accepted terms");
+        }
+      } catch (error) {
+        alert("Failed to accept terms, please try again");
+        console.error("Failed to update terms");
+        return;
+      }
+
       navigate("/collections");
     } else {
       alert("Please accept the privacy policy to continue.");

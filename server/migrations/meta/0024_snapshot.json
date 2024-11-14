@@ -1,6 +1,6 @@
 {
-  "id": "a2f14610-57c2-4eda-8c2d-37b088d9eab4",
-  "prevId": "d0999024-9bc7-4e50-a0a9-66b5328c5562",
+  "id": "66874caa-7052-4407-b244-420dea1bfb76",
+  "prevId": "ddeb9eaa-9b0a-442e-8223-fe7ca44046ec",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -54,7 +54,15 @@
           "name": "notification_opt_in",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": false
+        },
+        "accepted_terms": {
+          "name": "accepted_terms",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -111,19 +119,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "collections_user_id_users_user_id_fk": {
-          "name": "collections_user_id_users_user_id_fk",
-          "tableFrom": "collections",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
           "name": "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk",
           "tableFrom": "collections",
@@ -201,21 +196,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "collectionUniverses_user_id_users_user_id_fk": {
-          "name": "collectionUniverses_user_id_users_user_id_fk",
-          "tableFrom": "collectionUniverses",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -462,7 +443,7 @@
         },
         "text_vector": {
           "name": "text_vector",
-          "type": "vector(384)",
+          "type": "vector(768)",
           "primaryKey": false,
           "notNull": false
         },
@@ -528,7 +509,7 @@
         },
         "text_vector": {
           "name": "text_vector",
-          "type": "vector(384)",
+          "type": "vector(768)",
           "primaryKey": false,
           "notNull": false
         },

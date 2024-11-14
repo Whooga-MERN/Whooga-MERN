@@ -1,5 +1,5 @@
 {
-  "id": "da43a75a-51cb-4d80-b46d-29dd7030de23",
+  "id": "d0776c87-2b26-4c19-90b8-eaf64aad1a67",
   "prevId": "6f44a11b-e4f6-46ad-92d1-ace25036fde5",
   "version": "7",
   "dialect": "postgresql",
@@ -54,7 +54,8 @@
           "name": "notification_opt_in",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -111,19 +112,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "collections_user_id_users_user_id_fk": {
-          "name": "collections_user_id_users_user_id_fk",
-          "tableFrom": "collections",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk": {
           "name": "collections_collection_universe_id_collectionUniverses_collection_universe_id_fk",
           "tableFrom": "collections",
@@ -201,21 +189,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "collectionUniverses_user_id_users_user_id_fk": {
-          "name": "collectionUniverses_user_id_users_user_id_fk",
-          "tableFrom": "collectionUniverses",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -468,7 +442,7 @@
         },
         "image_vector": {
           "name": "image_vector",
-          "type": "vector(768)",
+          "type": "vector(512)",
           "primaryKey": false,
           "notNull": false
         }
@@ -534,7 +508,7 @@
         },
         "image_vector": {
           "name": "image_vector",
-          "type": "vector(768)",
+          "type": "vector(512)",
           "primaryKey": false,
           "notNull": false
         }

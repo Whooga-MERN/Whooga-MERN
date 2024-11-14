@@ -27,6 +27,7 @@ import BulkEdit from "./Pages/bulk_edit.tsx";
 import BulkEditStep2 from "./Pages/bulk_edit_step_2.tsx";
 import PrivacyPolicy from "./Pages/privacypolicy.tsx";
 import ContactUs from "./Pages/contactus.tsx";
+import OptIn from "./Pages/OptIn.tsx";
 
 import "./custom-amplify-styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -59,6 +60,7 @@ createRoot(document.getElementById("root")!).render(
           {/* new routes for the Privacy Policy and Contact Us pages */}
           <Route path="/privacypolicy" element={<PrivacyPolicy />} />
           <Route path="/contactus" element={<ContactUs />} />
+          <Route path="/optin" element={<OptIn />} />
 
           {/* authenticated routes */}
           <Route
