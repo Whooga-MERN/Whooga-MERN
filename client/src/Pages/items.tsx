@@ -581,6 +581,8 @@ export default function HomePage() {
     console.log("jump results: ", jumpSearchResults);
     setResetDropdown(true);
     setNoSearchResults(false);
+    setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
+    setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
   };
 
   const { ref: collectableRef, entry: collectableEntry } = useIntersection({
@@ -602,6 +604,8 @@ export default function HomePage() {
     setCurrentPage(1);
     setJumpSearchResults([]);
     setSearchResults([]);
+    setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
+    setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
   };
 
   const {
@@ -806,8 +810,8 @@ export default function HomePage() {
     setJumpSearchResults([]);
     setResetDropdown(true);
     setNoSearchResults(false);
-    // setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
-    // setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
+    setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
+    setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
   };
 
   // =======================Using Virtualizer instead of UseIntersection====================
@@ -827,6 +831,7 @@ export default function HomePage() {
       scrollRef.current.scrollTop = 30;
       // smoothScroll(scrollRef.current, 50, 500); // Smoothly scroll to 30px from the top
       setJumped(false); // Reset jumped after the initial adjustment
+      setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
     }
   }, [jumpSearchResults, jumped]);
 
@@ -869,7 +874,7 @@ export default function HomePage() {
     if (scrollRef.current && prevHeight !== 0 && !jumped) {
       // Measure the new height after items are updated
       const newHeight = scrollRef.current.scrollHeight;
-      const heightDifference = (newHeight - prevHeight) * 1.35;
+      const heightDifference = (newHeight - prevHeight) * 2;
 
       // Adjust scroll position by the height difference to keep it centered
       scrollRef.current.scrollTop += heightDifference / 2;
