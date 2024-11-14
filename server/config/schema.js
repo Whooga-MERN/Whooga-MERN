@@ -7,13 +7,14 @@ const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull(),
   phoneNumber: varchar('phone_number', { length: 255 }).notNull(),
   createdDate: date('created_date').notNull(),
-  userProfilePic: varchar('user_profile_pic', { length: 2048 }),
-  notification_opt_in: boolean('notification_opt_in')
+  user_profile_pic: varchar('user_profile_pic', { length: 2048 }),
+  notification_opt_in: boolean('notification_opt_in').default(false),
+  accepted_terms: boolean('accepted_terms').default(false)
 });
 
 const collections = pgTable('collections', {
   collection_id: serial('collection_id').primaryKey().notNull(),
-  user_id: integer('user_id').notNull().references(() => users.user_id),
+  user_id: integer('user_id').notNull(),
   collection_universe_id: integer('collection_universe_id').notNull().references(() => collectionUniverses.collection_universe_id, { onDelete: 'CASCADE' }),
   custom_attributes: jsonb('custom_attributes'),
   favorite_attributes: jsonb('favorite_attributes'),
@@ -23,7 +24,7 @@ const collections = pgTable('collections', {
 
 const collectionUniverses = pgTable('collectionUniverses', {
   collection_universe_id: serial('collection_universe_id').primaryKey().notNull(),
-  user_id: integer('user_id').notNull().references(() => users.user_id),
+  user_id: integer('user_id').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   created_by: varchar('created_by', { length: 255 }).notNull(),
   default_attributes: jsonb('default_attributes').notNull(),

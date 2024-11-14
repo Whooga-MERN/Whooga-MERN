@@ -624,7 +624,7 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
       console.log(error);
       try {
         if(imageUrl)
-          await deleteS3File(imageUrl);
+          await deleteS3File(imageUrl); // for some reason always fails
       } catch (error) {
         return res.status(500).send({ error: 'Failed to update collectable... Failed to delete new S3 Image'});
       }
