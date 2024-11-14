@@ -60,6 +60,8 @@ export const fetchUniverseCollectables = async (
     }
 
     const jsonResponse = await response.json();
+    const totalMatchingCollectables =
+      jsonResponse.totalMatchingCollectables || 0;
 
     const collectables = jsonResponse.collectables
       .map((item: any) => ({
@@ -77,7 +79,10 @@ export const fetchUniverseCollectables = async (
         return nameAttr && nameAttr.value && nameAttr.value.trim() !== "";
       });
 
-    return collectables;
+    return {
+      collectables,
+      totalMatchingCollectables,
+    };
   } catch (e) {
     console.error(`Error thrown when fetching universe collectables: ${e}`);
     throw e;
@@ -98,7 +103,6 @@ export const fetchOwnedCollectables = async (
     const url = buildPath(
       `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
     );
-    console.log(url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -115,7 +119,8 @@ export const fetchOwnedCollectables = async (
     }
 
     const jsonResponse = await response.json();
-    const collectables = jsonResponse
+
+    const collectables = jsonResponse.collectables
       .map((item: any) => ({
         universeCollectableId: item.universe_collectable_id,
         attributes: item.attributes.map((attr: any) => ({
@@ -131,7 +136,10 @@ export const fetchOwnedCollectables = async (
         return nameAttr && nameAttr.value && nameAttr.value.trim() !== "";
       });
 
-    return collectables;
+    return {
+      collectables,
+      totalMatchingCollectables: jsonResponse.totalMatchingCollectables,
+    };
   } catch (e) {
     console.error(`Error thrown when fetching universe collectables: ${e}`);
     throw e;
@@ -347,6 +355,7 @@ export const fetchUniverseJumpResults = async (
   const url = buildPath(
     `universe-collectable/jump?collectionUniverseId=${universeCollectionId}&${queryParams}&itemsPerPage=12`
   );
+  console.log("jump", url);
 
   try {
     const response = await fetch(url, {

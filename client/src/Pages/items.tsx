@@ -251,6 +251,10 @@ export default function HomePage() {
   }, [specificTag]);
 
   // -------------------------- show universecollectables and search ------------------
+  const [ownedCollectablesCount, setOwnedCollectablesCount] =
+    useState<number>();
+  const [unverseCollectablesCount, setUniverseCollectablesCount] =
+    useState<number>();
 
   useEffect(() => {
     const getUniverseCollectionId = async () => {
@@ -260,7 +264,8 @@ export default function HomePage() {
           initialPage,
           ITEMS_PER_PAGE
         );
-        setOwnedCollectables(ownedCollectables);
+        setOwnedCollectables(ownedCollectables.collectables);
+        setOwnedCollectablesCount(ownedCollectables.totalMatchingCollectables);
 
         if (universeCollectionId) {
           const universe_collectables = await fetchUniverseCollectables(
@@ -268,13 +273,22 @@ export default function HomePage() {
             initialPage,
             ITEMS_PER_PAGE
           );
-          setUniverseCollectables(universe_collectables);
+          setUniverseCollectables(universe_collectables.collectables);
+          setUniverseCollectablesCount(
+            universe_collectables.totalMatchingCollectables
+          );
         }
       }
     };
 
     getUniverseCollectionId();
   }, [collectionId]);
+
+  useEffect(() => {
+    if (ownedCollectables.length > 0) {
+      console.log("owned", ownedCollectables);
+    }
+  }, [ownedCollectables]);
 
   // add collectible form modal open handler
   const openModal = () => {
@@ -615,27 +629,32 @@ export default function HomePage() {
     isFetchingNextPage: isFetchingCollectables,
   } = useInfiniteQuery({
     queryKey: ["collectables", collectionId, universeCollectionId, enabled],
-    queryFn: ({ pageParam = 1 }) => {
-      if (enabled) {
-        return fetchOwnedCollectables(collectionId!, pageParam, ITEMS_PER_PAGE);
+    queryFn: async ({ pageParam = 1 }) => {
+      if (enabled && collectionId) {
+        // Fetch owned collectables when enabled
+        const { collectables, totalMatchingCollectables } =
+          await fetchOwnedCollectables(collectionId, pageParam, ITEMS_PER_PAGE);
+        return { collectables, totalMatchingCollectables };
       } else if (universeCollectionId) {
-        return fetchUniverseCollectables(
-          universeCollectionId,
-          pageParam,
-          ITEMS_PER_PAGE
-        );
+        // Fetch universe collectables when not enabled
+        const { collectables, totalMatchingCollectables } =
+          await fetchUniverseCollectables(
+            universeCollectionId,
+            pageParam,
+            ITEMS_PER_PAGE
+          );
+        return { collectables, totalMatchingCollectables };
       }
+      // Default empty structure if neither condition is met
+      return { collectables: [], totalMatchingCollectables: 0 };
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      if (
-        !lastPage ||
-        !Array.isArray(lastPage) ||
-        lastPage.length < ITEMS_PER_PAGE
-      ) {
-        return undefined;
-      }
-      return allPages.length + 1;
+      // Check if more pages are available based on the total count
+      const totalFetched = allPages.flatMap((page) => page.collectables).length;
+      return totalFetched < (lastPage?.totalMatchingCollectables || 0)
+        ? allPages.length + 1
+        : undefined;
     },
     refetchOnWindowFocus: false,
   });
@@ -657,7 +676,7 @@ export default function HomePage() {
 
   // Used when mounting the page. This means no Search or Jump Results have been made yet.
   const _default_collectables =
-    collectablesData?.pages.flatMap((page) => page) ?? [];
+    collectablesData?.pages.flatMap((page) => page.collectables) || [];
 
   const handleSearch = async (
     searchTags: { attribute: string; term: string }[]
@@ -750,7 +769,7 @@ export default function HomePage() {
           res.pageNumber,
           ITEMS_PER_PAGE
         );
-        setJumpSearchResults(data);
+        setJumpSearchResults(data.collectables);
 
         setLoadedPages(new Set([res.pageNumber]));
       }
@@ -768,7 +787,10 @@ export default function HomePage() {
         nextPageNumber,
         ITEMS_PER_PAGE
       );
-      setJumpSearchResults((prevResults) => [...prevResults, ...data]);
+      setJumpSearchResults((prevResults) => [
+        ...prevResults,
+        ...data.collectables,
+      ]);
       setNextPageNumber((prev) => prev! + 1);
     } catch (error) {
       console.error("Error fetching additional pages:", error);
@@ -786,7 +808,10 @@ export default function HomePage() {
         prevPageNumber,
         ITEMS_PER_PAGE
       );
-      setJumpSearchResults((prevResults) => [...data, ...prevResults]);
+      setJumpSearchResults((prevResults) => [
+        ...data.collectables,
+        ...prevResults,
+      ]);
       setPrevPageNumber((prev) => prev! - 1);
     } catch (error) {
       console.error("Error fetching previous page items:", error);
