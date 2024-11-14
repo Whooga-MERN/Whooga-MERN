@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _, { divide, get } from "lodash";
+import _, { divide, get, set } from "lodash";
 
 import {
   FaListUl,
@@ -731,6 +731,7 @@ export default function HomePage() {
       setNextPageNumber(data.page + 1);
       setPrevPageNumber(data.page - 1);
       setLoadedPages(new Set([data.page]));
+      setJumped(true); // Set `jumped` to true to indicate the initial jump has occurred
     } catch (error) {
       console.error("Fetch error:", error);
     }
@@ -786,15 +787,81 @@ export default function HomePage() {
     setJumpSearchResults([]);
     setResetDropdown(true);
     setNoSearchResults(false);
+    // setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
+    // setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
   };
 
   // =======================Using Virtualizer instead of UseIntersection====================
   const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (scrollRef && scrollRef.current) {
-      scrollRef.current.scrollTop = 200; // Set initial scroll position to 100px
+  const [prevHeight, setPrevHeight] = useState(0);
+  const [jumped, setJumped] = useState(false); // Track if "Jump" was clicked
+  // THIS WORKS BUT VERY SIMPLE
+  // useEffect(() => {
+  //   if (scrollRef && scrollRef.current) {
+  //     scrollRef.current.scrollTop = 500; // Set initial scroll position to 100px
+  // } }, [jumpSearchResults]);
+
+  useLayoutEffect(() => {
+    // Set initial scroll position when jump results first load
+    if (scrollRef.current && jumped && jumpSearchResults.length > 0) {
+      // Set the scroll to 30px from the top on the initial jump
+      scrollRef.current.scrollTop = 30;
+      // smoothScroll(scrollRef.current, 50, 500); // Smoothly scroll to 30px from the top
+      setJumped(false); // Reset jumped after the initial adjustment
     }
-  }, [jumpSearchResults]);
+  }, [jumpSearchResults, jumped]);
+
+
+  const smoothScroll = (element: HTMLElement, target: number, duration: number): void => {
+    const start = element.scrollTop;
+    const distance = target - start;
+  
+    if (distance === 0 || duration <= 0) return; // Exit if no scrolling is needed
+  
+    let startTime: number | null = null;
+  
+    function animation(currentTime: number) {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1); // Cap progress at 1 (100%)
+  
+      // Calculate and set the scroll position
+      element.scrollTop = start + distance * progress;
+  
+      // Continue the animation until complete
+      if (progress < 1) {
+        requestAnimationFrame(animation);
+      } else {
+        console.log("Scrolling complete");
+      }
+    }
+  
+    console.log(`Starting smooth scroll from ${start} to ${target} over ${duration}ms`);
+    requestAnimationFrame(animation);
+  };
+  
+
+  // This effect runs when items are added while scrolling up, to adjust the scroll position
+  useLayoutEffect(() => {
+    if (scrollRef.current && prevHeight !== 0 && !jumped) {
+      // Measure the new height after items are updated
+      const newHeight = scrollRef.current.scrollHeight;
+      const heightDifference = (newHeight - prevHeight) * 1.35;
+
+      // Adjust scroll position by the height difference to keep it centered
+      scrollRef.current.scrollTop += heightDifference / 2;
+      // smoothScroll(scrollRef.current, scrollRef.current.scrollTop + heightDifference / 2, 50);
+      setPrevHeight(newHeight); // Update `prevHeight` to the current height
+    } else if (scrollRef.current && prevHeight === 0) {
+      // Capture the initial height when prevHeight is 0
+      setPrevHeight(scrollRef.current.scrollHeight);
+    }
+  }, [jumpSearchResults, prevHeight, jumped]);
+
+
+
+  
+
 
   return (
     <>
@@ -1034,7 +1101,11 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex-1 w-full overflow-y-auto p-4 relative transition-all duration-300 ease-in-out">
+        <div 
+          ref={scrollRef} className="flex-1 w-full overflow-y-auto p-4 relative "
+          // style={{ scrollBehavior: 'smooth' }}
+          style={{ maxHeight: "100vh" }} // Allows dynamic growth without hard limit
+        >
            {/* Scrollable Content goes here */}
           <div className="h-fit bg-gray-100">
             {/* Add more content to enable scrolling */}
@@ -1063,10 +1134,23 @@ export default function HomePage() {
                       Load Previous Items
                     </button>
                   )} */}
-                  <div
-                    ref={jumpPrevRef}
-                    className="loading-indicator text-center bg-red-700 p-2 mb-[75px]"
-                  ></div>
+
+                  
+                  {(typeof prevPageNumber === 'number' && prevPageNumber > 0 && !loadedPages.has(prevPageNumber)) ? (
+                      <div
+                        ref={jumpPrevRef}
+                        className="loading-indicator text-center bg-red-700 p-1 mb-[30px]"
+                      >
+                        {/* Optionally add loading content */}
+                      </div>
+                    ):
+                    (<div
+                        className="loading-indicator text-center bg-red-700 p-1 mb-[30px]"
+                      >
+                        {/* Optionally add loading content */}
+                    </div>)
+                  }
+             
                     
                   {noSearchResults ? (
                     <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
@@ -1074,8 +1158,11 @@ export default function HomePage() {
                     </div>
                   ) : (     
                     <div className="w-full p-2 border-2 border-dashed border-yellow-500">
-
-                      {/* Default Collectables Results i.e what is shown when mounting onto the page */}
+                      
+                      {
+                        /* DEFAULT COLLECTABLE RESULTS 
+                        i.e what is shown when mounting onto the page */
+                      }
                       { 
                       // If there are no search results and no jump search results, show the default collectables
                       (_searchResults.length === 0 && jumpSearchResults.length === 0) && 
@@ -1085,8 +1172,8 @@ export default function HomePage() {
                           <div className="flex flex-wrap -mx-4 ">
                             {(_default_collectables).map((item) => (
                               <div
-                                key={item.universeCollectableId}
-                                className="w-full md:w-1/2 px-4 mb-6"
+                                key={`${item.universeCollectableId}-default-search`}
+                                className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
                               >
                                 <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                   <button
@@ -1141,7 +1228,7 @@ export default function HomePage() {
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
                                         <p
-                                          key={attribute.slug || attribute.name}
+                                          key={`${attribute.slug || attribute.name}-default-search`}
                                           className={
                                             index === 0
                                               ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1174,8 +1261,8 @@ export default function HomePage() {
                           // GRID VIEW 
                           <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
                             {(_default_collectables).map((item) => (
-                              <div key={item.universeCollectableId}>
-                                <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                              <div key={`${item.universeCollectableId}-default-search`}>
+                                <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-green-500">
                                   <div className="h-22 w-30">
                                     <div className="absolute top-2 right-2 flex space-x-2">
                                       <button
@@ -1230,7 +1317,7 @@ export default function HomePage() {
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
                                         <p
-                                          key={attribute.slug || attribute.name}
+                                          key={`${attribute.slug || attribute.name}-default-search`}
                                           className={
                                             index === 0
                                               ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1263,7 +1350,7 @@ export default function HomePage() {
                         ))}
 
                     
-                      {/* Search Results */}
+                      {/* SEARCH RESULTS */}
                       {
                         // If there are search results, show the search results
                         (_searchResults.length > 0) && 
@@ -1273,8 +1360,8 @@ export default function HomePage() {
                                <div className="flex flex-wrap -mx-4 ">
                                 {(_searchResults).map((item) => (
                                   <div
-                                    key={item.universeCollectableId}
-                                    className="w-full md:w-1/2 px-4 mb-6"
+                                    key={`${item.universeCollectableId}-search`}
+                                    className="w-full md:w-1/2 px-4 mb-6 bg-blue-500"
                                   >
                                     <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                       <button
@@ -1329,7 +1416,7 @@ export default function HomePage() {
                                           .slice(0, 3)
                                           .map((attribute: any, index: number) => (
                                             <p
-                                              key={attribute.slug || attribute.name}
+                                              key={`${attribute.slug || attribute.name}-search`}
                                               className={
                                                 index === 0
                                                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1362,8 +1449,8 @@ export default function HomePage() {
                           // GRID VIEW 
                           <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
                             {(_searchResults).map((item) => (
-                              <div key={item.universeCollectableId}>
-                                <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                              <div key={`${item.universeCollectableId}-search`}>
+                                <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-blue-500">
                                   <div className="h-22 w-30">
                                     <div className="absolute top-2 right-2 flex space-x-2">
                                       <button
@@ -1418,7 +1505,7 @@ export default function HomePage() {
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
                                         <p
-                                          key={attribute.slug || attribute.name}
+                                          key={`${attribute.slug || attribute.name}-search`}
                                           className={
                                             index === 0
                                               ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1452,7 +1539,7 @@ export default function HomePage() {
                         )
                       }
 
-                      {/* Jump Results */}
+                      {/* JUMP RESULTS */}
                       {
                         // If there are jump search results, show the jump search results
                         (jumpSearchResults.length > 0) && 
@@ -1460,23 +1547,23 @@ export default function HomePage() {
                         // If the view is list, show the list view
                         (view === "list" ? (
                         <div className="flex flex-wrap -mx-4 ">
-                          {(jumpSearchResults).map((items) => (
+                          {(jumpSearchResults).map((item) => (
                             <div
-                              key={items.universeCollectableId}
-                              className="w-full md:w-1/2 px-4 mb-6"
+                              key={`${item.universeCollectableId}-jump`}
+                              className="w-full md:w-1/2 px-4 mb-6 bg-yellow-500"
                             >
                               <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                 <button
                                   className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                   onClick={() =>
                                     handleStarClick(
-                                      items.universeCollectionId!,
+                                      item.universeCollectionId!,
                                       collectionId
                                     )
                                   }
                                 >
                                   {wishlistIds.includes(
-                                    items.universeCollectableId
+                                    item.universeCollectableId
                                   ) ? (
                                     <FontAwesomeIcon
                                       icon={faSolidStar}
@@ -1492,24 +1579,24 @@ export default function HomePage() {
                                 <div className="h-24 w-24">
                                   <img
                                     src={
-                                      items.attributes?.find(
+                                      item.attributes?.find(
                                         (attr: any) => attr.name === "image"
                                       )?.value || "/placeholder.jpg"
                                     }
                                     alt={
-                                      items.attributes?.find(
+                                      item.attributes?.find(
                                         (attr: any) => attr.name === "name"
                                       )?.value || "No Name"
                                     }
                                     width={100}
                                     height={100}
                                     className="rounded-md shadow-sm object-cover"
-                                    onClick={() => handleOpenModal(items)}
+                                    onClick={() => handleOpenModal(item)}
                                   />
                                 </div>
 
                                 <div className="flex-1">
-                                  {items.attributes
+                                  {item.attributes
                                     .filter(
                                       (attribute: any) =>
                                         attribute.name !== "image" &&
@@ -1518,7 +1605,7 @@ export default function HomePage() {
                                     .slice(0, 3)
                                     .map((attribute: any, index: number) => (
                                       <p
-                                        key={attribute.slug || attribute.name}
+                                        key={`${attribute.slug || attribute.name}-jump`}
                                         className={
                                           index === 0
                                             ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1532,13 +1619,13 @@ export default function HomePage() {
                                 <div className="flex space-x-4">
                                   <button
                                     className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                    onClick={() => openEdit(items)}
+                                    onClick={() => openEdit(item)}
                                   >
                                     <FaRegEdit />
                                   </button>
                                   <button
                                     className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                    onClick={() => handleDelete(items)}
+                                    onClick={() => handleDelete(item)}
                                   >
                                     <FaRegTrashCan />
                                   </button>
@@ -1550,22 +1637,22 @@ export default function HomePage() {
                       ) : (
                         // GRID VIEW 
                         <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
-                          {(jumpSearchResults).map((items) => (
-                            <div key={items.universeCollectableId}>
-                              <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                          {(jumpSearchResults).map((item) => (
+                            <div key={`${item.universeCollectableId}-jump`}>
+                              <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-yellow-500">
                                 <div className="h-22 w-30">
                                   <div className="absolute top-2 right-2 flex space-x-2">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={() =>
                                         handleStarClick(
-                                          items.universeCollectableId,
+                                          item.universeCollectableId,
                                           collectionId
                                         )
                                       }
                                     >
                                       {wishlistIds.includes(
-                                        items.universeCollectableId
+                                        item.universeCollectableId
                                       ) ? (
                                         <FontAwesomeIcon
                                           icon={faSolidStar}
@@ -1581,24 +1668,24 @@ export default function HomePage() {
                                   </div>
                                   <img
                                     src={
-                                      items.attributes?.find(
+                                      item.attributes?.find(
                                         (attr: any) => attr.name === "image"
                                       )?.value || "/placeholder.jpg"
                                     }
                                     alt={
-                                      items.attributes?.find(
+                                      item.attributes?.find(
                                         (attr: any) => attr.name === "name"
                                       )?.value || "No Name"
                                     }
                                     width={400}
                                     height={400}
                                     className="rounded-md shadow-sm object-cover pt-3"
-                                    onClick={() => handleOpenModal(items)}
+                                    onClick={() => handleOpenModal(item)}
                                   />
                                 </div>
 
                                 <div className="space-y-1 p-4">
-                                  {items.attributes
+                                  {item.attributes
                                     .filter(
                                       (attribute: any) =>
                                         attribute.name !== "image" &&
@@ -1607,7 +1694,7 @@ export default function HomePage() {
                                     .slice(0, 3)
                                     .map((attribute: any, index: number) => (
                                       <p
-                                        key={attribute.slug || attribute.name}
+                                        key={`${attribute.slug || attribute.name}-jump`}
                                         className={
                                           index === 0
                                             ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1621,13 +1708,13 @@ export default function HomePage() {
                                   <div className="pt-3 pb-2 text-center">
                                     <button
                                       className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                      onClick={() => openEdit(items)}
+                                      onClick={() => openEdit(item)}
                                     >
                                       <FaRegEdit />
                                     </button>
                                     <button
                                       className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                      onClick={() => handleDelete(items)}
+                                      onClick={() => handleDelete(item)}
                                     >
                                       <FaRegTrashCan />
                                     </button>
@@ -1644,19 +1731,19 @@ export default function HomePage() {
                       {/* DO NOT GO FURTHER */}
                       <div
                         ref={collectableRef}
-                        className="loading-indicator text-center p-4"
+                        className="loading-indicator text-center bg-green-500 p-1"
                       >
                         {isFetchingCollectables && <p>Loading more items...</p>}
                       </div>
                       <div
                         ref={searchRef}
-                        className="loading-indicator text-center p-4"
+                        className="loading-indicator text-center bg-green-500 p-1"
                       >
                         {isFetchingSearchResults && <p>Loading more items...</p>}
                       </div>
                       <div
                         ref={jumpNextRef}
-                        className="loading-indicator text-center bg-green-500 p-4"
+                        className="loading-indicator text-center bg-green-500 p-1"
                       ></div>
                     </div>
                   )}
