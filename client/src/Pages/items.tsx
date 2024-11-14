@@ -655,8 +655,6 @@ export default function HomePage() {
   const _default_collectables =
     collectablesData?.pages.flatMap((page) => page) ?? [];
 
-  //console.log("_default_collectables: ", _default_collectables);
-
   const handleSearch = async (
     searchTags: { attribute: string; term: string }[]
   ) => {
@@ -672,27 +670,35 @@ export default function HomePage() {
     isFetchingNextPage: isFetchingSearchResults,
   } = useInfiniteQuery({
     queryKey: ["searchResults", searchTags, enabled],
-    queryFn: ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 1 }) => {
       if (enabled && collectionId) {
-        return fetchOwnedSearchResults(
+        const { collectables } = await fetchOwnedSearchResults(
           searchTags,
           userId,
           collectionId,
           pageParam
         );
+        return collectables;
       } else if (universeCollectionId) {
-        return fetchUniverseSearchResults(
-          searchTags,
-          userId,
-          universeCollectionId,
-          pageParam
-        );
+        const { collectables, totalMatchingCollectables } =
+          await fetchUniverseSearchResults(
+            searchTags,
+            userId,
+            universeCollectionId,
+            pageParam
+          );
+        return { collectables, totalMatchingCollectables };
       }
+      return { collectables: [], totalMatchingCollectables: 0 };
     },
     initialPageParam: 1,
     enabled: searchTags.length > 0,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+    getNextPageParam: (lastPage, allPages) => {
+      const totalFetched = allPages.flatMap((page) => page.collectables).length;
+      return totalFetched < lastPage.totalMatchingCollectables
+        ? allPages.length + 1
+        : undefined;
+    },
     refetchOnWindowFocus: false,
   });
 
@@ -711,7 +717,8 @@ export default function HomePage() {
     }
   }, [searchEntry, hasNextSearchPage, fetchSearchNextPage]);
 
-  const _searchResults = searchResultsData?.pages.flat() || [];
+  const _searchResults =
+    searchResultsData?.pages.flatMap((page) => page.collectables) || [];
 
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
@@ -967,27 +974,6 @@ export default function HomePage() {
                       </ul>
                     </div>
                   ) : (
-                    //   <button
-                    //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    //     onClick={openModal}
-                    //   >
-                    //     New Collectible
-                    //     <IoIosAdd />
-                    //   </button>
-                    //   <Link
-                    //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
-                    //     to={`/bulk-upload/${collectionId}`}
-                    //   >
-                    //     Bulk Upload
-                    //     <IoIosAdd />
-                    //   </Link>
-                    //   <button
-                    //     className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
-                    //     onClick={deleteCollection}
-                    //   >
-                    //     Delete Collection
-                    //   </button>
-                    // </div>
                     <button
                       className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
                       onClick={handleAddToMyCollections}
@@ -1134,29 +1120,12 @@ export default function HomePage() {
           <div className="h-fit bg-gray-100">
             {/* Add more content to enable scrolling */}
             <div className=" border-2 border-dashed border-red-500 ">
-              {/* <div className="h-[400px]">
-                <div
-                  ref={jumpPrevRef}
-                  className="loading-indicator text-center p-4 bg-black"
-                ></div>
-              </div> */}
-              {/* <div
-                ref={jumpPrevRef}
-                className="loading-indicator text-center bg-red-700 p-2 mb-[70px]"
-              ></div> */}
-
               <div className="w-full flex flex-col md:flex-row border-2 border-dashed border-purple-500">
                 {/* collectibles */}
                 <div className="w-full p-2">
                   {/* <div className="text-xl py-4 text-right pr-10">
                     Total items in the collection:{" "}
                   </div> */}
-
-                  {/* {showLoadPreviousButton && (
-                    <button onClick={handleLoadPreviousPage}>
-                      Load Previous Items
-                    </button>
-                  )} */}
 
                   {typeof prevPageNumber === "number" &&
                   prevPageNumber > 0 &&
@@ -1775,15 +1744,13 @@ export default function HomePage() {
                         ref={collectableRef}
                         className="loading-indicator text-center bg-green-500 p-1"
                       >
-                        {isFetchingCollectables && <p>Loading more items...</p>}
+                        {isFetchingCollectables}
                       </div>
                       <div
                         ref={searchRef}
                         className="loading-indicator text-center bg-green-500 p-1"
                       >
-                        {isFetchingSearchResults && (
-                          <p>Loading more items...</p>
-                        )}
+                        {isFetchingSearchResults}
                       </div>
                       <div
                         ref={jumpNextRef}
