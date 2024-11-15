@@ -1104,12 +1104,12 @@ export default function HomePage() {
 
         <div
           ref={scrollRef}
-          className="flex-1 w-full overflow-y-auto p-4 relative "
+          className="flex-1 w-full overflow-y-auto p-4 relative dark:bg-gray-800"
           // style={{ scrollBehavior: 'smooth' }}
           style={{ maxHeight: "100vh" }} // Allows dynamic growth without hard limit
         >
           {/* Scrollable Content goes here */}
-          <div className="h-fit bg-gray-100">
+          <div className="h-fit dark:bg-gray-800">
             {/* Add more content to enable scrolling */}
             <div>
               <div className="w-full flex flex-col md:flex-row">
@@ -1130,11 +1130,11 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  <div className="w-full px-4 py-2 flex justify-end bg-gray-100">
+                  <div className="w-full px-4 py-2 flex justify-end dark:bg-gray-800">
                     {searchTags.length > 0 &&
                     searchResultsData?.pages?.[0]?.totalMatchingCollectables ? (
                       // if there is searchResults, show total count
-                      <p className="text-lg font-bold text-gray-700">
+                      <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
                         Total Matching Search Results:{" "}
                         {searchResultsData.pages[0].totalMatchingCollectables}
                       </p>
@@ -1142,7 +1142,7 @@ export default function HomePage() {
                       // Show total collectables
                       collectablesData?.pages?.[0]
                         ?.totalMatchingCollectables && (
-                        <p className="text-lg font-bold text-gray-700">
+                        <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
                           Total Collectables:{" "}
                           {collectablesData.pages[0].totalMatchingCollectables}
                         </p>
