@@ -56,7 +56,7 @@ export default function HomePage() {
   const [selectedSort, setSelectedSort] = useState<string>("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "grid">("grid");
-  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
+  //const [wishlistIds, setWishlistIds] = useState<number[]>([]);
   const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isPublished, setIsPublished] = useState(false);
@@ -78,6 +78,10 @@ export default function HomePage() {
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
+
+  const [wishlistIds, setWishlistIds] = useState<number[]>(() =>
+    JSON.parse(localStorage.getItem("wishlistIds") || "[]")
+  );
 
   const [noSearchResults, setNoSearchResults] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -352,6 +356,25 @@ export default function HomePage() {
   };
 
   // -------------- handle star click-------------------
+
+  useEffect(() => {
+    // get wishlst items from localstorage
+    const savedWishlist = localStorage.getItem("wishlistIds");
+    if (savedWishlist) {
+      try {
+        const parsedWishlist = JSON.parse(savedWishlist);
+        setWishlistIds(parsedWishlist);
+      } catch (error) {
+        console.error("Error parsing wishlist from localStorage:", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (wishlistIds.length > 0) {
+      localStorage.setItem("wishlistIds", JSON.stringify(wishlistIds));
+    }
+  }, [wishlistIds]);
 
   const handleStarClick = (
     universeCollectableId: number,
