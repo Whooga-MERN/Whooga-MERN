@@ -1130,6 +1130,26 @@ export default function HomePage() {
                     </div>
                   )}
 
+                  <div className="w-full px-4 py-2 flex justify-end bg-gray-100">
+                    {searchTags.length > 0 &&
+                    searchResultsData?.pages?.[0]?.totalMatchingCollectables ? (
+                      // if there is searchResults, show total count
+                      <p className="text-lg font-bold text-gray-700">
+                        Total Matching Search Results:{" "}
+                        {searchResultsData.pages[0].totalMatchingCollectables}
+                      </p>
+                    ) : (
+                      // Show total collectables
+                      collectablesData?.pages?.[0]
+                        ?.totalMatchingCollectables && (
+                        <p className="text-lg font-bold text-gray-700">
+                          Total Collectables:{" "}
+                          {collectablesData.pages[0].totalMatchingCollectables}
+                        </p>
+                      )
+                    )}
+                  </div>
+
                   {noSearchResults ? (
                     <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
                       No match found :(
