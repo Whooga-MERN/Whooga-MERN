@@ -67,7 +67,7 @@ router.post('', cpUpload, async (req, res) => {
         // Upload collectableImages to S3 if they exist
         if (collectableImages && collectableImages.length > 0) {
             console.log("uploading images");
-            const uploadPromises = collectableImages.map(file => {
+            const uploadPromises = collectableImages.map(async file => {
                 const fileContent = fs.readFileSync(file.path);
                 const uniqueFilename = `${uuidv4()}-${file.originalname}`;
                 const params = {
@@ -297,7 +297,7 @@ try {
     // Upload collectableImages to S3 if they exist
     if (collectableImages && collectableImages.length > 0) {
         console.log("uploading images");
-        const uploadPromises = collectableImages.map(file => {
+        const uploadPromises = collectableImages.map(async file => {
             const fileContent = fs.readFileSync(file.path);
             const uniqueFilename = `${uuidv4()}-${file.originalname}`;
             const params = {
