@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _, { get } from "lodash";
+import _, { divide, get, set } from "lodash";
 
 import {
   FaListUl,
@@ -23,6 +23,7 @@ import SearchBar from "../Components/searchBar";
 import OwnedToggle from "../Components/ownedToggle";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useIntersection } from "@mantine/hooks";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { buildPath } from "../utils/utils";
 import {
@@ -119,14 +120,19 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    // gather items from local storage
+    // Gather user data from local storage
     const getItemsFromStorage = async () => {
+      // Getting the collection name and collection ids from local storage
       const collectionName = localStorage.getItem("collectionName") ?? "";
       const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
       const savedWishlist = localStorage.getItem("wishlistIds");
 
+      // Setting the collection name and collection ids
       setUniverseCollectionName(collectionName);
       setCollectionIds(JSON.parse(storedCollectionIds));
+
+      // Checking if the collection is owned
+      // If the collection is owned, set the state to true
       if (
         universeCollectionId &&
         JSON.parse(storedCollectionIds).some(
@@ -140,10 +146,13 @@ export default function HomePage() {
       ) {
         setIsCollectionOwned(true);
       }
+
+      // Setting the wishlist items
       if (savedWishlist) {
         setWishlistIds(JSON.parse(savedWishlist));
       }
     };
+
     getItemsFromStorage();
     setSearchResults([]);
     setJumpSearchResults([]);
@@ -205,14 +214,12 @@ export default function HomePage() {
 
       if (favReponse.ok) {
         const data = await favReponse.json();
-        console.log("Favorite Attributes: ", data[0].favoriteAttributes);
         setFavoriteAttributes(data[0].favoriteAttributes);
         const allAttributes = data[0].favoriteAttributes.concat(
           maskedAttributes.filter(
             (attr) => !data[0].favoriteAttributes.includes(attr)
           )
         );
-        console.log("All Attributes: ", allAttributes);
         setMaskedAttributes(allAttributes);
       } else {
         console.error("Error fetching favorite attributes:", favReponse);
@@ -242,6 +249,10 @@ export default function HomePage() {
   }, [specificTag]);
 
   // -------------------------- show universecollectables and search ------------------
+  const [ownedCollectablesCount, setOwnedCollectablesCount] =
+    useState<number>();
+  const [unverseCollectablesCount, setUniverseCollectablesCount] =
+    useState<number>();
 
   useEffect(() => {
     const getUniverseCollectionId = async () => {
@@ -251,15 +262,19 @@ export default function HomePage() {
           initialPage,
           ITEMS_PER_PAGE
         );
-        setOwnedCollectables(ownedCollectables);
+        setOwnedCollectables(ownedCollectables.collectables);
+        setOwnedCollectablesCount(ownedCollectables.totalMatchingCollectables);
 
         if (universeCollectionId) {
-          const collectables = await fetchUniverseCollectables(
+          const universe_collectables = await fetchUniverseCollectables(
             universeCollectionId,
             initialPage,
             ITEMS_PER_PAGE
           );
-          setUniverseCollectables(collectables);
+          setUniverseCollectables(universe_collectables.collectables);
+          setUniverseCollectablesCount(
+            universe_collectables.totalMatchingCollectables
+          );
         }
       }
     };
@@ -556,22 +571,13 @@ export default function HomePage() {
     }
   };
 
-  const handleSearchResults = (results: any[]) => {
-    if (results.length === 0) {
-      setNoSearchResults(true);
-    } else {
-      setNoSearchResults(false);
-      setSearchResults(results);
-    }
-  };
-
   const handleClearSearch = () => {
     setSearchResults([]);
-    console.log("search result: ", searchResults);
     setJumpSearchResults([]);
-    console.log("jump results: ", jumpSearchResults);
     setResetDropdown(true);
     setNoSearchResults(false);
+    setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
+    setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
   };
 
   const { ref: collectableRef, entry: collectableEntry } = useIntersection({
@@ -584,7 +590,7 @@ export default function HomePage() {
     threshold: 1,
   });
   const { ref: jumpPrevRef, entry: jumpPrevEntry } = useIntersection({
-    threshold: 1,
+    threshold: 0.1,
   });
 
   const handleToggleChange = (enabled: boolean) => {
@@ -593,6 +599,8 @@ export default function HomePage() {
     setCurrentPage(1);
     setJumpSearchResults([]);
     setSearchResults([]);
+    setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
+    setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
   };
 
   const {
@@ -602,27 +610,32 @@ export default function HomePage() {
     isFetchingNextPage: isFetchingCollectables,
   } = useInfiniteQuery({
     queryKey: ["collectables", collectionId, universeCollectionId, enabled],
-    queryFn: ({ pageParam = 1 }) => {
-      if (enabled) {
-        return fetchOwnedCollectables(collectionId!, pageParam, ITEMS_PER_PAGE);
+    queryFn: async ({ pageParam = 1 }) => {
+      if (enabled && collectionId) {
+        // Fetch owned collectables when enabled
+        const { collectables, totalMatchingCollectables } =
+          await fetchOwnedCollectables(collectionId, pageParam, ITEMS_PER_PAGE);
+        return { collectables, totalMatchingCollectables };
       } else if (universeCollectionId) {
-        return fetchUniverseCollectables(
-          universeCollectionId,
-          pageParam,
-          ITEMS_PER_PAGE
-        );
+        // Fetch universe collectables when not enabled
+        const { collectables, totalMatchingCollectables } =
+          await fetchUniverseCollectables(
+            universeCollectionId,
+            pageParam,
+            ITEMS_PER_PAGE
+          );
+        return { collectables, totalMatchingCollectables };
       }
+      // Default empty structure if neither condition is met
+      return { collectables: [], totalMatchingCollectables: 0 };
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      if (
-        !lastPage ||
-        !Array.isArray(lastPage) ||
-        lastPage.length < ITEMS_PER_PAGE
-      ) {
-        return undefined;
-      }
-      return allPages.length + 1;
+      // Check if more pages are available based on the total count
+      const totalFetched = allPages.flatMap((page) => page.collectables).length;
+      return totalFetched < (lastPage?.totalMatchingCollectables || 0)
+        ? allPages.length + 1
+        : undefined;
     },
     refetchOnWindowFocus: false,
   });
@@ -642,7 +655,9 @@ export default function HomePage() {
     }
   }, [collectableEntry, hasMoreCollectables, fetchCollectablesNextPage]);
 
-  const collectables = collectablesData?.pages.flatMap((page) => page) ?? [];
+  // Used when mounting the page. This means no Search or Jump Results have been made yet.
+  const _default_collectables =
+    collectablesData?.pages.flatMap((page) => page.collectables) || [];
 
   const handleSearch = async (
     searchTags: { attribute: string; term: string }[]
@@ -659,27 +674,35 @@ export default function HomePage() {
     isFetchingNextPage: isFetchingSearchResults,
   } = useInfiniteQuery({
     queryKey: ["searchResults", searchTags, enabled],
-    queryFn: ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 1 }) => {
       if (enabled && collectionId) {
-        return fetchOwnedSearchResults(
+        const { collectables } = await fetchOwnedSearchResults(
           searchTags,
           userId,
           collectionId,
           pageParam
         );
+        return collectables;
       } else if (universeCollectionId) {
-        return fetchUniverseSearchResults(
-          searchTags,
-          userId,
-          universeCollectionId,
-          pageParam
-        );
+        const { collectables, totalMatchingCollectables } =
+          await fetchUniverseSearchResults(
+            searchTags,
+            userId,
+            universeCollectionId,
+            pageParam
+          );
+        return { collectables, totalMatchingCollectables };
       }
+      return { collectables: [], totalMatchingCollectables: 0 };
     },
     initialPageParam: 1,
     enabled: searchTags.length > 0,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === ITEMS_PER_PAGE ? allPages.length + 1 : undefined,
+    getNextPageParam: (lastPage, allPages) => {
+      const totalFetched = allPages.flatMap((page) => page.collectables).length;
+      return totalFetched < lastPage.totalMatchingCollectables
+        ? allPages.length + 1
+        : undefined;
+    },
     refetchOnWindowFocus: false,
   });
 
@@ -698,7 +721,8 @@ export default function HomePage() {
     }
   }, [searchEntry, hasNextSearchPage, fetchSearchNextPage]);
 
-  const _searchResults = searchResultsData?.pages.flat() || [];
+  const _searchResults =
+    searchResultsData?.pages.flatMap((page) => page.collectables) || [];
 
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
@@ -708,16 +732,29 @@ export default function HomePage() {
     setLoadedPages(new Set());
 
     try {
-      const data = await fetchUniverseJumpResults(
+      const res = await fetchUniverseJumpResults(
         jumpTags,
         userId,
         universeCollectionId!
       );
-      setJumpSearchResults(data.collectables);
-      setJumpPageNumber(data.page);
-      setNextPageNumber(data.page + 1);
-      setPrevPageNumber(data.page - 1);
-      setLoadedPages(new Set([data.page]));
+
+      console.log(res); // this return the matched item and page number
+      if (res) {
+        setJumpPageNumber(res.pageNumber);
+        setPrevPageNumber(res.pageNumber - 1);
+        setNextPageNumber(res.pageNumber + 1);
+
+        // use the page number to fetch items on that page
+        const data = await fetchUniverseCollectables(
+          universeCollectionId!,
+          res.pageNumber,
+          ITEMS_PER_PAGE
+        );
+        setJumpSearchResults(data.collectables);
+
+        setLoadedPages(new Set([res.pageNumber]));
+      }
+      // setJumped(true); // Set `jumped` to true to indicate the initial jump has occurred
     } catch (error) {
       console.error("Fetch error:", error);
     }
@@ -731,7 +768,10 @@ export default function HomePage() {
         nextPageNumber,
         ITEMS_PER_PAGE
       );
-      setJumpSearchResults((prevResults) => [...prevResults, ...data]);
+      setJumpSearchResults((prevResults) => [
+        ...prevResults,
+        ...data.collectables,
+      ]);
       setNextPageNumber((prev) => prev! + 1);
     } catch (error) {
       console.error("Error fetching additional pages:", error);
@@ -739,14 +779,20 @@ export default function HomePage() {
   };
 
   const handleLoadPreviousJumpPage = async () => {
+    // if there is no previous page or it has already been loaded, return
     if (!prevPageNumber || loadedPages.has(prevPageNumber)) return;
+
+    // fetch the previous page
     try {
       const data = await fetchUniverseCollectables(
         universeCollectionId!,
         prevPageNumber,
         ITEMS_PER_PAGE
       );
-      setJumpSearchResults((prevResults) => [...data, ...prevResults]);
+      setJumpSearchResults((prevResults) => [
+        ...data.collectables,
+        ...prevResults,
+      ]);
       setPrevPageNumber((prev) => prev! - 1);
     } catch (error) {
       console.error("Error fetching previous page items:", error);
@@ -766,38 +812,109 @@ export default function HomePage() {
   }, [jumpPrevEntry]);
 
   const handleReset = () => {
-    setSearchResults([]);
-    setJumpSearchResults([]);
     setResetDropdown(true);
     setNoSearchResults(false);
+    setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
+    setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
+    window.location.reload();
   };
+
+  // =======================Using Virtualizer instead of UseIntersection====================
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [prevHeight, setPrevHeight] = useState(0);
+  const [jumped, setJumped] = useState(false); // Track if "Jump" was clicked
+  // THIS WORKS BUT VERY SIMPLE
+  // useEffect(() => {
+  //   if (scrollRef && scrollRef.current) {
+  //     scrollRef.current.scrollTop = 500; // Set initial scroll position to 100px
+  // } }, [jumpSearchResults]);
+
+  useLayoutEffect(() => {
+    // Set initial scroll position when jump results first load
+    if (scrollRef.current && jumped && jumpSearchResults.length > 0) {
+      // Set the scroll to 30px from the top on the initial jump
+      scrollRef.current.scrollTop = 30;
+      // smoothScroll(scrollRef.current, 50, 500); // Smoothly scroll to 30px from the top
+      setJumped(false); // Reset jumped after the initial adjustment
+      setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
+    }
+  }, [jumpSearchResults, jumped]);
+
+  const smoothScroll = (
+    element: HTMLElement,
+    target: number,
+    duration: number
+  ): void => {
+    const start = element.scrollTop;
+    const distance = target - start;
+
+    if (distance === 0 || duration <= 0) return; // Exit if no scrolling is needed
+
+    let startTime: number | null = null;
+
+    function animation(currentTime: number) {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1); // Cap progress at 1 (100%)
+
+      // Calculate and set the scroll position
+      element.scrollTop = start + distance * progress;
+
+      // Continue the animation until complete
+      if (progress < 1) {
+        requestAnimationFrame(animation);
+      } else {
+        console.log("Scrolling complete");
+      }
+    }
+
+    console.log(
+      `Starting smooth scroll from ${start} to ${target} over ${duration}ms`
+    );
+    requestAnimationFrame(animation);
+  };
+
+  // This effect runs when items are added while scrolling up, to adjust the scroll position
+  useLayoutEffect(() => {
+    if (scrollRef.current && prevHeight !== 0 && !jumped) {
+      // Measure the new height after items are updated
+      const newHeight = scrollRef.current.scrollHeight;
+      const heightDifference = (newHeight - prevHeight) * 2;
+
+      // Adjust scroll position by the height difference to keep it centered
+      scrollRef.current.scrollTop += heightDifference / 2;
+      // smoothScroll(scrollRef.current, scrollRef.current.scrollTop + heightDifference / 2, 50);
+      setPrevHeight(newHeight); // Update `prevHeight` to the current height
+    } else if (scrollRef.current && prevHeight === 0) {
+      // Capture the initial height when prevHeight is 0
+      setPrevHeight(scrollRef.current.scrollHeight);
+    }
+  }, [jumpSearchResults, prevHeight, jumped]);
 
   return (
     <>
-      <div>
-        <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 w-full">
+      <div className="h-screen flex flex-col overflow-y-hidden">
+        <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full  relative">
           <Header />
           <div className="w-full mx-auto pt-8">
             <div className="mx-auto pl-10">
-              {/* collection option */}
-              <div className="flex items-center gap-4">
-                <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-8 py-3">
-                  {universeCollectionName}
-                </p>
-                <OwnedToggle
-                  enabled={enabled}
-                  setEnabled={setEnabled}
-                  onToggle={handleToggleChange}
-                />
-              </div>
+              <div className="flex md:items-center justify-center gap-48 pb-4 max-md:px-4  ">
+                {/* collection option */}
+                <div className="flex items-center gap-4 ml-0">
+                  <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
+                    {universeCollectionName}
+                  </p>
+                  <OwnedToggle
+                    enabled={enabled}
+                    setEnabled={setEnabled}
+                    onToggle={handleToggleChange}
+                  />
+                </div>
 
-              <div className="sticky flex md:items-center justify-center gap-8 py-4 max-md:px-4">
                 {/* Search bar */}
                 {universeCollectionId && (
                   <SearchBar
                     attributes={maskedAttributes}
-                    onSearchResults={handleSearchResults}
-                    // onResetSearch={() => setSearchResults([])}
                     resetDropdown={resetDropdown}
                     onResetSearch={handleReset}
                     setResetDropdown={setResetDropdown}
@@ -814,13 +931,27 @@ export default function HomePage() {
                   <button className="pr-16" onClick={() => setView("grid")}>
                     <BsFillGridFill />
                   </button>
-                {isCollectionOwned ? (
-                  <div className="dropdown">
-                    <div tabIndex={0} role="button" className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit">Edit Collection</div>
-                    <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-
-                      <li><a className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                       onClick={openModal}>New Collectable</a></li>
+                  {isCollectionOwned ? (
+                    <div className="dropdown">
+                      <div
+                        tabIndex={0}
+                        role="button"
+                        className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                      >
+                        Edit Collection
+                      </div>
+                      <ul
+                        tabIndex={0}
+                        className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                      >
+                        <li>
+                          <a
+                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                            onClick={openModal}
+                          >
+                            New Collectable
+                          </a>
+                        </li>
 
                         <li>
                           <Link
@@ -851,27 +982,6 @@ export default function HomePage() {
                       </ul>
                     </div>
                   ) : (
-                    //   <button
-                    //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    //     onClick={openModal}
-                    //   >
-                    //     New Collectible
-                    //     <IoIosAdd />
-                    //   </button>
-                    //   <Link
-                    //     className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit ml-5"
-                    //     to={`/bulk-upload/${collectionId}`}
-                    //   >
-                    //     Bulk Upload
-                    //     <IoIosAdd />
-                    //   </Link>
-                    //   <button
-                    //     className="btn text-lg text-black bg-yellow-300 hover:bg-red-500 rounded-full w-fit ml-5"
-                    //     onClick={deleteCollection}
-                    //   >
-                    //     Delete Collection
-                    //   </button>
-                    // </div>
                     <button
                       className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
                       onClick={handleAddToMyCollections}
@@ -888,100 +998,100 @@ export default function HomePage() {
                           Create New Collectible
                         </h2>
 
-                      <form onSubmit={handleSubmit}>
-                        {maskedAttributes
-                          .concat("owned", "image")
-                          .filter((attr) => attr !== null)
-                          .map((attribute, index) => (
-                            <div key={index} className="mb-4 lg:max-w-lg">
-                              {attribute !== "image" ? (
-                                attribute === "owned" ? (
-                                  <div className="flex items-center mb-3">
-                                    <input
-                                      type="checkbox"
-                                      id="publishCollection"
-                                      onChange={(e) =>
-                                        handleOwnedChange(e.target.checked)
-                                      }
-                                      className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
-                                    />
-                                    <label
-                                      htmlFor="publishCollection"
-                                      className="text-gray-700 dark:text-gray-300 text-sm font-bold"
-                                    >
-                                      Is Owned
-                                    </label>
-                                  </div>
+                        <form onSubmit={handleSubmit}>
+                          {maskedAttributes
+                            .concat("owned", "image")
+                            .filter((attr) => attr !== null)
+                            .map((attribute, index) => (
+                              <div key={index} className="mb-4 lg:max-w-lg">
+                                {attribute !== "image" ? (
+                                  attribute === "owned" ? (
+                                    <div className="flex items-center mb-3">
+                                      <input
+                                        type="checkbox"
+                                        id="publishCollection"
+                                        onChange={(e) =>
+                                          handleOwnedChange(e.target.checked)
+                                        }
+                                        className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                      />
+                                      <label
+                                        htmlFor="publishCollection"
+                                        className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                      >
+                                        Is Owned
+                                      </label>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                        {attribute.charAt(0).toUpperCase() +
+                                          attribute.slice(1)}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name={attribute}
+                                        placeholder={`${attribute}`}
+                                        value={formData[attribute] || ""}
+                                        onChange={handleChange}
+                                        className="border rounded w-full py-2 px-3 text-gray-700"
+                                      />
+                                    </>
+                                  )
                                 ) : (
                                   <>
-                                    <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                      {attribute.charAt(0).toUpperCase() +
-                                        attribute.slice(1)}
+                                    <label
+                                      htmlFor="cover-photo"
+                                      className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                    >
+                                      Upload Photo
                                     </label>
-                                    <input
-                                      type="text"
-                                      name={attribute}
-                                      placeholder={`${attribute}`}
-                                      value={formData[attribute] || ""}
-                                      onChange={handleChange}
-                                      className="border rounded w-full py-2 px-3 text-gray-700"
-                                    />
-                                  </>
-                                )
-                              ) : (
-                                <>
-                                  <label
-                                    htmlFor="cover-photo"
-                                    className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                                  >
-                                    Upload Photo
-                                  </label>
-                                  <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                                    <div className="text-center">
-                                      <PhotoIcon
-                                        aria-hidden="true"
-                                        className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                      />
-                                      <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                        <label
-                                          htmlFor="file-upload"
-                                          className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                                        >
-                                          <span>Upload a photo</span>
-                                          <input
-                                            id="file-upload"
-                                            name="file-upload"
-                                            type="file"
-                                            className="sr-only"
-                                            onChange={handleFileChange}
-                                          />
-                                        </label>
-                                        <p>or drag and drop</p>
+                                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                      <div className="text-center">
+                                        <PhotoIcon
+                                          aria-hidden="true"
+                                          className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                        />
+                                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                          <label
+                                            htmlFor="file-upload"
+                                            className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                          >
+                                            <span>Upload a photo</span>
+                                            <input
+                                              id="file-upload"
+                                              name="file-upload"
+                                              type="file"
+                                              className="sr-only"
+                                              onChange={handleFileChange}
+                                            />
+                                          </label>
+                                          <p>or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs leading-5 text-gray-600">
+                                          PNG, JPG
+                                        </p>
                                       </div>
-                                      <p className="text-xs leading-5 text-gray-600">
-                                        PNG, JPG
-                                      </p>
                                     </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ))}
-                        <div className="flex items-center mb-3">
-                          <input
-                            type="checkbox"
-                            id="publishCollection"
-                            checked={isPublished}
-                            onChange={handlePublishChange}
-                            className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
-                          />
-                          <label
-                            htmlFor="publishCollection"
-                            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                          >
-                            Publish Collectable
-                          </label>
-                        </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          <div className="flex items-center mb-3">
+                            <input
+                              type="checkbox"
+                              id="publishCollection"
+                              checked={isPublished}
+                              onChange={handlePublishChange}
+                              className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                            />
+                            <label
+                              htmlFor="publishCollection"
+                              className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                            >
+                              Publish Collectable
+                            </label>
+                          </div>
 
                           <div className="flex justify-end space-x-4 mt-8">
                             <button
@@ -1008,376 +1118,790 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* <div className="h-[400px]">
-          <div
-            ref={jumpPrevRef}
-            className="loading-indicator text-center p-4 bg-black"
-          ></div>
-        </div> */}
         <div
-          ref={jumpPrevRef}
-          className="loading-indicator text-center p-2"
-        ></div>
+          ref={scrollRef}
+          className="flex-1 w-full overflow-y-auto p-4 relative "
+          // style={{ scrollBehavior: 'smooth' }}
+          style={{ maxHeight: "100vh" }} // Allows dynamic growth without hard limit
+        >
+          {/* Scrollable Content goes here */}
+          <div className="h-fit bg-gray-100">
+            {/* Add more content to enable scrolling */}
+            <div>
+              <div className="w-full flex flex-col md:flex-row">
+                {/* collectibles */}
+                <div className="w-full p-2">
+                  {typeof prevPageNumber === "number" &&
+                  prevPageNumber > 0 &&
+                  !loadedPages.has(prevPageNumber) ? (
+                    <div
+                      ref={jumpPrevRef}
+                      className="loading-indicator text-center p-1 mb-[30px]"
+                    >
+                      {/* Optionally add loading content */}
+                    </div>
+                  ) : (
+                    <div className="loading-indicator text-center p-1 mb-[30px]">
+                      {/* Optionally add loading content */}
+                    </div>
+                  )}
 
-        <div className="w-full flex flex-col md:flex-row">
-          {/* collectibles */}
-          <div className="w-full p-2">
-            <div className="text-xl py-4 text-right pr-10">
-              Total items in the collection:{" "}
-            </div>
-
-            {/* {showLoadPreviousButton && (
-              <button onClick={handleLoadPreviousPage}>
-                Load Previous Items
-              </button>
-            )} */}
-
-            {noSearchResults ? (
-              <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
-                No match found :(
-              </div>
-            ) : (
-              <div className="w-full p-2">
-                {/* switch between grid and list */}
-                {view === "list" ? (
-                  <div className="flex flex-wrap -mx-4">
-                    {(_searchResults.length > 0
-                      ? _searchResults
-                      : jumpSearchResults.length > 0
-                      ? jumpSearchResults
-                      : collectables
-                    ).map((item) => (
-                      <div
-                        key={item.universeCollectableId}
-                        className="w-full md:w-1/2 px-4 mb-6"
-                      >
-                        <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                          <button
-                            className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                            onClick={() =>
-                              handleStarClick(
-                                item.universeCollectionId!,
-                                collectionId
-                              )
-                            }
-                          >
-                            {wishlistIds.includes(
-                              item.universeCollectableId
-                            ) ? (
-                              <FontAwesomeIcon
-                                icon={faSolidStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            ) : (
-                              <FontAwesomeIcon
-                                icon={faRegularStar}
-                                style={{ color: "#EDC307" }}
-                              />
-                            )}
-                          </button>
-                          <div className="h-24 w-24">
-                            <img
-                              src={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "image"
-                                )?.value || "/placeholder.jpg"
-                              }
-                              alt={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "name"
-                                )?.value || "No Name"
-                              }
-                              width={100}
-                              height={100}
-                              className="rounded-md shadow-sm object-cover"
-                              onClick={() => handleOpenModal(item)}
-                            />
-                          </div>
-
-                          <div className="flex-1">
-                            {item.attributes
-                              .filter(
-                                (attribute: any) =>
-                                  attribute.name !== "image" &&
-                                  attribute.name !== "owned"
-                              )
-                              .slice(0, 3)
-                              .map((attribute: any, index: number) => (
-                                <p
-                                  key={attribute.slug || attribute.name}
-                                  className={
-                                    index === 0
-                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                      : "text-md font-semibold pl-4 capitalize truncate"
-                                  }
+                  {noSearchResults ? (
+                    <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
+                      No match found :(
+                    </div>
+                  ) : (
+                    <div className="w-full p-2">
+                      {/* DEFAULT COLLECTABLE RESULTS 
+                        i.e what is shown when mounting onto the page */}
+                      {
+                        // If there are no search results and no jump search results, show the default collectables
+                        _searchResults.length === 0 &&
+                          jumpSearchResults.length === 0 &&
+                          // If the view is list, show the list view
+                          (view === "list" ? (
+                            <div className="flex flex-wrap -mx-4 ">
+                              {_default_collectables.map((item) => (
+                                <div
+                                  key={`${item.universeCollectableId}-default-search`}
+                                  // className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
+                                  className="w-full md:w-1/2 px-4 mb-6"
                                 >
-                                  {`${attribute.value}`}
-                                </p>
-                              ))}
-                          </div>
-                          <div className="flex space-x-4">
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => openEdit(item)}
-                            >
-                              <FaRegEdit />
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                              onClick={() => handleDelete(item)}
-                            >
-                              <FaRegTrashCan />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                    {(_searchResults.length > 0
-                      ? _searchResults
-                      : jumpSearchResults.length > 0
-                      ? jumpSearchResults
-                      : collectables
-                    ).map((item) => (
-                      <div key={item.universeCollectableId}>
-                        <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                          <div className="h-22 w-30">
-                            <div className="absolute top-2 right-2 flex space-x-2">
-                              <button
-                                className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                onClick={() =>
-                                  handleStarClick(
-                                    item.universeCollectableId,
-                                    collectionId
-                                  )
-                                }
-                              >
-                                {wishlistIds.includes(
-                                  item.universeCollectableId
-                                ) ? (
-                                  <FontAwesomeIcon
-                                    icon={faSolidStar}
-                                    style={{ color: "#EDC307" }}
-                                  />
-                                ) : (
-                                  <FontAwesomeIcon
-                                    icon={faRegularStar}
-                                    style={{ color: "#EDC307" }}
-                                  />
-                                )}
-                              </button>
-                            </div>
-                            <img
-                              src={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "image"
-                                )?.value || "/placeholder.jpg"
-                              }
-                              alt={
-                                item.attributes?.find(
-                                  (attr: any) => attr.name === "name"
-                                )?.value || "No Name"
-                              }
-                              width={400}
-                              height={400}
-                              className="rounded-md shadow-sm object-cover pt-3"
-                              onClick={() => handleOpenModal(item)}
-                            />
-                          </div>
-
-                          <div className="space-y-1 p-4">
-                            {item.attributes
-                              .filter(
-                                (attribute: any) =>
-                                  attribute.name !== "image" &&
-                                  attribute.name !== "owned"
-                              )
-                              .slice(0, 3)
-                              .map((attribute: any, index: number) => (
-                                <p
-                                  key={attribute.slug || attribute.name}
-                                  className={
-                                    index === 0
-                                      ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                      : "text-md font-semibold pl-4 capitalize truncate"
-                                  }
-                                >
-                                  {`${attribute.value}`}
-                                </p>
-                              ))}
-
-                            <div className="pt-3 pb-2 text-center">
-                              <button
-                                className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={() => openEdit(item)}
-                              >
-                                <FaRegEdit />
-                              </button>
-                              <button
-                                className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                onClick={() => handleDelete(item)}
-                              >
-                                <FaRegTrashCan />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div
-                  ref={collectableRef}
-                  className="loading-indicator text-center p-4"
-                >
-                  {isFetchingCollectables && <p>Loading more items...</p>}
-                </div>
-                <div
-                  ref={searchRef}
-                  className="loading-indicator text-center p-4"
-                >
-                  {isFetchingSearchResults && <p>Loading more items...</p>}
-                </div>
-                <div
-                  ref={jumpNextRef}
-                  className="loading-indicator text-center p-4"
-                ></div>
-              </div>
-            )}
-            {/* send data to modal */}
-            {showModal && specificTag && (
-              <Modal
-                itemData={specificTag}
-                onClose={handleCloseModal}
-                isVisible={showModal}
-              />
-            )}
-            {showEdit && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
-                  <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
-                    Edit your Collectible
-                  </h2>
-
-                  <form onSubmit={handleEditSubmit}>
-                    {maskedAttributes
-                      .concat("owned", "image")
-                      .filter((attr) => attr !== null)
-                      .map((attribute, index) => (
-                        <div key={index} className="mb-4 lg:max-w-lg">
-                          {attribute !== "image" ? (
-                            attribute === "owned" ? (
-                              <div className="flex items-center mb-3">
-                                <input
-                                  type="checkbox"
-                                  id="publishCollection"
-                                  onChange={(e) =>
-                                    handleOwnedChange(e.target.checked)
-                                  }
-                                  className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
-                                />
-                                <label
-                                  htmlFor="publishCollection"
-                                  className="text-gray-700 dark:text-gray-300 text-sm font-bold"
-                                >
-                                  Is Owned
-                                </label>
-                              </div>
-                            ) : (
-                              <>
-                                <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                  {attribute.charAt(0).toUpperCase() +
-                                    attribute.slice(1)}
-                                </label>
-                                <input
-                                  type="text"
-                                  name={attribute}
-                                  placeholder={`${attribute}`}
-                                  value={formData[attribute] || ""}
-                                  onChange={handleChange}
-                                  className="border rounded w-full py-2 px-3 text-gray-700"
-                                />
-                              </>
-                            )
-                          ) : (
-                            <>
-                              <label
-                                htmlFor="cover-photo"
-                                className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                              >
-                                Upload Photo
-                              </label>
-                              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                                <div className="text-center">
-                                  <PhotoIcon
-                                    aria-hidden="true"
-                                    className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                  />
-                                  <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                    <label
-                                      htmlFor="file-upload"
-                                      className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                    <button
+                                      className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                      onClick={() =>
+                                        handleStarClick(
+                                          item.universeCollectionId!,
+                                          collectionId
+                                        )
+                                      }
                                     >
-                                      <span>Upload a photo</span>
-                                      <input
-                                        id="file-upload"
-                                        name="file-upload"
-                                        type="file"
-                                        className="sr-only"
-                                        onChange={handleFileChange}
+                                      {wishlistIds.includes(
+                                        item.universeCollectableId
+                                      ) ? (
+                                        <FontAwesomeIcon
+                                          icon={faSolidStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      ) : (
+                                        <FontAwesomeIcon
+                                          icon={faRegularStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      )}
+                                    </button>
+                                    <div className="h-24 w-24">
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/placeholder.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "name"
+                                          )?.value || "No Name"
+                                        }
+                                        width={100}
+                                        height={100}
+                                        className="rounded-md shadow-sm object-cover"
+                                        onClick={() => handleOpenModal(item)}
                                       />
-                                    </label>
-                                    <p>or drag and drop</p>
-                                  </div>
-                                  <p className="text-xs leading-5 text-gray-600">
-                                    PNG, JPG
-                                  </p>
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                    <div className="flex items-center mb-3">
-                      <input
-                        type="checkbox"
-                        id="publishCollection"
-                        checked={isPublished}
-                        onChange={handlePublishChange}
-                        className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
-                      />
-                      <label
-                        htmlFor="publishCollection"
-                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                      >
-                        Publish Collectable
-                      </label>
-                    </div>
+                                    </div>
 
-                    <div className="flex justify-end space-x-4 mt-8">
-                      <button
-                        type="button"
-                        onClick={closeEdit}
-                        className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                                    <div className="flex-1">
+                                      {item.attributes
+                                        .filter(
+                                          (attribute: any) =>
+                                            attribute.name !== "image" &&
+                                            attribute.name !== "owned"
+                                        )
+                                        .slice(0, 3)
+                                        .map(
+                                          (attribute: any, index: number) => (
+                                            <p
+                                              key={`${
+                                                attribute.slug || attribute.name
+                                              }-default-search`}
+                                              className={
+                                                index === 0
+                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                  : "text-md font-semibold pl-4 capitalize truncate"
+                                              }
+                                            >
+                                              {`${attribute.value}`}
+                                            </p>
+                                          )
+                                        )}
+                                    </div>
+                                    <div className="flex space-x-4">
+                                      <button
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => openEdit(item)}
+                                      >
+                                        <FaRegEdit />
+                                      </button>
+                                      <button
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => handleDelete(item)}
+                                      >
+                                        <FaRegTrashCan />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            // GRID VIEW
+                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                              {_default_collectables.map((item) => (
+                                <div
+                                  key={`${item.universeCollectableId}-default-search`}
+                                >
+                                  {/* <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-green-500"> */}
+                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                    <div className="h-22 w-30">
+                                      <div className="absolute top-2 right-2 flex space-x-2">
+                                        <button
+                                          className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                          onClick={() =>
+                                            handleStarClick(
+                                              item.universeCollectableId,
+                                              collectionId
+                                            )
+                                          }
+                                        >
+                                          {wishlistIds.includes(
+                                            item.universeCollectableId
+                                          ) ? (
+                                            <FontAwesomeIcon
+                                              icon={faSolidStar}
+                                              style={{ color: "#EDC307" }}
+                                            />
+                                          ) : (
+                                            <FontAwesomeIcon
+                                              icon={faRegularStar}
+                                              style={{ color: "#EDC307" }}
+                                            />
+                                          )}
+                                        </button>
+                                      </div>
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/placeholder.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "name"
+                                          )?.value || "No Name"
+                                        }
+                                        width={400}
+                                        height={400}
+                                        className="rounded-md shadow-sm object-cover pt-3"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-1 p-4">
+                                      {item.attributes
+                                        .filter(
+                                          (attribute: any) =>
+                                            attribute.name !== "image" &&
+                                            attribute.name !== "owned"
+                                        )
+                                        .slice(0, 3)
+                                        .map(
+                                          (attribute: any, index: number) => (
+                                            <p
+                                              key={`${
+                                                attribute.slug || attribute.name
+                                              }-default-search`}
+                                              className={
+                                                index === 0
+                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                  : "text-md font-semibold pl-4 capitalize truncate"
+                                              }
+                                            >
+                                              {`${attribute.value}`}
+                                            </p>
+                                          )
+                                        )}
+
+                                      <div className="pt-3 pb-2 text-center">
+                                        <button
+                                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => openEdit(item)}
+                                        >
+                                          <FaRegEdit />
+                                        </button>
+                                        <button
+                                          className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => handleDelete(item)}
+                                        >
+                                          <FaRegTrashCan />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ))
+                      }
+
+                      {/* SEARCH RESULTS */}
+                      {
+                        // If there are search results, show the search results
+                        _searchResults.length > 0 &&
+                          // If the view is list, show the list view
+                          (view === "list" ? (
+                            <div className="flex flex-wrap -mx-4 ">
+                              {_searchResults.map((item) => (
+                                <div
+                                  key={`${item.universeCollectableId}-search`}
+                                  className="w-full md:w-1/2 px-4 mb-6"
+                                >
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                    <button
+                                      className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                      onClick={() =>
+                                        handleStarClick(
+                                          item.universeCollectionId!,
+                                          collectionId
+                                        )
+                                      }
+                                    >
+                                      {wishlistIds.includes(
+                                        item.universeCollectableId
+                                      ) ? (
+                                        <FontAwesomeIcon
+                                          icon={faSolidStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      ) : (
+                                        <FontAwesomeIcon
+                                          icon={faRegularStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      )}
+                                    </button>
+                                    <div className="h-24 w-24">
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/placeholder.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "name"
+                                          )?.value || "No Name"
+                                        }
+                                        width={100}
+                                        height={100}
+                                        className="rounded-md shadow-sm object-cover"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
+
+                                    <div className="flex-1">
+                                      {item.attributes
+                                        .filter(
+                                          (attribute: any) =>
+                                            attribute.name !== "image" &&
+                                            attribute.name !== "owned"
+                                        )
+                                        .slice(0, 3)
+                                        .map(
+                                          (attribute: any, index: number) => (
+                                            <p
+                                              key={`${
+                                                attribute.slug || attribute.name
+                                              }-search`}
+                                              className={
+                                                index === 0
+                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                  : "text-md font-semibold pl-4 capitalize truncate"
+                                              }
+                                            >
+                                              {`${attribute.value}`}
+                                            </p>
+                                          )
+                                        )}
+                                    </div>
+                                    <div className="flex space-x-4">
+                                      <button
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => openEdit(item)}
+                                      >
+                                        <FaRegEdit />
+                                      </button>
+                                      <button
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => handleDelete(item)}
+                                      >
+                                        <FaRegTrashCan />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            // GRID VIEW
+                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                              {_searchResults.map((item) => (
+                                <div
+                                  key={`${item.universeCollectableId}-search`}
+                                >
+                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                    <div className="h-22 w-30">
+                                      <div className="absolute top-2 right-2 flex space-x-2">
+                                        <button
+                                          className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                          onClick={() =>
+                                            handleStarClick(
+                                              item.universeCollectableId,
+                                              collectionId
+                                            )
+                                          }
+                                        >
+                                          {wishlistIds.includes(
+                                            item.universeCollectableId
+                                          ) ? (
+                                            <FontAwesomeIcon
+                                              icon={faSolidStar}
+                                              style={{ color: "#EDC307" }}
+                                            />
+                                          ) : (
+                                            <FontAwesomeIcon
+                                              icon={faRegularStar}
+                                              style={{ color: "#EDC307" }}
+                                            />
+                                          )}
+                                        </button>
+                                      </div>
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/placeholder.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "name"
+                                          )?.value || "No Name"
+                                        }
+                                        width={400}
+                                        height={400}
+                                        className="rounded-md shadow-sm object-cover pt-3"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-1 p-4">
+                                      {item.attributes
+                                        .filter(
+                                          (attribute: any) =>
+                                            attribute.name !== "image" &&
+                                            attribute.name !== "owned"
+                                        )
+                                        .slice(0, 3)
+                                        .map(
+                                          (attribute: any, index: number) => (
+                                            <p
+                                              key={`${
+                                                attribute.slug || attribute.name
+                                              }-search`}
+                                              className={
+                                                index === 0
+                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                  : "text-md font-semibold pl-4 capitalize truncate"
+                                              }
+                                            >
+                                              {`${attribute.value}`}
+                                            </p>
+                                          )
+                                        )}
+
+                                      <div className="pt-3 pb-2 text-center">
+                                        <button
+                                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => openEdit(item)}
+                                        >
+                                          <FaRegEdit />
+                                        </button>
+                                        <button
+                                          className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => handleDelete(item)}
+                                        >
+                                          <FaRegTrashCan />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ))
+                      }
+
+                      {/* JUMP RESULTS */}
+                      {
+                        // If there are jump search results, show the jump search results
+                        jumpSearchResults.length > 0 &&
+                          // If the view is list, show the list view
+                          (view === "list" ? (
+                            <div className="flex flex-wrap -mx-4 ">
+                              {jumpSearchResults.map((item) => (
+                                <div
+                                  key={`${item.universeCollectableId}-jump`}
+                                  className="w-full md:w-1/2 px-4 mb-6"
+                                >
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                    <button
+                                      className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                      onClick={() =>
+                                        handleStarClick(
+                                          item.universeCollectionId!,
+                                          collectionId
+                                        )
+                                      }
+                                    >
+                                      {wishlistIds.includes(
+                                        item.universeCollectableId
+                                      ) ? (
+                                        <FontAwesomeIcon
+                                          icon={faSolidStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      ) : (
+                                        <FontAwesomeIcon
+                                          icon={faRegularStar}
+                                          style={{ color: "#EDC307" }}
+                                        />
+                                      )}
+                                    </button>
+                                    <div className="h-24 w-24">
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/placeholder.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "name"
+                                          )?.value || "No Name"
+                                        }
+                                        width={100}
+                                        height={100}
+                                        className="rounded-md shadow-sm object-cover"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
+
+                                    <div className="flex-1">
+                                      {item.attributes
+                                        .filter(
+                                          (attribute: any) =>
+                                            attribute.name !== "image" &&
+                                            attribute.name !== "owned"
+                                        )
+                                        .slice(0, 3)
+                                        .map(
+                                          (attribute: any, index: number) => (
+                                            <p
+                                              key={`${
+                                                attribute.slug || attribute.name
+                                              }-jump`}
+                                              className={
+                                                index === 0
+                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                  : "text-md font-semibold pl-4 capitalize truncate"
+                                              }
+                                            >
+                                              {`${attribute.value}`}
+                                            </p>
+                                          )
+                                        )}
+                                    </div>
+                                    <div className="flex space-x-4">
+                                      <button
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => openEdit(item)}
+                                      >
+                                        <FaRegEdit />
+                                      </button>
+                                      <button
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => handleDelete(item)}
+                                      >
+                                        <FaRegTrashCan />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            // GRID VIEW
+                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+                              {jumpSearchResults.map((item) => (
+                                <div key={`${item.universeCollectableId}-jump`}>
+                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                    <div className="h-22 w-30">
+                                      <div className="absolute top-2 right-2 flex space-x-2">
+                                        <button
+                                          className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
+                                          onClick={() =>
+                                            handleStarClick(
+                                              item.universeCollectableId,
+                                              collectionId
+                                            )
+                                          }
+                                        >
+                                          {wishlistIds.includes(
+                                            item.universeCollectableId
+                                          ) ? (
+                                            <FontAwesomeIcon
+                                              icon={faSolidStar}
+                                              style={{ color: "#EDC307" }}
+                                            />
+                                          ) : (
+                                            <FontAwesomeIcon
+                                              icon={faRegularStar}
+                                              style={{ color: "#EDC307" }}
+                                            />
+                                          )}
+                                        </button>
+                                      </div>
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/placeholder.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "name"
+                                          )?.value || "No Name"
+                                        }
+                                        width={400}
+                                        height={400}
+                                        className="rounded-md shadow-sm object-cover pt-3"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-1 p-4">
+                                      {item.attributes
+                                        .filter(
+                                          (attribute: any) =>
+                                            attribute.name !== "image" &&
+                                            attribute.name !== "owned"
+                                        )
+                                        .slice(0, 3)
+                                        .map(
+                                          (attribute: any, index: number) => (
+                                            <p
+                                              key={`${
+                                                attribute.slug || attribute.name
+                                              }-jump`}
+                                              className={
+                                                index === 0
+                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                  : "text-md font-semibold pl-4 capitalize truncate"
+                                              }
+                                            >
+                                              {`${attribute.value}`}
+                                            </p>
+                                          )
+                                        )}
+
+                                      <div className="pt-3 pb-2 text-center">
+                                        <button
+                                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => openEdit(item)}
+                                        >
+                                          <FaRegEdit />
+                                        </button>
+                                        <button
+                                          className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                          onClick={() => handleDelete(item)}
+                                        >
+                                          <FaRegTrashCan />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ))
+                      }
+
+                      {/* DO NOT GO FURTHER */}
+                      <div
+                        ref={collectableRef}
+                        className="loading-indicator text-center p-1"
                       >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                        {isFetchingCollectables}
+                      </div>
+                      <div
+                        ref={searchRef}
+                        className="loading-indicator text-center p-1"
                       >
-                        Save Changes
-                      </button>
+                        {isFetchingSearchResults}
+                      </div>
+                      <div
+                        ref={jumpNextRef}
+                        className="loading-indicator text-center p-1"
+                      ></div>
                     </div>
-                  </form>
+                  )}
+
+                  {/* Show All the details about an item in the modal*/}
+                  {showModal && specificTag && (
+                    <Modal
+                      itemData={specificTag}
+                      onClose={handleCloseModal}
+                      isVisible={showModal}
+                    />
+                  )}
+
+                  {/* Show Edit Collectable Form */}
+                  {showEdit && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                        <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                          Edit your Collectible
+                        </h2>
+
+                        <form onSubmit={handleEditSubmit}>
+                          {maskedAttributes
+                            .concat("owned", "image")
+                            .filter((attr) => attr !== null)
+                            .map((attribute, index) => (
+                              <div key={index} className="mb-4 lg:max-w-lg">
+                                {attribute !== "image" ? (
+                                  attribute === "owned" ? (
+                                    <div className="flex items-center mb-3">
+                                      <input
+                                        type="checkbox"
+                                        id="publishCollection"
+                                        onChange={(e) =>
+                                          handleOwnedChange(e.target.checked)
+                                        }
+                                        className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                      />
+                                      <label
+                                        htmlFor="publishCollection"
+                                        className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                      >
+                                        Is Owned
+                                      </label>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                        {attribute.charAt(0).toUpperCase() +
+                                          attribute.slice(1)}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name={attribute}
+                                        placeholder={`${attribute}`}
+                                        value={formData[attribute] || ""}
+                                        onChange={handleChange}
+                                        className="border rounded w-full py-2 px-3 text-gray-700"
+                                      />
+                                    </>
+                                  )
+                                ) : (
+                                  <>
+                                    <label
+                                      htmlFor="cover-photo"
+                                      className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                    >
+                                      Upload Photo
+                                    </label>
+                                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                      <div className="text-center">
+                                        <PhotoIcon
+                                          aria-hidden="true"
+                                          className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                        />
+                                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                          <label
+                                            htmlFor="file-upload"
+                                            className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                          >
+                                            <span>Upload a photo</span>
+                                            <input
+                                              id="file-upload"
+                                              name="file-upload"
+                                              type="file"
+                                              className="sr-only"
+                                              onChange={handleFileChange}
+                                            />
+                                          </label>
+                                          <p>or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs leading-5 text-gray-600">
+                                          PNG, JPG
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          <div className="flex items-center mb-3">
+                            <input
+                              type="checkbox"
+                              id="publishCollection"
+                              checked={isPublished}
+                              onChange={handlePublishChange}
+                              className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                            />
+                            <label
+                              htmlFor="publishCollection"
+                              className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                            >
+                              Publish Collectable
+                            </label>
+                          </div>
+
+                          <div className="flex justify-end space-x-4 mt-8">
+                            <button
+                              type="button"
+                              onClick={closeEdit}
+                              className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+              <Footer />
+            </div>
           </div>
         </div>
-        <Footer />
       </div>
     </>
   );
