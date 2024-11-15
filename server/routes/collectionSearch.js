@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const { db, pool } = require('../config/db');
 const {collectionUniverses, collections} = require('../config/schema');
 const express = require('express');
-const { eq, ilike, and } = require('drizzle-orm');
+const { eq, ilike, and, sql } = require('drizzle-orm');
 // const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
@@ -17,7 +17,8 @@ router.get('', async (req, res) => {
         return res.status(400).send({error: 'Missing a request parameter'});
     }
 
-    const items = await db
+    try {
+        const items = await db
         .select()
         .from(collections)
         .innerJoin(
@@ -27,12 +28,17 @@ router.get('', async (req, res) => {
         .where(
             and(
                 eq(collections.user_id, userId),
-                ilike(collectionUniverses.name, `%${searchTerm}%`)
+                sql`similarity(${collectionUniverses.name}, ${searchTerm}) > 0.3`
             )
-        );
-    
-    res.json(items);
+        )
+        .orderBy(sql`similarity(${collectionUniverses.name}, ${searchTerm}) DESC`)
+        .execute();
 
+        res.status(200).json(items);
+
+    } catch (error) {
+        res.status(400).send("Error searching for collections");
+    }    
 });
 
 module.exports = router;

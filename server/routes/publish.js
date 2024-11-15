@@ -2,7 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const { db, pool } = require('../config/db');
 const {collectables, collectionUniverses, universeCollectables, collectableAttributes, collections} = require('../config/schema');
 const express = require('express');
-const { eq, inArray, and, ilike } = require('drizzle-orm');
+const { eq, inArray, and, ilike, sql } = require('drizzle-orm');
 // const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
@@ -183,9 +183,10 @@ router.get('/display-published-universes', async (req, res) => {
             .where(
                 and(
                     eq(collectionUniverses.is_published, true),
-                    ilike(collectionUniverses.name, `%${searchTerm}%`)
+                    sql`similarity(${collectionUniverses.name}, ${searchTerm}) > 0.3` // Adjust threshold as needed
                 )
             )
+            .orderBy(sql`similarity(${collectionUniverses.name}, ${searchTerm}) DESC`)
             .execute();
 
         console.log("Finished Fetching published universes");
