@@ -4,7 +4,6 @@ import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 
 interface SearchBarProps {
   attributes: string[];
-  onSearchResults: (results: any[]) => void;
   onResetSearch: () => void;
   resetDropdown: boolean;
   setResetDropdown: (value: boolean) => void;

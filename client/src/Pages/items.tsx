@@ -214,14 +214,12 @@ export default function HomePage() {
 
       if (favReponse.ok) {
         const data = await favReponse.json();
-        console.log("Favorite Attributes: ", data[0].favoriteAttributes);
         setFavoriteAttributes(data[0].favoriteAttributes);
         const allAttributes = data[0].favoriteAttributes.concat(
           maskedAttributes.filter(
             (attr) => !data[0].favoriteAttributes.includes(attr)
           )
         );
-        console.log("All Attributes: ", allAttributes);
         setMaskedAttributes(allAttributes);
       } else {
         console.error("Error fetching favorite attributes:", favReponse);
@@ -283,12 +281,6 @@ export default function HomePage() {
 
     getUniverseCollectionId();
   }, [collectionId]);
-
-  useEffect(() => {
-    if (ownedCollectables.length > 0) {
-      console.log("owned", ownedCollectables);
-    }
-  }, [ownedCollectables]);
 
   // add collectible form modal open handler
   const openModal = () => {
@@ -579,20 +571,9 @@ export default function HomePage() {
     }
   };
 
-  const handleSearchResults = (results: any[]) => {
-    if (results.length === 0) {
-      setNoSearchResults(true);
-    } else {
-      setNoSearchResults(false);
-      setSearchResults(results);
-    }
-  };
-
   const handleClearSearch = () => {
     setSearchResults([]);
-    console.log("search result: ", searchResults);
     setJumpSearchResults([]);
-    console.log("jump results: ", jumpSearchResults);
     setResetDropdown(true);
     setNoSearchResults(false);
     setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
@@ -831,12 +812,11 @@ export default function HomePage() {
   }, [jumpPrevEntry]);
 
   const handleReset = () => {
-    setSearchResults([]);
-    setJumpSearchResults([]);
     setResetDropdown(true);
     setNoSearchResults(false);
     setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
     setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
+    window.location.reload();
   };
 
   // =======================Using Virtualizer instead of UseIntersection====================
@@ -935,8 +915,6 @@ export default function HomePage() {
                 {universeCollectionId && (
                   <SearchBar
                     attributes={maskedAttributes}
-                    onSearchResults={handleSearchResults}
-                    // onResetSearch={() => setSearchResults([])}
                     resetDropdown={resetDropdown}
                     onResetSearch={handleReset}
                     setResetDropdown={setResetDropdown}
@@ -1149,25 +1127,21 @@ export default function HomePage() {
           {/* Scrollable Content goes here */}
           <div className="h-fit bg-gray-100">
             {/* Add more content to enable scrolling */}
-            <div className=" border-2 border-dashed border-red-500 ">
-              <div className="w-full flex flex-col md:flex-row border-2 border-dashed border-purple-500">
+            <div>
+              <div className="w-full flex flex-col md:flex-row">
                 {/* collectibles */}
                 <div className="w-full p-2">
-                  {/* <div className="text-xl py-4 text-right pr-10">
-                    Total items in the collection:{" "}
-                  </div> */}
-
                   {typeof prevPageNumber === "number" &&
                   prevPageNumber > 0 &&
                   !loadedPages.has(prevPageNumber) ? (
                     <div
                       ref={jumpPrevRef}
-                      className="loading-indicator text-center bg-red-700 p-1 mb-[30px]"
+                      className="loading-indicator text-center p-1 mb-[30px]"
                     >
                       {/* Optionally add loading content */}
                     </div>
                   ) : (
-                    <div className="loading-indicator text-center bg-red-700 p-1 mb-[30px]">
+                    <div className="loading-indicator text-center p-1 mb-[30px]">
                       {/* Optionally add loading content */}
                     </div>
                   )}
@@ -1177,7 +1151,7 @@ export default function HomePage() {
                       No match found :(
                     </div>
                   ) : (
-                    <div className="w-full p-2 border-2 border-dashed border-yellow-500">
+                    <div className="w-full p-2">
                       {/* DEFAULT COLLECTABLE RESULTS 
                         i.e what is shown when mounting onto the page */}
                       {
@@ -1190,7 +1164,8 @@ export default function HomePage() {
                               {_default_collectables.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
-                                  className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
+                                  // className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
+                                  className="w-full md:w-1/2 px-4 mb-6"
                                 >
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
@@ -1280,12 +1255,13 @@ export default function HomePage() {
                             </div>
                           ) : (
                             // GRID VIEW
-                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
+                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                               {_default_collectables.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
                                 >
-                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-green-500">
+                                  {/* <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-green-500"> */}
+                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <div className="h-22 w-30">
                                       <div className="absolute top-2 right-2 flex space-x-2">
                                         <button
@@ -1387,7 +1363,7 @@ export default function HomePage() {
                               {_searchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-search`}
-                                  className="w-full md:w-1/2 px-4 mb-6 bg-blue-500"
+                                  className="w-full md:w-1/2 px-4 mb-6"
                                 >
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
@@ -1477,12 +1453,12 @@ export default function HomePage() {
                             </div>
                           ) : (
                             // GRID VIEW
-                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
+                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                               {_searchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-search`}
                                 >
-                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-blue-500">
+                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <div className="h-22 w-30">
                                       <div className="absolute top-2 right-2 flex space-x-2">
                                         <button
@@ -1584,7 +1560,7 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className="w-full md:w-1/2 px-4 mb-6 bg-yellow-500"
+                                  className="w-full md:w-1/2 px-4 mb-6"
                                 >
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
@@ -1674,10 +1650,10 @@ export default function HomePage() {
                             </div>
                           ) : (
                             // GRID VIEW
-                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4 border-2 border-dashed border-blue-500">
+                            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                               {jumpSearchResults.map((item) => (
                                 <div key={`${item.universeCollectableId}-jump`}>
-                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-yellow-500">
+                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <div className="h-22 w-30">
                                       <div className="absolute top-2 right-2 flex space-x-2">
                                         <button
@@ -1772,19 +1748,19 @@ export default function HomePage() {
                       {/* DO NOT GO FURTHER */}
                       <div
                         ref={collectableRef}
-                        className="loading-indicator text-center bg-green-500 p-1"
+                        className="loading-indicator text-center p-1"
                       >
                         {isFetchingCollectables}
                       </div>
                       <div
                         ref={searchRef}
-                        className="loading-indicator text-center bg-green-500 p-1"
+                        className="loading-indicator text-center p-1"
                       >
                         {isFetchingSearchResults}
                       </div>
                       <div
                         ref={jumpNextRef}
-                        className="loading-indicator text-center bg-green-500 p-1"
+                        className="loading-indicator text-center p-1"
                       ></div>
                     </div>
                   )}
