@@ -905,9 +905,10 @@ export default function HomePage() {
           <Header />
           <div className="w-full mx-auto pt-8">
             <div className="mx-auto pl-10">
+              {/* <div> */}
               <div className="flex md:items-center justify-center gap-48 pb-4 max-md:px-4  ">
                 {/* collection option */}
-                <div className="flex items-center gap-4 ml-0">
+                <div className="flex items-center gap-4">
                   <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
                     {universeCollectionName}
                   </p>
