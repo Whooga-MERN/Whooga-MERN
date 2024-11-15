@@ -41,26 +41,6 @@ import fetchJWT from "../fetchJWT";
 const ITEMS_PER_PAGE = 12;
 const initialPage = 1;
 
-const sortBy = [
-  { id: "yearLowToHigh", label: "Year: Low to High" },
-  { id: "yearHighToLow", label: "Year: High to Low" },
-  { id: "tagLowToHigh", label: "Tag ID: Low to High" },
-  { id: "tagHighToLow", label: "Tag ID: High to Low" },
-];
-const color = [
-  "purple",
-  "red",
-  "yellow",
-  "pink",
-  "brown",
-  "blue",
-  "orange",
-  "white",
-  "grey",
-  "black",
-  "green",
-];
-
 export default function HomePage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [resetDropdown, setResetDropdown] = useState(true);
@@ -112,6 +92,9 @@ export default function HomePage() {
   const [nextPageNumber, setNextPageNumber] = useState<number>();
   const [prevPageNumber, setPrevPageNumber] = useState<number>();
   const [loadedPages, setLoadedPages] = useState(new Set<number>());
+  const [highlightedItemId, setHighlightedItemId] = useState<number | null>(
+    null
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -743,6 +726,7 @@ export default function HomePage() {
         setJumpPageNumber(res.pageNumber);
         setPrevPageNumber(res.pageNumber - 1);
         setNextPageNumber(res.pageNumber + 1);
+        setHighlightedItemId(res.universe_collectable_id);
 
         // use the page number to fetch items on that page
         const data = await fetchUniverseCollectables(
@@ -1560,7 +1544,12 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className="w-full md:w-1/2 px-4 mb-6"
+                                  className={` ${
+                                    item.universeCollectableId ===
+                                    highlightedItemId
+                                      ? "border-4 border-yellow-500"
+                                      : ""
+                                  }`}
                                 >
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
@@ -1652,7 +1641,15 @@ export default function HomePage() {
                             // GRID VIEW
                             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                               {jumpSearchResults.map((item) => (
-                                <div key={`${item.universeCollectableId}-jump`}>
+                                <div
+                                  key={`${item.universeCollectableId}-jump`}
+                                  className={` ${
+                                    item.universeCollectableId ===
+                                    highlightedItemId
+                                      ? "border-4 border-yellow-500"
+                                      : ""
+                                  }`}
+                                >
                                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <div className="h-22 w-30">
                                       <div className="absolute top-2 right-2 flex space-x-2">
