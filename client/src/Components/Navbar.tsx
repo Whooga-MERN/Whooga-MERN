@@ -92,13 +92,13 @@ export default function Navbar() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               <Link
-                to="/login"
+                to="/auth"
                 className="block text-black hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
               >
                 Log in
               </Link>
               <Link
-                to="/signup"
+                to="/auth"
                 className="block text-black bg-white hover:bg-yellow-300 hover:text-orange-400 rounded-lg p-2 font-bold"
               >
                 Register
