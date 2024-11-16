@@ -980,7 +980,6 @@ export default function HomePage() {
                         <li>
                           <a
                             className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            onClick={openModal}
                           >
                             Edit Favorite Attributes
                           </a>
