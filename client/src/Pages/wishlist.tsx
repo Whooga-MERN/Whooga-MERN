@@ -275,13 +275,14 @@ export default function Collections() {
                             width: "95%",
                             aspectRatio: "1 / 1",
                           }}
-                          src={collection.collection_pic}
-                          alt={collection.collection_id}
+                          src={collectionUniverse.universe_collection_pic}
+                          // src={"/placeholder.jpg"}
+                          alt={collectionUniverse.name}
                         />
                       </figure>
                       <div className="card-body">
                         <h2 className="card-title">
-                          {collection.name + " Wishlist"}
+                          {collectionUniverse.name + " Wishlist"}
                         </h2>
                       </div>
                     </div>
