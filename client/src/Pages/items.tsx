@@ -75,6 +75,9 @@ export default function HomePage() {
   const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
+  const [openEditFavAttributesModal, setOpenEditFavAttributesModal] = useState(false);
+  const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<string[]>([]);
+
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -180,6 +183,7 @@ export default function HomePage() {
       if (response.ok) {
         const data = await response.json();
         setMaskedAttributes(data);
+        console.log("Masked Attributes: ", data);
       } else {
         console.error("Error fetching attributes:", response);
       }
@@ -914,6 +918,65 @@ export default function HomePage() {
     }
   }, [jumpSearchResults, prevHeight, jumped]);
 
+  const openEditAttributes = () => {
+    setEditedFavoriteAttributes(favoriteAttributes);
+    console.log("Edited Favorite Attributes: ", editedFavoriteAttributes);
+    console.log("maskedAttributes: ", maskedAttributes);
+    setOpenEditFavAttributesModal(true);
+  };
+
+  const closeEditAttributes = () => {
+    setOpenEditFavAttributesModal(false);
+  };
+
+  const handleFavAttributeChange = (checked: boolean, attribute: string) => {
+    if (checked) {
+      setEditedFavoriteAttributes((prev) => [...prev, attribute]);
+    } else {
+      setEditedFavoriteAttributes((prev) => prev.filter((attr) => attr !== attribute));
+    }
+    console.log("Favorite Attributes: ", editedFavoriteAttributes);
+  };
+
+  const handleEditFavAttributesSubmit = async () => {
+    const request = {
+      collectionId: collectionId,
+      favoriteAttributes: editedFavoriteAttributes,
+    };
+
+    try {
+      const response = await fetch(
+        buildPath(`collectable-attributes/update-favorite-attributes`),
+        {
+          method: "PUT",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        console.log("Favorite Attributes edited successfully");
+        setFavoriteAttributes(editedFavoriteAttributes);
+        const allAttributes = editedFavoriteAttributes.concat(
+          maskedAttributes.filter(
+            (attr) => !editedFavoriteAttributes.includes(attr)
+          )
+        );
+        await setMaskedAttributes(allAttributes);
+        closeEditAttributes();
+        //window.location.reload();
+      } else {
+        console.error("Error editing favorite attributes:", response);
+      }
+    } catch (error) {
+      console.error("Error editing favorite attributes:", error);
+    }
+  };
+
+
   return (
     <>
       <div className="h-screen flex flex-col overflow-y-hidden">
@@ -980,6 +1043,7 @@ export default function HomePage() {
                         <li>
                           <a
                             className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                            onClick={openEditAttributes}
                           >
                             Edit Favorite Attributes
                           </a>
@@ -1947,6 +2011,55 @@ export default function HomePage() {
                             <button
                               type="button"
                               onClick={closeEdit}
+                              className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Edit Favorite Attributes Modal */}
+                  {openEditFavAttributesModal && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                        <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                          Edit Favorite Attributes
+                        </h2>
+
+                        <form onSubmit={handleEditFavAttributesSubmit}>
+                          {maskedAttributes
+                            .map((attribute, index) => (
+                              <div className="flex items-center mb-3">
+                                <input
+                                  type="checkbox"
+                                  id={attribute}
+                                  checked={editedFavoriteAttributes.includes(attribute)}
+                                  onChange={(e) => handleFavAttributeChange(e.target.checked, attribute)}
+                                  className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                                />
+                                <label
+                                  htmlFor="publishCollection"
+                                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                >
+                                  {attribute}
+                                </label>
+                              </div>
+                            ))}
+                          
+
+                          <div className="flex justify-end space-x-4 mt-8">
+                            <button
+                              type="button"
+                              onClick={closeEditAttributes}
                               className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
                             >
                               Cancel
