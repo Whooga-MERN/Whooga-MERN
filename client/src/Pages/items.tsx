@@ -710,6 +710,13 @@ export default function HomePage() {
   const handleSearch = async (
     searchTags: { attribute: string; term: string }[]
   ) => {
+    setJumpSearchTags([]);
+    setJumpSearchResults([]);
+    setLoadedPages(new Set());
+    setHighlightedItemId(null);
+    setJumped(false);
+    setPrevHeight(0);
+
     setSearchTags(searchTags);
     setSearchResults([]);
     fetchSearchNextPage();
@@ -787,6 +794,10 @@ export default function HomePage() {
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
   ) => {
+    // Clear search-related state
+    setSearchTags([]);
+    setSearchResults([]);
+
     setJumpSearchTags(jumpTags);
     setJumpSearchResults([]);
     setLoadedPages(new Set());
@@ -872,13 +883,13 @@ export default function HomePage() {
     if (jumpNextEntry?.isIntersecting) {
       handleLoadFromJumpPage();
     }
-  }, [jumpNextEntry, sortBy, sortOrder]);
+  }, [jumpNextEntry]);
 
   useEffect(() => {
     if (jumpPrevEntry?.isIntersecting) {
       handleLoadPreviousJumpPage();
     }
-  }, [jumpPrevEntry, sortBy, sortOrder]);
+  }, [jumpPrevEntry]);
 
   const handleReset = () => {
     setResetDropdown(true);

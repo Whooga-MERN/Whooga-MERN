@@ -170,7 +170,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </ul>
 
             <ul className="py-1">
-              <p className="px-3 py-2 font-bold">Attributes:</p>
+              <p className="px-3 py-2 font-bold">Sort by:</p>
               {attributes.map((attribute) => (
                 <li key={attribute} className="px-4 py-2">
                   <div className="flex items-center space-x-2">
@@ -194,7 +194,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </ul>
 
             <div className="px-4 py-2 border-t border-gray-200">
-              <p className="pb-3 font-bold">Sort by:</p>
+              <p className="pb-3 font-bold">Sort order:</p>
               <div className="flex items-center space-x-2">
                 <input
                   type="radio"
