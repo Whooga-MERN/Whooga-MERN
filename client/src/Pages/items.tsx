@@ -235,7 +235,24 @@ export default function HomePage() {
         },
         {} as Record<string, string>
       );
-      setFormData(initialFormData);
+      setFormData(initialFormData); // Set the form data to the initial data for editing Modal
+
+
+      const initialWishlistFormData = specificTag.attributes.reduce(
+        (
+          acc: { [x: string]: any },
+          attr: { name: string | number; value: any }
+        ) => {
+          acc[attr.name] = {
+            value: attr.value, // Store the original value
+            checked: false,    // Add a checked property initialized to false
+          };
+          return acc;
+        },
+        {} as Record<string, { value: any; checked: boolean }> // Ensure the correct type
+      );
+      
+      setWishlistForm(initialWishlistFormData); // Set the wishlist form to the initial data for wishlisting Modal
     }
   }, [specificTag]);
 
@@ -396,6 +413,7 @@ export default function HomePage() {
     collectionId?: string,
   ) => {
     event.stopPropagation(); // Prevent event bubbling
+    console.log("universeCollectableId", universeCollectableId);
     if (!collectionId) return;
     // check if in wishlist
     if (wishlistIds.includes(universeCollectableId)) {
@@ -411,13 +429,33 @@ export default function HomePage() {
       setSpecificTag(item);
       setWishlistModal_UCollectableID(universeCollectableId);
 
-      const attributesObject = maskedAttributes.reduce((acc: Record<string, boolean>, key) => {
-        acc[key] = false;
-        return acc;
-      }, {});
+      // const initialFormData = specificTag!.attributes.reduce(
+      //   (
+      //     acc: { [x: string]: any },
+      //     attr: { name: string | number; value: any }
+      //   ) => {
+      //     acc[attr.value] = false; // Use attribute value as the key and set its value to false
+      //     return acc;
+      //   },
+      //   {} as Record<string, boolean> // Ensure the resulting object has boolean values
+      // );
+
+      // const Other = specificTag!.attributes.reduce(
+      //   (
+      //     acc: { [x: string]: any },
+      //     attr: { name: string | number; value: any }
+      //   ) => {
+      //     acc[attr.name] = attr.value;
+      //     return acc;
+      //   },
+      //   {} as Record<string, string>
+      // );
+
+      // console.log("OTHER:", Other);
       
-      setWishlistForm(attributesObject);
-      console.log("attributesObject", attributesObject);
+      
+      // setWishlistForm(initialFormData);
+      // console.log("attributesObject", initialFormData);
     }
   };
 
@@ -430,15 +468,18 @@ export default function HomePage() {
   const [wishlistForm, setWishlistForm] = useState<Record<string, any>>({});
 
   const submitWishlistRequest = () => {
-    // RUN CODE TO SUBIT WISHLIST REQUEST
+    // RUN CODE TO SUBMIT WISHLIST REQUEST
     if (universeCollectionId && wishlistModal_UCollectableID) {
       setWishlistIds((prev) => [...prev, wishlistModal_UCollectableID]);
-      const searchString = Object.entries(wishlistForm)
-        .filter(([key, value]) => value === true) // Filter entries where the value is true
-        .map(([key]) => key) // Extract the keys
-        .join(', '); // Join the keys into a string
 
-      console.log(searchString);
+      // Create a search string from checked attributes
+      const searchString = Object.entries(wishlistForm)
+        .filter(([_, obj]) => obj.checked) // Include only entries where checked is true
+        .map(([_, obj]) => obj.value) // Extract the value property
+        .join(' '); // Join the values into a space-separated string
+
+      console.log("searchString:", searchString);
+
       addToWishlist(universeCollectionId, wishlistModal_UCollectableID, searchString);
     } else {
       console.error("universeCollectionId is null");
@@ -465,9 +506,20 @@ export default function HomePage() {
 
   const handleWishlistFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    console.log(`${name} is now ${checked}`)
-    setWishlistForm((prev) => ({ ...prev, [name]: checked }));
-  }
+  
+    // Log the change for debugging
+    console.log(`${name} is now ${checked}`);
+  
+    // Update the wishlistForm state
+    setWishlistForm((prev) => ({
+      ...prev, // Keep all other attributes
+      [name]: {
+        ...prev[name], // Preserve the existing value property
+        checked: checked, // Update only the checked property
+      },
+    }));
+  };
+  
 
 
   //--------------------- handle form field ------------------------
@@ -1393,7 +1445,7 @@ export default function HomePage() {
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                      onClick={(event) => handleStarClick(item, item.universeCollectionId!, collectionId, event)}
+                                      onClick={(event) => handleStarClick(event, item, item.universeCollectableId, item.universeCollectionId!)}
                                     >
                                       {wishlistIds.includes(
                                         item.universeCollectableId
@@ -1582,7 +1634,7 @@ export default function HomePage() {
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectionId!, collectionId);
+                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
                                       }}
                                     >
                                       <FontAwesomeIcon
@@ -2080,6 +2132,7 @@ export default function HomePage() {
                     <WishlistModal
                       handleWishlistFormChange={handleWishlistFormChange}
                       maskedAttributes={maskedAttributes}
+                      wishlistForm={wishlistForm}
                       submitWishlistRequest={submitWishlistRequest}
                       itemData={specificTag}
                       onClose={starClickClose}

@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 
 interface ModalProps {
   submitWishlistRequest: () => void;
+  wishlistForm: Record<string, any>;
   itemData: Record<string, any>;
   onClose: () => void;
   isVisible: boolean;
@@ -13,7 +14,7 @@ interface ModalProps {
   handleWishlistFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ submitWishlistRequest, isVisible, onClose, itemData, maskedAttributes, handleWishlistFormChange }) => {
+const Modal: React.FC<ModalProps> = ({ submitWishlistRequest, wishlistForm, isVisible, onClose, itemData, maskedAttributes, handleWishlistFormChange }) => {
 
 
 
@@ -44,37 +45,38 @@ const Modal: React.FC<ModalProps> = ({ submitWishlistRequest, isVisible, onClose
           .map((attribute, index) => (
             <div key={index} className="mb-4 lg:max-w-lg">
               <div className="flex items-center space-x-4">
-                <label
-                  htmlFor={attribute}
-                  className="text-lg font-medium text-gray-700 dark:text-gray-300"
-                >
-                  {attribute}
-                </label>
-                {attribute === "image" ? (
+
+                {
+                  (attribute !== "owned" && attribute !== "image" && wishlistForm[attribute])&& (
+                    <>
+                      <label
+                        htmlFor={attribute}
+                        className="text-lg font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        {/* <span className="text-yellow-600"><strong>{attribute}</strong></span>: (wishlistForm[attribute] === "") ? {wishlistForm[attribute]} : "N/A"
+                         */}
+                         <span className="text-yellow-600"><strong>{attribute}</strong></span>: {wishlistForm[attribute]["value"] !== "" ? wishlistForm[attribute]["value"] : "N/A"}
+                      </label>
+                      <input
+                      type="checkbox"
+                      id={attribute}
+                      name={attribute}
+                      defaultChecked={false} // Start off as unchecked
+                      className="w-4 h-4 text-yellow-300 border-gray-300 rounded focus:ring focus:ring-yellow-300 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                      onChange={(e) => {handleWishlistFormChange(e)}}
+                      />
+                    </>
+                 )
+                }
+           
+                { (attribute === "image") && (
                   <div className="flex items-center space-x-4">
                     <img
                       src={imageUrl}
                       alt="Item"
                       className="w-16 h-16 object-cover rounded-lg"
                     />
-                    <a
-                      href={imageUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      {/* External Link Icon or Text */}
-                    </a>
                   </div>
-                ) : (
-                  <input
-                    type="checkbox"
-                    id={attribute}
-                    name={attribute}
-                    defaultChecked={false} // Start off as unchecked
-                    className="w-4 h-4 text-yellow-300 border-gray-300 rounded focus:ring focus:ring-yellow-300 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                    onChange={(e) => {handleWishlistFormChange(e)}}
-                  />
                 )}
               </div>
             </div>
