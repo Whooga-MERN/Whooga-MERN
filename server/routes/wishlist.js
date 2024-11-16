@@ -79,7 +79,7 @@ router.delete('/remove-wishlist', async (req, res) => {
 router.get('/wishlisted-collectables/:collection_universe_id', async (req, res) => {
     const { collection_universe_id } = req.params;
     if(!collection_universe_id || isNaN(collection_universe_id)) {
-        return res.status(400).json({ message: 'Invalid input for collection_id'} );
+        return res.status(400).json({ message: 'Invalid input for collection_universe_id'} );
     }
     console.log("collection_universe_id: ", collection_universe_id);
 
@@ -120,6 +120,56 @@ router.get('/wishlisted-collectables/:collection_universe_id', async (req, res) 
         res.status(500).send({ error: 'Internal server error' });
     }
 });
+
+router.get('/whooga-alert/my-wishlisted-matches/:collectionUniverseId', async (req, res) => {
+    const { collectionUniverseId } = req.params;
+
+    console.log("collection_universe_id: ", collectionUniverseId);
+    if(!collectionUniverseId || isNaN(collectionUniverseId)) {
+        return res.status(400).json({ message: 'Invalid input for collectionUniverseId'} );
+    }
+    console.log("collectionUniverseId: ", collectionUniverseId);
+
+    try {
+        console.log("Searching for matched results");
+        const results = await db
+        .select({
+            universeCollectableId: wishlist.universe_collectable_id,
+            title: scraped.title,
+            price: scraped.price,
+            link: scraped.link,
+            image_url: scraped.image_url
+        })
+        .from(wishlist)
+        .innerJoin(scraped, eq(wishlist.closest_match, scraped.id))
+        .where(eq(wishlist.collection_universe_id, collectionUniverseId))
+        .execute();
+
+        if(results.length < 1)
+            return res.status(200).json([]);
+
+        console.log("Finished fetching for matched results... beginning mapping");
+        const groupedResults = results.reduce((acc, result) => {
+            const { universeCollectableId, title, price, link, image_url } = result;
+            if (!acc[universeCollectableId]) {
+                acc[universeCollectableId] = {
+                    universe_collectable_id: universeCollectableId,
+                    scrapedData: []
+                };
+            }
+            acc[universeCollectableId].scrapedData.push({ title, price, link, image_url });
+            return acc;
+        }, {});
+
+        const formattedResults = Object.values(groupedResults);
+        console.log("Finished Mapping data");
+
+        res.status(200).json(formattedResults);
+    } catch (error) {
+        console.log(error);
+        res.status(400).send("Failed to fetch matches");
+    }
+})
 
 router.get('/whooga-alert/my-wishlisted/:collection_universe_id', async (req, res) => {
     const { collection_universe_id } = req.params;
