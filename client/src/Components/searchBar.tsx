@@ -113,7 +113,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleEnterPress}
               placeholder="What are you looking for today?"
-              className="flex-grow h-14 border-none ring-1 ring-gray-200 w-96 p-4 rounded-r-lg pl-32"
+              className="flex-grow border-none ring-1 ring-gray-200 w-96 p-4 rounded-sm"
             />
 
             {/* Search Button */}
