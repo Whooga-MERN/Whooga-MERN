@@ -153,7 +153,7 @@ createRoot(document.getElementById("root")!).render(
             }
           />
           <Route
-            path="/wishlist/:collectionId"
+            path="/wishlist/:collectionUniverseId"
             element={
               <ProtectedRoute>
                 <WishlistItems />

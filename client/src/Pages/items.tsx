@@ -442,7 +442,7 @@ export default function HomePage() {
   const submitWishlistRequest = () => {
     // RUN CODE TO SUBMIT WISHLIST REQUEST
     if (universeCollectionId && wishlistModal_UCollectableID) {
-      setWishlistIds((prev) => [...prev, wishlistModal_UCollectableID]);
+      
 
       // Create a search string from checked attributes
       const searchString = Object.entries(wishlistForm)
@@ -453,6 +453,8 @@ export default function HomePage() {
       console.log("searchString:", searchString);
 
       addToWishlist(universeCollectionId, wishlistModal_UCollectableID, searchString);
+
+      setWishlistIds((prev) => [...prev, wishlistModal_UCollectableID]);
     } else {
       console.error("universeCollectionId is null");
     }

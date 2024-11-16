@@ -20,7 +20,7 @@ function WishlistItems() {
   const [isUserIdFetched, setIsUserIdFetched] = useState(false);
   const [collectionName, setCollectionName] = useState<string>("");
 
-  const { collectionId } = useParams<{ collectionId: string }>();
+  const { collectionUniverseId } = useParams<{ collectionUniverseId: string }>();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -81,6 +81,7 @@ function WishlistItems() {
   // ------------------ fetch wishlist items ----------------------
   useEffect(() => {
     const storedName = localStorage.getItem("collectionName");
+    console.log("collectionUniverseId @wishlist_items.tsx:", collectionUniverseId);
     setCollectionName(storedName ? storedName : "");
   }, []);
 
@@ -92,36 +93,43 @@ function WishlistItems() {
   }
 
   interface WishlistItemsState {
-    collectionId: string;
+    collectionUniverseId: string;
     items: WishlistItem[];
   }
 
   const [myWishlistItems, setMyWishlistItems] = useState<WishlistItemsState>({
-    collectionId: "",
+    collectionUniverseId: "",
     items: [],
   });
   const [relatedWishlistItems, setRelatedWishlistItems] =
-    useState<WishlistItemsState>({ collectionId: "", items: [] });
+    useState<WishlistItemsState>({ collectionUniverseId: "", items: [] });
 
-  const fetchWishlistItems = async (collectionId: number) => {
+  const fetchWishlistItems = async (collectionUniverseId: number) => {
     // fetch items user listed
     try {
       // fetch items for collection
       const response = await fetch(
-        // `http://localhost:3000/wishlist/whooga-alert/my-wishlisted/${collectionId}`
+        // `http://localhost:3000/wishlist/whooga-alert/my-wishlisted/${collectionUniverseId}`
         // `http://localhost:3000/wishlist/whooga-alert/my-wishlisted/113`
-        buildPath(`wishlist/whooga-alert/my-wishlisted/${collectionId}`)
+        buildPath(`wishlist/whooga-alert/my-wishlisted-matches/${collectionUniverseId}`),
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
       );
 
       // if no wishlist items, return empty array
       if (!response.ok) {
-        const result = { collectionId: collectionId.toString(), items: [] };
+        const result = { collectionUniverseId: collectionUniverseId.toString(), items: [] };
         setMyWishlistItems(result);
       }
 
       const data = await response.json();
       const result = {
-        collectionId: collectionId.toString(),
+        collectionUniverseId: collectionUniverseId.toString(),
         items: data.length > 0 ? data : [],
       };
 
@@ -134,20 +142,20 @@ function WishlistItems() {
     try {
       // fetch items for collection
       const response = await fetch(
-        // `http://localhost:3000/wishlist/whooga-alert/related-wishlisted/${collectionId}`
+        // `http://localhost:3000/wishlist/whooga-alert/related-wishlisted/${collectionUniverseId}`
         //`http://localhost:3000/wishlist/whooga-alert/related-wishlisted/113`
-        buildPath(`wishlist/whooga-alert/related-wishlisted/${collectionId}`)
+        buildPath(`wishlist/whooga-alert/related-wishlisted/${collectionUniverseId}`)
       );
 
       // if no wishlist items, return empty array
       if (!response.ok) {
-        const result = { collectionId: collectionId.toString(), items: [] };
+        const result = { collectionUniverseId: collectionUniverseId.toString(), items: [] };
         setRelatedWishlistItems(result);
       }
 
       const data = await response.json();
       const result = {
-        collectionId: collectionId.toString(),
+        collectionUniverseId: collectionUniverseId.toString(),
         items: data.length > 0 ? data : [],
       };
 
@@ -159,10 +167,11 @@ function WishlistItems() {
 
   useEffect(() => {
     // when there is collection, try fetch wishlist
-    if (collectionId) {
-      fetchWishlistItems(Number(collectionId));
+    if (collectionUniverseId) {
+      console.log("Fetching wishlist items for collection:", collectionUniverseId);
+      fetchWishlistItems(Number(collectionUniverseId));
     }
-  }, [collectionId]);
+  }, [collectionUniverseId]);
 
   // useEffect(() => {
   //   console.log("Wishlist Related Items:", relatedWishlistItems);
@@ -180,9 +189,10 @@ function WishlistItems() {
 
       <div className="w-full px-16">
         {/* const collection = collections.find((col) => col.id === collectionId); */}
-        <div key={collectionId} className="my-8">
+        <div key={collectionUniverseId} className="my-8">
           <h3 className="font-semibold text-2xl w-fit text-black bg-yellow-300 rounded-full px-5 py-2">
             {collectionName}
+            {collectionUniverseId}
           </h3>
 
           {myWishlistItems.items.length > 0 ? (
