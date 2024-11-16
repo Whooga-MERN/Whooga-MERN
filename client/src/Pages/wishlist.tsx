@@ -123,8 +123,9 @@ export default function Collections() {
           })
         );
 
+
         const collectionIds = data.map(
-          (col: { collection_id: string }) => col.collection_id
+          (col: { collection_id: string, collection_universe_id: string }) => [col.collection_id, col.collection_universe_id]
         );
         localStorage.setItem("collectionIds", JSON.stringify(collectionIds));
 
@@ -135,8 +136,12 @@ export default function Collections() {
     }
   }, [isUserIdFetched, userId, JWT]);
 
-  function handleClick(collectionUId: number) {
-    const collection = collections.find((col) => col.id === collectionUId);
+  function handleClick(collectionUniverseId: number) {
+    console.log("collectionUniverseId: ", collectionUniverseId);
+    console.log("collections: ", collections);
+    const collection = collections.find((col) => col.collectionUniverseId === collectionUniverseId);
+    console.log("collectionUId: ", collectionUniverseId);
+    console.log("collection upon being clicked: ", collection);
     console.log("sending UCID: ", collection.collectionUniverseId);
     localStorage.setItem(
       "collectionUniverseId",
@@ -144,7 +149,7 @@ export default function Collections() {
     );
     localStorage.setItem("collectionName", collection.name);
     console.log("collection upon being clicked: ", collection);
-    navigate(`/wishlist/${collectionUId}`);
+    navigate(`/wishlist/${collectionUniverseId}`);
     console.log("clicked collection");
   }
 
@@ -225,18 +230,18 @@ export default function Collections() {
       </div>
 
       {/* collections */}
-      <div className="w-full px-32">
+      <div className="w-full px-32 ">
         <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
           {debouncedSearchTerm.length > 0 ? (
             searchResults && searchResults.length > 0 ? (
               searchResults.map((result: any) => {
-                const { collections, collectionUniverses } = result;
+                const { collections: collection, collectionUniverses: collectionUniverse } = result;
 
                 return (
-                  <div key={collections.collection_id}>
+                  <div key={collection.collection_id}>
                     <div
                       className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                      onClick={() => handleClick(collections.collectionUniverseId)}
+                      onClick={() => handleClick(collection.collection_universe_id)}
                     >
                       <div
                         style={{
@@ -245,7 +250,7 @@ export default function Collections() {
                           position: "absolute",
                         }}
                       >
-                        {collections.newListing ? (
+                        {collection.newListing ? (
                           <div className="badge h-8 text-lg font-bold badge-primary">
                             WHOOGA!
                           </div>
@@ -261,13 +266,13 @@ export default function Collections() {
                             width: "95%",
                             aspectRatio: "1 / 1",
                           }}
-                          src={collections.collection_pic}
-                          alt={collections.collection_id}
+                          src={collection.collection_pic}
+                          alt={collection.collection_id}
                         />
                       </figure>
                       <div className="card-body">
                         <h2 className="card-title">
-                          {collectionUniverses.name + " Wishlist"}
+                          {collection.name + " Wishlist"}
                         </h2>
                       </div>
                     </div>

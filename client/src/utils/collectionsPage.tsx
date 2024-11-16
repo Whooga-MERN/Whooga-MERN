@@ -34,7 +34,20 @@ export const fetchCollectionSearchResults = async (
     }
 
     const jsonResponse = await response.json();
-    // console.log("search result: ", jsonResponse);
+    
+    /**
+     * collections search result [{
+        "collection_id": 151,
+        "collection_pic": "https://whooga-images.s3.us-east-1.amazonaws.com/10586b65-052c-43bc-aa57-931d2dea4307-alienclub25.jpg",
+        "collection_universe_id": 217,
+        "custom_attributes": ["Back Color"],
+        "favorite_attributes": ["Name", "tag number", "create at", "create by"],
+        "hidden_attributes": null,
+        "name": "Path Tags",
+        "user_id": 38
+      }
+     */
+    console.log("search result: ", jsonResponse);
     return jsonResponse;
   } catch (e) {
     console.error("Error thrown when fetching search results: ${e}");

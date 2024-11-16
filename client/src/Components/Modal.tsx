@@ -18,7 +18,7 @@ const Modal: React.FC<ModalProps> = ({ isVisible, onClose, itemData }) => {
     "/placeholder.jpg";
 
   return (
-    <div className="fixed inset-0 bg-opacity-10 backdrop-blur-[2px] flex justify-center items-center bg-gray-600">
+    <div className="fixed inset-0 bg-opacity-10 backdrop-blur-[2px] flex justify-center items-center z-50 bg-gray-600">
       <div className="modal-box max-w-2xl">
         <div className="relative">
           <div className="absolute top-0 right-0">

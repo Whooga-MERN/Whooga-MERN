@@ -129,15 +129,17 @@ export default function Collections() {
         console.log("collectionIds: ", collectionIds);
         localStorage.setItem("collectionIds", JSON.stringify(collectionIds));
 
-        //console.log("Collections as collection:", collections);
+        console.log("Collections as collection:", collections);
       };
 
       fetchCollections();
     }
   }, [isUserIdFetched, userId, JWT]);
 
-  function handleClick(collectionUniverseId: number) {
-    const collection = collections.find((col) => col.id === collectionUniverseId);
+  function handleClick(collectionUniverseId: any) {
+    console.log("collectionUniverseId: ", collectionUniverseId);
+    console.log("collections: ", collections);
+    const collection = collections.find((col) => col.collectionUniverseId === collectionUniverseId);
     console.log("collection upon being clicked: ", collection);
     if (collection) {
       localStorage.setItem(
@@ -244,13 +246,13 @@ export default function Collections() {
           {debouncedSearchTerm.length > 0 ? (
             searchResults && searchResults.length > 0 ? (
               searchResults.map((result: any) => {
-                const { collections, collectionUniverses } = result;
+                const { collections: collection, collectionUniverses: collectionUniverse } = result;
 
                 return (
-                  <div key={collections.collection_id}>
+                  <div key={collection.collection_id}>
                     <div
-                      className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                      onClick={() => handleClick(collections.collectionUniverseId)}
+                      className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300 bg-black"
+                      onClick={() => handleClick(collection.collection_universe_id)}
                     >
                       <div
                         style={{
@@ -259,7 +261,7 @@ export default function Collections() {
                           position: "absolute",
                         }}
                       >
-                        {collections.newListing ? (
+                        {collection.newListing ? (
                           <div className="badge h-8 text-lg font-bold badge-primary">
                             WHOOGA!
                           </div>
@@ -275,13 +277,13 @@ export default function Collections() {
                             width: "95%",
                             aspectRatio: "1 / 1",
                           }}
-                          src={collections.collection_pic}
-                          alt={collections.collection_id}
+                          src={collection.collection_pic}
+                          alt={collection.collection_id}
                         />
                       </figure>
                       <div className="card-body">
                         <h2 className="card-title">
-                          {collectionUniverses.name}
+                          {collectionUniverse.name}
                         </h2>
                       </div>
                     </div>
@@ -296,7 +298,7 @@ export default function Collections() {
               <div key={collection.id}>
                 <div
                   className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                  onClick={() => handleClick(collection.id)}
+                  onClick={() => handleClick(collection.collectionUniverseId)}
                 >
                   <div
                     style={{

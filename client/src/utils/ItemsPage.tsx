@@ -253,12 +253,14 @@ export const fetchOwnedSearchResults = async (
 
 export const addToWishlist = async (
   collectionId: string,
-  universeCollectableId: number
+  universeCollectableId: number,
+  sourceAttributesString: string
 ) => {
-  if (!collectionId || !universeCollectableId) {
-    console.error("Missing collectionId or universeCollectableId", {
+  if (!collectionId || !universeCollectableId || !sourceAttributesString) {
+    console.error("Missing collectionId or universeCollectableId or sourceAttributesString", {
       collectionId,
       universeCollectableId,
+      sourceAttributesString,
     });
     throw new Error("Missing a request parameter");
   }
@@ -274,6 +276,7 @@ export const addToWishlist = async (
       body: JSON.stringify({
         collection_universe_id: collectionId,
         universe_collectable_id: universeCollectableId,
+        sourceAttributesString: sourceAttributesString,
       }),
     });
 
