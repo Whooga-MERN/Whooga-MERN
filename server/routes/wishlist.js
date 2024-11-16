@@ -202,7 +202,7 @@ router.get('/whooga-alert/my-wishlisted/:collection_universe_id', async (req, re
     
         console.log("whoogaResults: ", whoogaResults);
         
-        res.status(400).json(whoogaResults);
+        res.status(200).json(whoogaResults);
     } catch (error) {
         console.log(error);
         res.status(500).send("Grabbing whooga wishlist results failed");
