@@ -27,6 +27,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   >([]);
 
   useEffect(() => {
+    if (attributes && attributes.length > 0) {
+      setSelectedOption(attributes[0]);
+    }
+  }, [attributes]);
+
+  useEffect(() => {
     if (resetDropdown) {
       setSelectedOption(attributes[0]);
       setSearchTags([]);
@@ -87,43 +93,46 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <div className="flex flex-col justify-center mt-8 ">
       <div className="relative items-center">
-        {/* Dropdown Button */}
-        <div className="absolute inset-y-0 left-0 flex items-center">
-          <button
-            id="dropdown-button"
-            className="flex-shrink-0 z-50 inline-flex items-center h-full px-4  text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200 dark:bg-yellow-100 dark:hover:bg-yellow-200 dark:text-black"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            {selectedOption}
-            <IoMdArrowDropdown className="text-2xl pl-1" />
-          </button>
+        <div className="flex items-center">
+          {/* Dropdown Button */}
+          <div className="flex items-center">
+            {/* Dropdown Button */}
+            <button
+              id="dropdown-button"
+              className="flex-shrink-0 z-50 inline-flex items-center h-14 px-4 text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200 dark:bg-yellow-100 dark:hover:bg-yellow-200 dark:text-black"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              {selectedOption}
+              <IoMdArrowDropdown className="text-2xl pl-1" />
+            </button>
+
+            {/* Input Box */}
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleEnterPress}
+              placeholder="What are you looking for today?"
+              className="flex-grow border-none ring-1 ring-gray-200 w-96 p-4 rounded-sm"
+            />
+
+            {/* Search Button */}
+            <button
+              className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
+              onClick={handleSearch}
+            >
+              Search
+              <FaMagnifyingGlass />
+            </button>
+            <button
+              className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
+              onClick={handleJump}
+            >
+              Jump
+              <FaMagnifyingGlass />
+            </button>
+          </div>
         </div>
-
-        {/* Input Box */}
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={handleEnterPress}
-          placeholder="What are you looking for today?"
-          className="flex-grow border-none ring-1 ring-gray-200 w-96 p-4 rounded-lg pl-32"
-        />
-
-        {/* Search Button */}
-        <button
-          className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
-          onClick={handleSearch}
-        >
-          Search
-          <FaMagnifyingGlass />
-        </button>
-        <button
-          className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
-          onClick={handleJump}
-        >
-          Jump
-          <FaMagnifyingGlass />
-        </button>
 
         {/* Dropdown List */}
         {isDropdownOpen && (

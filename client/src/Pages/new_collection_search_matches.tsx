@@ -39,7 +39,7 @@ function NewCollectionSearchMatches () {
                                 {collection.name}
                             </h2>
                             <div className="card-actions justify-end">
-                                <Link to={`/items/${collection.collection_universe_id}`} className="btn btn-primary">View Collection</Link>
+                                <Link to={`/universe-items/${collection.collection_universe_id}`} className="btn btn-primary">View Collection</Link>
                             </div>
                             </div>
                         </div>

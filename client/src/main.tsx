@@ -28,6 +28,7 @@ import BulkEditStep2 from "./Pages/bulk_edit_step_2.tsx";
 import PrivacyPolicy from "./Pages/privacypolicy.tsx";
 import ContactUs from "./Pages/contactus.tsx";
 import OptIn from "./Pages/OptIn.tsx";
+import UniverseItems from "./Pages/universe_items.tsx";
 
 import "./custom-amplify-styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -188,6 +189,14 @@ createRoot(document.getElementById("root")!).render(
             element={
               <ProtectedRoute>
                 <BulkEditStep2 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/universe-items/:universeCollectionId"
+            element={
+              <ProtectedRoute>
+                <UniverseItems />
               </ProtectedRoute>
             }
           />
