@@ -1,0 +1,1 @@
+ALTER TABLE "wishlist" ALTER COLUMN "image_vector" SET NOT NULL;

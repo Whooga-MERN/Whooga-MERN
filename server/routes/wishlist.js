@@ -6,33 +6,42 @@ const { db } = require('../config/db');
 const router = express.Router();
 
 router.post('/add-wishlist', async (req, res) => {
-    const {collection_universe_id, universe_collectable_id} = req.body;
+    const {collection_universe_id, universe_collectable_id, sourceAttributesString} = req.body;
 
-    if(!collection_universe_id, !universe_collectable_id){
-        console.log("No collection_universe_id or universe_collectable_id given");
+    if(!collection_universe_id, !universe_collectable_id, !sourceAttributesString){
+        console.log("No collection_universe_id or universe_collectable_id or sourceAttributesString given");
         return res.status(404).send({ error: 'Not Given either collection_id or universe_collectable_id'});
     }
     console.log("collection_universe_id: ", collection_universe_id );
     console.log("universe_collectable_id: ", universe_collectable_id);
+    console.log("sourceAttributesString: ", sourceAttributesString);
 
 
     try {
         console.log("Starting query for sourceUniverse");
         const fetchSourceUniverse = await db
-            .select({ source_universe: collectionUniverses.source_universe })
+            .select({
+                source_universe: collectionUniverses.source_universe,
+                universe_name: collectionUniverses.name
+            })
             .from(collectionUniverses)
             .where(eq(collectionUniverses.collection_universe_id, collection_universe_id))
             .execute();
         console.log("Finished query for sourceUniverse");
     
         let sourceUniverse;
+        let universe_name;
         try {
             sourceUniverse = fetchSourceUniverse[0].source_universe;
+            universe_name = fetchSourceUniverse[0].universe_name;
         } catch (error) {
             console.log(error);
             return res.status(404).send("Error finding sourceUniverse");
         }
     
+        console.log("universe_name: ", universe_name);
+        const search_string = universe_name + " " + sourceAttributesString;
+        console.log("search_string: ", search_string);
         console.log("sourceUniverse: ", sourceUniverse);
         console.log("\nStarting insert into wishlist table");
         const postWishlist = await db
@@ -40,7 +49,8 @@ router.post('/add-wishlist', async (req, res) => {
             .values({
                 source_universe: sourceUniverse,
                 collection_universe_id: collection_universe_id,
-                universe_collectable_id: universe_collectable_id
+                universe_collectable_id: universe_collectable_id,
+                search_string: search_string
             })
             .execute();
         console.log(postWishlist);
