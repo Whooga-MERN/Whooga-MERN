@@ -100,6 +100,7 @@ export const fetchOwnedCollectables = async (
   sortBy: string,
   sortOrder: string
 ) => {
+  console.log("page: ", page);
   if (!collectionId) {
     console.error("Missing collectionId", { collectionId });
     throw new Error("Missing a request parameter");
@@ -111,6 +112,8 @@ export const fetchOwnedCollectables = async (
     const url = buildPath(
       `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}&sortBy=${handleSortBy}&order=${sortOrder}`
     );
+
+    console.log("owned: ", url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -127,6 +130,8 @@ export const fetchOwnedCollectables = async (
     }
 
     const jsonResponse = await response.json();
+    const totalMatchingCollectables =
+      jsonResponse.totalMatchingCollectables || 0;
 
     const collectables = jsonResponse.collectables
       .map((item: any) => ({
@@ -146,7 +151,7 @@ export const fetchOwnedCollectables = async (
 
     return {
       collectables,
-      totalMatchingCollectables: jsonResponse.totalMatchingCollectables,
+      totalMatchingCollectables,
     };
   } catch (e) {
     console.error(`Error thrown when fetching universe collectables: ${e}`);
@@ -374,6 +379,58 @@ export const fetchUniverseJumpResults = async (
 
   const url = buildPath(
     `universe-collectable/jump?collectionUniverseId=${universeCollectionId}&${queryParams}&itemsPerPage=12&sortBy=${handleSortBy}&order=${sortOrder}`
+  );
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 404) {
+      console.log("No matching collectables found.");
+      return [];
+    }
+
+    const jsonResponse = await response.json();
+    return jsonResponse;
+  } catch (e) {
+    console.error(`Error thrown when fetching jump search results: ${e}`);
+    throw e;
+  }
+};
+
+export const fetchOwnedJumpResults = async (
+  searchTerm: { attribute: string; term: string }[],
+  userId: string,
+  collectionId: string,
+  sortBy: string,
+  sortOrder: string
+) => {
+  if (!userId || !collectionId || searchTerm.length === 0) {
+    console.error("Missing userId, collectionId, or search tags", {
+      userId,
+      collectionId,
+      searchTerm,
+    });
+    throw new Error("Missing a request parameter");
+  }
+
+  const handleSortBy = sortBy.replace(/\s+/g, "_");
+
+  const queryParams = searchTerm
+    .map(
+      ({ attribute, term }) =>
+        `attributeToSearch=${encodeURIComponent(
+          attribute.replace(/\s+/g, "_").toLowerCase()
+        )}&searchTerm=${encodeURIComponent(term)}`
+    )
+    .join("&");
+
+  const url = buildPath(
+    `collectable/jump?collectionId=${collectionId}&${queryParams}&itemsPerPage=12&sortBy=${handleSortBy}&order=${sortOrder}`
   );
 
   try {
