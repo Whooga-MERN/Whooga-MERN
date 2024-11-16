@@ -47,9 +47,7 @@ export default function HomePage() {
   const [jumpSearchResults, setJumpSearchResults] = useState<any[]>([]);
 
   const [showModal, setShowModal] = useState(false);
-  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
-    null
-  );
+  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(null);
   const [isCollectionOwned, setIsCollectionOwned] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
@@ -60,6 +58,8 @@ export default function HomePage() {
   const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isPublished, setIsPublished] = useState(false);
+
+  const isOwnedMap = new Map<string, boolean>();
 
   const [userId, setUserId] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
@@ -202,6 +202,7 @@ export default function HomePage() {
       if (favReponse.ok) {
         const data = await favReponse.json();
         setFavoriteAttributes(data[0].favoriteAttributes);
+        console.log("Favorite Attributes: ", data[0].favoriteAttributes);
         const allAttributes = data[0].favoriteAttributes.concat(
           maskedAttributes.filter(
             (attr) => !data[0].favoriteAttributes.includes(attr)
@@ -249,6 +250,11 @@ export default function HomePage() {
           initialPage,
           ITEMS_PER_PAGE
         );
+        console.log("ownedCollectables", ownedCollectables);
+        ownedCollectables.collectables.forEach((collectable: any) => {
+          isOwnedMap.set(collectable.universeCollectableId, true);
+        });
+        console.log("isOwnedMap0", isOwnedMap);
         setOwnedCollectables(ownedCollectables.collectables);
         setOwnedCollectablesCount(ownedCollectables.totalMatchingCollectables);
 
@@ -258,12 +264,20 @@ export default function HomePage() {
             initialPage,
             ITEMS_PER_PAGE
           );
+          universe_collectables.collectables.forEach((collectable: any) => {
+            if (!isOwnedMap.has(collectable.universeCollectableId))
+            {
+              isOwnedMap.set(collectable.universeCollectableId, false);
+            } 
+          });
           setUniverseCollectables(universe_collectables.collectables);
           setUniverseCollectablesCount(
             universe_collectables.totalMatchingCollectables
           );
         }
       }
+
+      console.log("isOwnedMap", isOwnedMap);
     };
 
     getUniverseCollectionId();
@@ -280,12 +294,14 @@ export default function HomePage() {
   };
 
   // edit collectible
-  const openEdit = (item: Record<string, any>) => {
-    setSpecificTag(item);
+  const openEdit = async (item: Record<string, any>) => {
+    await setSpecificTag(item);
+    console.log("specificTag", specificTag);
     setShowEdit(true);
   };
 
   const closeEdit = () => {
+    console.log(specificTag);
     setShowEdit(false);
     setSpecificTag(null);
   };
@@ -958,6 +974,15 @@ export default function HomePage() {
                             onClick={openModal}
                           >
                             New Collectable
+                          </a>
+                        </li>
+
+                        <li>
+                          <a
+                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                            onClick={openModal}
+                          >
+                            Edit Favorite Attributes
                           </a>
                         </li>
 
@@ -1838,6 +1863,7 @@ export default function HomePage() {
                                         onChange={(e) =>
                                           handleOwnedChange(e.target.checked)
                                         }
+                                        checked={specificTag ? isOwnedMap.get(specificTag.universeCollectableId) : false}
                                         className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
                                       />
                                       <label
