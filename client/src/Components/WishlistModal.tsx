@@ -44,7 +44,7 @@ const Modal: React.FC<ModalProps> = ({ submitWishlistRequest, wishlistForm, isVi
           .filter((attr) => attr !== null)
           .map((attribute, index) => (
             <div key={index} className="mb-4 lg:max-w-lg">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center  space-x-4">
 
                 {
                   (attribute !== "owned" && attribute !== "image" && wishlistForm[attribute])&& (
@@ -74,7 +74,7 @@ const Modal: React.FC<ModalProps> = ({ submitWishlistRequest, wishlistForm, isVi
                     <img
                       src={imageUrl}
                       alt="Item"
-                      className="w-16 h-16 object-cover rounded-lg"
+                      className="w-24 h-24 object-cover rounded-lg"
                     />
                   </div>
                 )}

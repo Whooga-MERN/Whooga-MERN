@@ -428,34 +428,6 @@ export default function HomePage() {
       setWishlistModal(true);
       setSpecificTag(item);
       setWishlistModal_UCollectableID(universeCollectableId);
-
-      // const initialFormData = specificTag!.attributes.reduce(
-      //   (
-      //     acc: { [x: string]: any },
-      //     attr: { name: string | number; value: any }
-      //   ) => {
-      //     acc[attr.value] = false; // Use attribute value as the key and set its value to false
-      //     return acc;
-      //   },
-      //   {} as Record<string, boolean> // Ensure the resulting object has boolean values
-      // );
-
-      // const Other = specificTag!.attributes.reduce(
-      //   (
-      //     acc: { [x: string]: any },
-      //     attr: { name: string | number; value: any }
-      //   ) => {
-      //     acc[attr.name] = attr.value;
-      //     return acc;
-      //   },
-      //   {} as Record<string, string>
-      // );
-
-      // console.log("OTHER:", Other);
-      
-      
-      // setWishlistForm(initialFormData);
-      // console.log("attributesObject", initialFormData);
     }
   };
 
@@ -492,13 +464,8 @@ export default function HomePage() {
 
   const starClickClose = () => {
     // Cancel the wishlist request
-
-    const attributesObject = maskedAttributes.reduce((acc: Record<string, boolean>, key) => {
-      acc[key] = false;
-      return acc;
-    }, {});
     
-    setWishlistForm(attributesObject);
+    setWishlistForm({});
     setWishlistModal(false);
     setSpecificTag(null);
     setWishlistModal_UCollectableID(null);
@@ -1445,7 +1412,10 @@ export default function HomePage() {
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                      onClick={(event) => handleStarClick(event, item, item.universeCollectableId, item.universeCollectionId!)}
+                                      onClick={(event) => {
+                                        event.stopPropagation(); // Prevent event bubbling
+                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                      }}
                                     >
                                       {wishlistIds.includes(
                                         item.universeCollectableId
@@ -1527,103 +1497,6 @@ export default function HomePage() {
                             // GRID VIEW
                             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                               {_default_collectables.map((item) => (
-                                // <div
-                                //   key={`${item.universeCollectableId}-default-search`}
-                                // >
-                                //   {/* <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-green-500"> */}
-                                //   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                //     <div className="h-22 w-30">
-                                //       <div className="absolute top-2 right-2 flex space-x-2"
-                                //         onClick={(event) => {
-                                //           event.stopPropagation(); // Prevent event bubbling
-                                //           handleStarClick(event, item, item.universeCollectionId!, collectionId );
-                                //         }}
-                                //       >
-                                //         <div
-                                //           className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] border-red-50 border hover:text-yellow-600 z-10 rounded-full"
-                                      
-                                //         >
-                                //           {/* {wishlistIds.includes(
-                                //             item.universeCollectableId
-                                //           ) ? (
-                                //             <FontAwesomeIcon
-                                //               icon={faSolidStar}
-                                //               style={{ color: "#EDC307" }}
-                                //             />
-                                //           ) : (
-                                //             <FontAwesomeIcon
-                                //               icon={faRegularStar}
-                                //               style={{ color: "#EDC307" }}
-                                //             />
-                                //           )} */}
-                                //             <FontAwesomeIcon
-                                //               icon={wishlistIds.includes(item.universeCollectableId) ? faSolidStar : faRegularStar}
-                                //               style={{ color: "#EDC307", position: "relative", zIndex: 0 }}
-                                          
-                                //             />
-                                //         </div>
-                                //       </div>
-                                //       <img
-                                //         src={
-                                //           item.attributes?.find(
-                                //             (attr: any) => attr.name === "image"
-                                //           )?.value || "/placeholder.jpg"
-                                //         }
-                                //         alt={
-                                //           item.attributes?.find(
-                                //             (attr: any) => attr.name === "name"
-                                //           )?.value || "No Name"
-                                //         }
-                                //         width={400}
-                                //         height={400}
-                                //         className="rounded-md shadow-sm object-cover pt-3"
-                                //         onClick={() => handleOpenModal(item)}
-                                //       />
-                                //     </div>
-
-                                //     <div className="space-y-1 p-4">
-                                //       {item.attributes
-                                //         .filter(
-                                //           (attribute: any) =>
-                                //             attribute.name !== "image" &&
-                                //             attribute.name !== "owned"
-                                //         )
-                                //         .slice(0, 3)
-                                //         .map(
-                                //           (attribute: any, index: number) => (
-                                //             <p
-                                //               key={`${
-                                //                 attribute.slug || attribute.name
-                                //               }-default-search`}
-                                //               className={
-                                //                 index === 0
-                                //                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                //                   : "text-md font-semibold pl-4 capitalize truncate"
-                                //               }
-                                //             >
-                                //               {`${attribute.value}`}
-                                //             </p>
-                                //           )
-                                //         )}
-
-                                //       <div className="pt-3 pb-2 text-center">
-                                //         <button
-                                //           className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                //           onClick={() => openEdit(item)}
-                                //         >
-                                //           <FaRegEdit />
-                                //         </button>
-                                //         <button
-                                //           className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                //           onClick={() => handleDelete(item)}
-                                //         >
-                                //           <FaRegTrashCan />
-                                //         </button>
-                                //       </div>
-                                //     </div>
-                                //   </div>
-                                // </div>
-
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
                                   className="relative hover:shadow-xl dark:bg-base-300 rounded-xl"
@@ -1724,7 +1597,10 @@ export default function HomePage() {
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                      onClick={(event) => handleStarClick(item, item.universeCollectionId!, collectionId, event)}
+                                      onClick={(event) => {
+                                        event.stopPropagation(); // Prevent event bubbling
+                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                      }}
                                     >
                                       {wishlistIds.includes(
                                         item.universeCollectableId
@@ -1812,87 +1688,80 @@ export default function HomePage() {
                                     item.collectionId ||
                                     `item-${index}`
                                   }
+                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl"
                                 >
-                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                    <div className="h-22 w-30">
-                                      <div className="absolute top-2 right-2 flex space-x-2">
-                                        <button
-                                          className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                          onClick={(event) => handleStarClick(item, item.universeCollectionId!, collectionId, event)}
-                                        >
-                                          {wishlistIds.includes(
-                                            item.universeCollectableId ||
-                                              item.collectionId
-                                          ) ? (
-                                            <FontAwesomeIcon
-                                              icon={faSolidStar}
-                                              style={{ color: "#EDC307" }}
-                                            />
-                                          ) : (
-                                            <FontAwesomeIcon
-                                              icon={faRegularStar}
-                                              style={{ color: "#EDC307" }}
-                                            />
-                                          )}
-                                        </button>
-                                      </div>
-                                      <img
-                                        src={
-                                          item.attributes?.find(
-                                            (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                  <div className="h-22 w-30 relative">
+                                    {/* Star Button */}
+                                    <button
+                                      className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
+                                      onClick={(event) => {
+                                        event.stopPropagation(); // Prevent event bubbling
+                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                      }}
+                                    >
+                                      <FontAwesomeIcon
+                                        icon={
+                                          wishlistIds.includes(item.universeCollectableId)
+                                            ? faSolidStar
+                                            : faRegularStar
                                         }
-                                        alt={
-                                          item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
-                                          )?.value || "No Name"
-                                        }
-                                        width={400}
-                                        height={400}
-                                        className="rounded-md shadow-sm object-cover pt-3"
-                                        onClick={() => handleOpenModal(item)}
+                                        style={{ color: "#EDC307" }}
                                       />
-                                    </div>
+                                    </button>
 
-                                    <div className="space-y-1 p-4">
-                                      {item.attributes
-                                        .filter(
-                                          (attribute: any) =>
-                                            attribute.name !== "image" &&
-                                            attribute.name !== "owned"
-                                        )
-                                        .slice(0, 3)
-                                        .map(
-                                          (attribute: any, index: number) => (
-                                            <p
-                                              key={`${
-                                                attribute.slug || attribute.name
-                                              }-search`}
-                                              className={
-                                                index === 0
-                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                                  : "text-md font-semibold pl-4 capitalize truncate"
-                                              }
-                                            >
-                                              {`${attribute.value}`}
-                                            </p>
-                                          )
-                                        )}
+                                    {/* Image */}
+                                    <img
+                                      src={
+                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
+                                        "/placeholder.jpg"
+                                      }
+                                      alt={
+                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
+                                        "No Name"
+                                      }
+                                      width={400}
+                                      height={400}
+                                      className="rounded-md shadow-sm object-cover pt-3"
+                                      onClick={() => handleOpenModal(item)}
+                                    />
+                                  </div>
 
-                                      <div className="pt-3 pb-2 text-center">
-                                        <button
-                                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                          onClick={() => openEdit(item)}
+                                  {/* Attributes Section */}
+                                  <div className="space-y-1 p-4">
+                                    {item.attributes
+                                      .filter(
+                                        (attribute: any) =>
+                                          attribute.name !== "image" && attribute.name !== "owned"
+                                      )
+                                      .slice(0, 3)
+                                      .map((attribute: any, index: number) => (
+                                        <p
+                                          key={`${
+                                            attribute.slug || attribute.name
+                                          }-default-search`}
+                                          className={
+                                            index === 0
+                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                              : "text-md font-semibold pl-4 capitalize truncate"
+                                          }
                                         >
-                                          <FaRegEdit />
-                                        </button>
-                                        <button
-                                          className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                          onClick={() => handleDelete(item)}
-                                        >
-                                          <FaRegTrashCan />
-                                        </button>
-                                      </div>
+                                          {`${attribute.value}`}
+                                        </p>
+                                      ))}
+
+                                    <div className="pt-3 pb-2 text-center">
+                                      <button
+                                        className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => openEdit(item)}
+                                      >
+                                        <FaRegEdit />
+                                      </button>
+                                      <button
+                                        className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => handleDelete(item)}
+                                      >
+                                        <FaRegTrashCan />
+                                      </button>
                                     </div>
                                   </div>
                                 </div>
@@ -1921,7 +1790,10 @@ export default function HomePage() {
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                      onClick={(event) => handleStarClick(item, item.universeCollectionId!, collectionId, event)}
+                                      onClick={(event) => {
+                                        event.stopPropagation(); // Prevent event bubbling
+                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                      }}
                                     >
                                       {wishlistIds.includes(
                                         item.universeCollectableId
@@ -2005,92 +1877,84 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className={` ${
-                                    item.universeCollectableId ===
-                                    highlightedItemId
+                                  className={`relative hover:shadow-xl dark:bg-base-300 rounded-xl ${
+                                    item.universeCollectableId === highlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}
                                 >
-                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                    <div className="h-22 w-30">
-                                      <div className="absolute top-2 right-2 flex space-x-2">
-                                        <button
-                                          className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
-                                          onClick={(event) => handleStarClick(item, item.universeCollectionId!, collectionId, event)}
-                                        >
-                                          {wishlistIds.includes(
-                                            item.universeCollectableId
-                                          ) ? (
-                                            <FontAwesomeIcon
-                                              icon={faSolidStar}
-                                              style={{ color: "#EDC307" }}
-                                            />
-                                          ) : (
-                                            <FontAwesomeIcon
-                                              icon={faRegularStar}
-                                              style={{ color: "#EDC307" }}
-                                            />
-                                          )}
-                                        </button>
-                                      </div>
-                                      <img
-                                        src={
-                                          item.attributes?.find(
-                                            (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                  <div className="h-22 w-30 relative">
+                                    {/* Star Button */}
+                                    <button
+                                      className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
+                                      onClick={(event) => {
+                                        event.stopPropagation(); // Prevent event bubbling
+                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                      }}
+                                    >
+                                      <FontAwesomeIcon
+                                        icon={
+                                          wishlistIds.includes(item.universeCollectableId)
+                                            ? faSolidStar
+                                            : faRegularStar
                                         }
-                                        alt={
-                                          item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
-                                          )?.value || "No Name"
-                                        }
-                                        width={400}
-                                        height={400}
-                                        className="rounded-md shadow-sm object-cover pt-3"
-                                        onClick={() => handleOpenModal(item)}
+                                        style={{ color: "#EDC307" }}
                                       />
-                                    </div>
+                                    </button>
 
-                                    <div className="space-y-1 p-4">
-                                      {item.attributes
-                                        .filter(
-                                          (attribute: any) =>
-                                            attribute.name !== "image" &&
-                                            attribute.name !== "owned"
-                                        )
-                                        .slice(0, 3)
-                                        .map(
-                                          (attribute: any, index: number) => (
-                                            <p
-                                              key={`${
-                                                attribute.slug || attribute.name
-                                              }-jump`}
-                                              className={
-                                                index === 0
-                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                                  : "text-md font-semibold pl-4 capitalize truncate"
-                                              }
-                                            >
-                                              {`${attribute.value}`}
-                                            </p>
-                                          )
-                                        )}
+                                    {/* Image */}
+                                    <img
+                                      src={
+                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
+                                        "/placeholder.jpg"
+                                      }
+                                      alt={
+                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
+                                        "No Name"
+                                      }
+                                      width={400}
+                                      height={400}
+                                      className="rounded-md shadow-sm object-cover pt-3"
+                                      onClick={() => handleOpenModal(item)}
+                                    />
+                                  </div>
 
-                                      <div className="pt-3 pb-2 text-center">
-                                        <button
-                                          className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                          onClick={() => openEdit(item)}
+                                  {/* Attributes Section */}
+                                  <div className="space-y-1 p-4">
+                                    {item.attributes
+                                      .filter(
+                                        (attribute: any) =>
+                                          attribute.name !== "image" && attribute.name !== "owned"
+                                      )
+                                      .slice(0, 3)
+                                      .map((attribute: any, index: number) => (
+                                        <p
+                                          key={`${
+                                            attribute.slug || attribute.name
+                                          }-default-search`}
+                                          className={
+                                            index === 0
+                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                              : "text-md font-semibold pl-4 capitalize truncate"
+                                          }
                                         >
-                                          <FaRegEdit />
-                                        </button>
-                                        <button
-                                          className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                          onClick={() => handleDelete(item)}
-                                        >
-                                          <FaRegTrashCan />
-                                        </button>
-                                      </div>
+                                          {`${attribute.value}`}
+                                        </p>
+                                      ))}
+
+                                    <div className="pt-3 pb-2 text-center">
+                                      <button
+                                        className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => openEdit(item)}
+                                      >
+                                        <FaRegEdit />
+                                      </button>
+                                      <button
+                                        className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        onClick={() => handleDelete(item)}
+                                      >
+                                        <FaRegTrashCan />
+                                      </button>
                                     </div>
                                   </div>
                                 </div>
