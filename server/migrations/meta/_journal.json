@@ -197,6 +197,27 @@
       "when": 1731436261910,
       "tag": "0024_fearless_roland_deschain",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1731728455965,
+      "tag": "0025_broad_cyclops",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1731728707988,
+      "tag": "0026_wise_serpent_society",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1731728759437,
+      "tag": "0027_romantic_magik",
+      "breakpoints": true
     }
   ]
 }
