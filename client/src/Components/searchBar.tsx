@@ -9,6 +9,8 @@ interface SearchBarProps {
   setResetDropdown: (value: boolean) => void;
   onSearch: (tags: { attribute: string; term: string }[]) => void;
   onJump: (tags: { attribute: string; term: string }[]) => void;
+  onSortOrder: (order: string) => void;
+  onSortBy: (attribute: string) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -18,6 +20,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   setResetDropdown,
   onSearch,
   onJump,
+  onSortOrder,
+  onSortBy,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>(attributes[0]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -25,10 +29,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchTags, setSearchTags] = useState<
     { attribute: string; term: string }[]
   >([]);
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState<string>(attributes[0]);
 
   useEffect(() => {
     if (attributes && attributes.length > 0) {
       setSelectedOption(attributes[0]);
+      setSortBy(attributes[0]);
     }
   }, [attributes]);
 
@@ -37,8 +44,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setSelectedOption(attributes[0]);
       setSearchTags([]);
       setResetDropdown(false);
+      setSortBy(attributes[0]);
+      setSortOrder("ascending");
     }
-  }, [resetDropdown, setResetDropdown]);
+  }, [resetDropdown, setResetDropdown, attributes]);
+
+  const handleSortOrderChange = (order: string) => {
+    setSortOrder(order);
+    onSortOrder(order);
+  };
+
+  const handleSortByChange = (attribute: string) => {
+    setSortBy(attribute);
+    onSortBy(attribute);
+  };
 
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
@@ -99,7 +118,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             {/* Dropdown Button */}
             <button
               id="dropdown-button"
-              className="flex-shrink-0 z-50 inline-flex items-center h-14 px-4 text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200 dark:bg-yellow-100 dark:hover:bg-yellow-200 dark:text-black"
+              className="flex-shrink-0 z-50 inline-flex items-center h-14 px-4 text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200 dark:bg-yellow-300 dark:hover:bg-yellow-200 dark:text-black"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               {selectedOption}
@@ -136,18 +155,75 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
         {/* Dropdown List */}
         {isDropdownOpen && (
-          <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-48 z-10">
+          <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-48 z-10 dark:text-black">
             <ul className="py-1">
+              <p className="px-3 py-2 font-bold">Attributes:</p>
               {attributes.map((attribute) => (
                 <li
                   key={attribute}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
                   onClick={() => handleOptionSelect(attribute)}
                 >
                   {attribute}
                 </li>
               ))}
             </ul>
+
+            <ul className="py-1">
+              <p className="px-3 py-2 font-bold">Attributes:</p>
+              {attributes.map((attribute) => (
+                <li key={attribute} className="px-4 py-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id={attribute}
+                      name="attribute"
+                      checked={sortBy === attribute}
+                      onChange={() => handleSortByChange(attribute)}
+                      className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-1 focus:ring-yellow-400"
+                    />
+                    <label
+                      htmlFor={attribute}
+                      className="cursor-pointer font-semibold text-gray-700 dark:text-black"
+                    >
+                      {attribute}
+                    </label>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="px-4 py-2 border-t border-gray-200">
+              <p className="pb-3 font-bold">Sort by:</p>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="ascending"
+                  name="sortOrder"
+                  checked={sortOrder === "asc"}
+                  onChange={() => handleSortOrderChange("asc")}
+                  className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-1 focus:ring-yellow-400"
+                />
+                <label htmlFor="ascending" className="text-md font-semibold">
+                  Ascending
+                </label>
+              </div>
+            </div>
+            <div className="px-4 py-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="descending"
+                  name="sortOrder"
+                  checked={sortOrder === "desc"}
+                  onChange={() => handleSortOrderChange("desc")}
+                  className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-2 focus:ring-yellow-400"
+                />
+                <label htmlFor="descending" className="text-md font-semibold">
+                  Descending
+                </label>
+              </div>
+            </div>
           </div>
         )}
       </div>

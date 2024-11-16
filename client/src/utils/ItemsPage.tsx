@@ -33,16 +33,20 @@ export const fetchUniverseCollectionId = async (collectionId: string) => {
 export const fetchUniverseCollectables = async (
   universeCollectionId: string,
   page: number,
-  itemsPerPage: number
+  itemsPerPage: number,
+  sortBy: string,
+  sortOrder: string
 ) => {
   if (!universeCollectionId) {
     console.error("Missing universeCollectionId", { universeCollectionId });
     throw new Error("Missing a request parameter");
   }
 
+  const handleSortBy = sortBy.replace(/\s+/g, "_");
+
   try {
     const url = buildPath(
-      `universe-collectable/universe-collection-paginated/${universeCollectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
+      `universe-collectable/universe-collection-paginated/${universeCollectionId}?page=${page}&itemsPerPage=${itemsPerPage}&sortBy=${handleSortBy}&order=${sortOrder}`
     );
 
     const response = await fetch(url, {
@@ -92,16 +96,20 @@ export const fetchUniverseCollectables = async (
 export const fetchOwnedCollectables = async (
   collectionId: string,
   page: number,
-  itemsPerPage: number
+  itemsPerPage: number,
+  sortBy: string,
+  sortOrder: string
 ) => {
   if (!collectionId) {
     console.error("Missing collectionId", { collectionId });
     throw new Error("Missing a request parameter");
   }
 
+  const handleSortBy = sortBy.replace(/\s+/g, "_");
+
   try {
     const url = buildPath(
-      `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}`
+      `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}&sortBy=${handleSortBy}&order=${sortOrder}`
     );
 
     const response = await fetch(url, {
@@ -150,7 +158,9 @@ export const fetchUniverseSearchResults = async (
   searchterm: { attribute: string; term: string }[],
   userId: string,
   universeCollectionId: string,
-  page: number
+  page: number,
+  sortBy: string,
+  sortOrder: string
 ) => {
   if (!userId || !universeCollectionId || searchterm.length === 0) {
     console.error("Missing userId, collectionId, or search tags", {
@@ -160,6 +170,8 @@ export const fetchUniverseSearchResults = async (
     });
     throw new Error("Missing a request parameter");
   }
+
+  const handleSortBy = sortBy.replace(/\s+/g, "_");
 
   const queryParams = searchterm
     .map(
@@ -171,7 +183,7 @@ export const fetchUniverseSearchResults = async (
     .join("&");
 
   const url = buildPath(
-    `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}&page=${page}&itemsPerPage=12`
+    `universe-collectable-search?collectionUniverseId=${universeCollectionId}&${queryParams}&page=${page}&itemsPerPage=12&sortBy=${handleSortBy}&order=${sortOrder}`
   );
 
   try {
@@ -204,7 +216,9 @@ export const fetchOwnedSearchResults = async (
   searchterm: { attribute: string; term: string }[],
   userId: string,
   collectionId: string,
-  page: number
+  page: number,
+  sortBy: string,
+  sortOrder: string
 ) => {
   if (!userId || !collectionId || searchterm.length === 0) {
     console.error("Missing userId, collectionId, or search tags", {
@@ -214,6 +228,8 @@ export const fetchOwnedSearchResults = async (
     });
     throw new Error("Missing a request parameter");
   }
+
+  const handleSortBy = sortBy.replace(/\s+/g, "_");
 
   const queryParams = searchterm
     .map(
@@ -225,7 +241,7 @@ export const fetchOwnedSearchResults = async (
     .join("&");
 
   const url = buildPath(
-    `universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}&page=${page}&itemsPerPage=12`
+    `universe-collectable-search/owned?collectionId=${collectionId}&${queryParams}&page=${page}&itemsPerPage=12&sortBy=${handleSortBy}&order=${sortOrder}`
   );
 
   try {
@@ -332,7 +348,9 @@ export const removeFromWishlist = async (
 export const fetchUniverseJumpResults = async (
   searchTerm: { attribute: string; term: string }[],
   userId: string,
-  universeCollectionId: string
+  universeCollectionId: string,
+  sortBy: string,
+  sortOrder: string
 ) => {
   if (!userId || !universeCollectionId || searchTerm.length === 0) {
     console.error("Missing userId, collectionId, or search tags", {
@@ -342,6 +360,8 @@ export const fetchUniverseJumpResults = async (
     });
     throw new Error("Missing a request parameter");
   }
+
+  const handleSortBy = sortBy.replace(/\s+/g, "_");
 
   const queryParams = searchTerm
     .map(
@@ -353,9 +373,8 @@ export const fetchUniverseJumpResults = async (
     .join("&");
 
   const url = buildPath(
-    `universe-collectable/jump?collectionUniverseId=${universeCollectionId}&${queryParams}&itemsPerPage=12`
+    `universe-collectable/jump?collectionUniverseId=${universeCollectionId}&${queryParams}&itemsPerPage=12&sortBy=${handleSortBy}&order=${sortOrder}`
   );
-  console.log("jump", url);
 
   try {
     const response = await fetch(url, {

@@ -51,10 +51,7 @@ export default function HomePage() {
   const [isCollectionOwned, setIsCollectionOwned] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
-  const [selectedSort, setSelectedSort] = useState<string>("");
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "grid">("grid");
-  //const [wishlistIds, setWishlistIds] = useState<number[]>([]);
   const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isPublished, setIsPublished] = useState(false);
@@ -75,6 +72,9 @@ export default function HomePage() {
   const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
+  const [openEditFavAttributesModal, setOpenEditFavAttributesModal] = useState(false);
+  const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<string[]>([]);
+
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -180,6 +180,7 @@ export default function HomePage() {
       if (response.ok) {
         const data = await response.json();
         setMaskedAttributes(data);
+        console.log("Masked Attributes: ", data);
       } else {
         console.error("Error fetching attributes:", response);
       }
@@ -237,18 +238,15 @@ export default function HomePage() {
   }, [specificTag]);
 
   // -------------------------- show universecollectables and search ------------------
-  const [ownedCollectablesCount, setOwnedCollectablesCount] =
-    useState<number>();
-  const [unverseCollectablesCount, setUniverseCollectablesCount] =
-    useState<number>();
-
   useEffect(() => {
     const getUniverseCollectionId = async () => {
       if (collectionId) {
         const ownedCollectables = await fetchOwnedCollectables(
           collectionId,
           initialPage,
-          ITEMS_PER_PAGE
+          ITEMS_PER_PAGE,
+          sortBy,
+          sortOrder
         );
         console.log("ownedCollectables", ownedCollectables);
         ownedCollectables.collectables.forEach((collectable: any) => {
@@ -256,13 +254,13 @@ export default function HomePage() {
         });
         console.log("isOwnedMap0", isOwnedMap);
         setOwnedCollectables(ownedCollectables.collectables);
-        setOwnedCollectablesCount(ownedCollectables.totalMatchingCollectables);
-
         if (universeCollectionId) {
           const universe_collectables = await fetchUniverseCollectables(
             universeCollectionId,
             initialPage,
-            ITEMS_PER_PAGE
+            ITEMS_PER_PAGE,
+            sortBy,
+            sortOrder
           );
           universe_collectables.collectables.forEach((collectable: any) => {
             if (!isOwnedMap.has(collectable.universeCollectableId))
@@ -271,9 +269,6 @@ export default function HomePage() {
             } 
           });
           setUniverseCollectables(universe_collectables.collectables);
-          setUniverseCollectablesCount(
-            universe_collectables.totalMatchingCollectables
-          );
         }
       }
 
@@ -625,18 +620,47 @@ export default function HomePage() {
     setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
   };
 
+  // -------------------------- show universecollectables and search ------------------
+  const [sortOrder, setSortOrder] = useState<string>("ascending");
+  const [sortBy, setSortBy] = useState<string>("");
+
+  const handleSortOrderChange = (order: string) => {
+    setSortOrder(order);
+    console.log("Sort Order:", order);
+    fetchCollectablesNextPage();
+  };
+
+  const handleSortByChange = (attribute: string) => {
+    setSortBy(attribute);
+    console.log("Sort By:", attribute);
+    fetchCollectablesNextPage();
+  };
+
   const {
     data: collectablesData,
     fetchNextPage: fetchCollectablesNextPage,
     hasNextPage: hasMoreCollectables,
     isFetchingNextPage: isFetchingCollectables,
   } = useInfiniteQuery({
-    queryKey: ["collectables", collectionId, universeCollectionId, enabled],
+    queryKey: [
+      "collectables",
+      collectionId,
+      universeCollectionId,
+      enabled,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: async ({ pageParam = 1 }) => {
       if (enabled && collectionId) {
         // Fetch owned collectables when enabled
         const { collectables, totalMatchingCollectables } =
-          await fetchOwnedCollectables(collectionId, pageParam, ITEMS_PER_PAGE);
+          await fetchOwnedCollectables(
+            collectionId,
+            pageParam,
+            ITEMS_PER_PAGE,
+            sortBy,
+            sortOrder
+          );
         return { collectables, totalMatchingCollectables };
       } else if (universeCollectionId) {
         // Fetch universe collectables when not enabled
@@ -644,7 +668,9 @@ export default function HomePage() {
           await fetchUniverseCollectables(
             universeCollectionId,
             pageParam,
-            ITEMS_PER_PAGE
+            ITEMS_PER_PAGE,
+            sortBy,
+            sortOrder
           );
         return { collectables, totalMatchingCollectables };
       }
@@ -695,23 +721,35 @@ export default function HomePage() {
     hasNextPage: hasNextSearchPage,
     isFetchingNextPage: isFetchingSearchResults,
   } = useInfiniteQuery({
-    queryKey: ["searchResults", searchTags, enabled],
+    queryKey: [
+      "searchResults",
+      JSON.stringify(searchTags),
+      enabled,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: async ({ pageParam = 1 }) => {
+      console.log("searchTags passed to queryFn: ", searchTags);
       if (enabled && collectionId) {
-        const { collectables } = await fetchOwnedSearchResults(
-          searchTags,
-          userId,
-          collectionId,
-          pageParam
-        );
-        return collectables;
+        const { collectables, totalMatchingCollectables } =
+          await fetchOwnedSearchResults(
+            searchTags,
+            userId,
+            collectionId,
+            pageParam,
+            sortBy,
+            sortOrder
+          );
+        return { collectables, totalMatchingCollectables };
       } else if (universeCollectionId) {
         const { collectables, totalMatchingCollectables } =
           await fetchUniverseSearchResults(
             searchTags,
             userId,
             universeCollectionId,
-            pageParam
+            pageParam,
+            sortBy,
+            sortOrder
           );
         return { collectables, totalMatchingCollectables };
       }
@@ -757,7 +795,9 @@ export default function HomePage() {
       const res = await fetchUniverseJumpResults(
         jumpTags,
         userId,
-        universeCollectionId!
+        universeCollectionId!,
+        sortBy,
+        sortOrder
       );
 
       console.log(res); // this return the matched item and page number
@@ -771,7 +811,9 @@ export default function HomePage() {
         const data = await fetchUniverseCollectables(
           universeCollectionId!,
           res.pageNumber,
-          ITEMS_PER_PAGE
+          ITEMS_PER_PAGE,
+          sortBy,
+          sortOrder
         );
         setJumpSearchResults(data.collectables);
 
@@ -789,7 +831,9 @@ export default function HomePage() {
       const data = await fetchUniverseCollectables(
         universeCollectionId!,
         nextPageNumber,
-        ITEMS_PER_PAGE
+        ITEMS_PER_PAGE,
+        sortBy,
+        sortOrder
       );
       setJumpSearchResults((prevResults) => [
         ...prevResults,
@@ -810,7 +854,9 @@ export default function HomePage() {
       const data = await fetchUniverseCollectables(
         universeCollectionId!,
         prevPageNumber,
-        ITEMS_PER_PAGE
+        ITEMS_PER_PAGE,
+        sortBy,
+        sortOrder
       );
       setJumpSearchResults((prevResults) => [
         ...data.collectables,
@@ -826,13 +872,13 @@ export default function HomePage() {
     if (jumpNextEntry?.isIntersecting) {
       handleLoadFromJumpPage();
     }
-  }, [jumpNextEntry]);
+  }, [jumpNextEntry, sortBy, sortOrder]);
 
   useEffect(() => {
     if (jumpPrevEntry?.isIntersecting) {
       handleLoadPreviousJumpPage();
     }
-  }, [jumpPrevEntry]);
+  }, [jumpPrevEntry, sortBy, sortOrder]);
 
   const handleReset = () => {
     setResetDropdown(true);
@@ -914,6 +960,65 @@ export default function HomePage() {
     }
   }, [jumpSearchResults, prevHeight, jumped]);
 
+  const openEditAttributes = () => {
+    setEditedFavoriteAttributes(favoriteAttributes);
+    console.log("Edited Favorite Attributes: ", editedFavoriteAttributes);
+    console.log("maskedAttributes: ", maskedAttributes);
+    setOpenEditFavAttributesModal(true);
+  };
+
+  const closeEditAttributes = () => {
+    setOpenEditFavAttributesModal(false);
+  };
+
+  const handleFavAttributeChange = (checked: boolean, attribute: string) => {
+    if (checked) {
+      setEditedFavoriteAttributes((prev) => [...prev, attribute]);
+    } else {
+      setEditedFavoriteAttributes((prev) => prev.filter((attr) => attr !== attribute));
+    }
+    console.log("Favorite Attributes: ", editedFavoriteAttributes);
+  };
+
+  const handleEditFavAttributesSubmit = async () => {
+    const request = {
+      collectionId: collectionId,
+      favoriteAttributes: editedFavoriteAttributes,
+    };
+
+    try {
+      const response = await fetch(
+        buildPath(`collectable-attributes/update-favorite-attributes`),
+        {
+          method: "PUT",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        console.log("Favorite Attributes edited successfully");
+        setFavoriteAttributes(editedFavoriteAttributes);
+        const allAttributes = editedFavoriteAttributes.concat(
+          maskedAttributes.filter(
+            (attr) => !editedFavoriteAttributes.includes(attr)
+          )
+        );
+        await setMaskedAttributes(allAttributes);
+        closeEditAttributes();
+        //window.location.reload();
+      } else {
+        console.error("Error editing favorite attributes:", response);
+      }
+    } catch (error) {
+      console.error("Error editing favorite attributes:", error);
+    }
+  };
+
+
   return (
     <>
       <div className="h-screen flex flex-col overflow-y-hidden">
@@ -944,6 +1049,8 @@ export default function HomePage() {
                     setResetDropdown={setResetDropdown}
                     onSearch={handleSearch}
                     onJump={handleJump}
+                    onSortOrder={handleSortOrderChange}
+                    onSortBy={handleSortByChange}
                   />
                 )}
 
@@ -980,6 +1087,7 @@ export default function HomePage() {
                         <li>
                           <a
                             className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                            onClick={openEditAttributes}
                           >
                             Edit Favorite Attributes
                           </a>
@@ -1506,9 +1614,13 @@ export default function HomePage() {
                           ) : (
                             // GRID VIEW
                             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                              {_searchResults.map((item) => (
+                              {_searchResults.map((item, index) => (
                                 <div
-                                  key={`${item.universeCollectableId}-search`}
+                                  key={
+                                    `${item.universeCollectableId}-search` ||
+                                    item.collectionId ||
+                                    `item-${index}`
+                                  }
                                 >
                                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <div className="h-22 w-30">
@@ -1517,13 +1629,15 @@ export default function HomePage() {
                                           className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                           onClick={() =>
                                             handleStarClick(
-                                              item.universeCollectableId,
+                                              item.universeCollectableId ||
+                                                item.collectionId,
                                               collectionId
                                             )
                                           }
                                         >
                                           {wishlistIds.includes(
-                                            item.universeCollectableId
+                                            item.universeCollectableId ||
+                                              item.collectionId
                                           ) ? (
                                             <FontAwesomeIcon
                                               icon={faSolidStar}
@@ -1947,6 +2061,55 @@ export default function HomePage() {
                             <button
                               type="button"
                               onClick={closeEdit}
+                              className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Edit Favorite Attributes Modal */}
+                  {openEditFavAttributesModal && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                        <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                          Edit Favorite Attributes
+                        </h2>
+
+                        <form onSubmit={handleEditFavAttributesSubmit}>
+                          {maskedAttributes
+                            .map((attribute, index) => (
+                              <div className="flex items-center mb-3">
+                                <input
+                                  type="checkbox"
+                                  id={attribute}
+                                  checked={editedFavoriteAttributes.includes(attribute)}
+                                  onChange={(e) => handleFavAttributeChange(e.target.checked, attribute)}
+                                  className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                                />
+                                <label
+                                  htmlFor="publishCollection"
+                                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                >
+                                  {attribute}
+                                </label>
+                              </div>
+                            ))}
+                          
+
+                          <div className="flex justify-end space-x-4 mt-8">
+                            <button
+                              type="button"
+                              onClick={closeEditAttributes}
                               className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
                             >
                               Cancel
