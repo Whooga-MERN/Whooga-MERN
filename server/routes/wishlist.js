@@ -14,6 +14,7 @@ router.post('/add-wishlist', async (req, res) => {
     }
     console.log("collection_universe_id: ", collection_universe_id );
     console.log("universe_collectable_id: ", universe_collectable_id);
+    console.log("sourceAttributesString: ", sourceAttributesString);
 
 
     try {
@@ -38,7 +39,9 @@ router.post('/add-wishlist', async (req, res) => {
             return res.status(404).send("Error finding sourceUniverse");
         }
     
+        console.log("universe_name: ", universe_name);
         const search_string = universe_name + " " + sourceAttributesString;
+        console.log("search_string: ", search_string);
         console.log("sourceUniverse: ", sourceUniverse);
         console.log("\nStarting insert into wishlist table");
         const postWishlist = await db
