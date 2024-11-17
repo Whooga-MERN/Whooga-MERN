@@ -1,13 +1,8 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _, { divide, get, set } from "lodash";
+import _ from "lodash";
 
-import {
-  FaListUl,
-  FaRegEdit,
-  FaSortAmountDown,
-  FaFilter,
-} from "react-icons/fa";
+import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
@@ -23,7 +18,6 @@ import SearchBar from "../Components/searchBar";
 import OwnedToggle from "../Components/ownedToggle";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useIntersection } from "@mantine/hooks";
-import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { buildPath } from "../utils/utils";
 import {
@@ -49,7 +43,9 @@ export default function HomePage() {
   const [jumpSearchResults, setJumpSearchResults] = useState<any[]>([]);
 
   const [showModal, setShowModal] = useState(false);
-  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(null);
+  const [specificTag, setSpecificTag] = useState<Record<string, any> | null>(
+    null
+  );
   const [isCollectionOwned, setIsCollectionOwned] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
@@ -74,9 +70,11 @@ export default function HomePage() {
   const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
-  const [openEditFavAttributesModal, setOpenEditFavAttributesModal] = useState(false);
-  const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<string[]>([]);
-
+  const [openEditFavAttributesModal, setOpenEditFavAttributesModal] =
+    useState(false);
+  const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
+    string[]
+  >([]);
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -286,16 +284,13 @@ export default function HomePage() {
             sortOrder
           );
           universe_collectables.collectables.forEach((collectable: any) => {
-            if (!isOwnedMap.has(collectable.universeCollectableId))
-            {
+            if (!isOwnedMap.has(collectable.universeCollectableId)) {
               isOwnedMap.set(collectable.universeCollectableId, false);
-            } 
+            }
           });
           setUniverseCollectables(universe_collectables.collectables);
         }
       }
-
-      console.log("isOwnedMap", isOwnedMap);
     };
 
     getUniverseCollectionId();
@@ -924,14 +919,13 @@ export default function HomePage() {
         setJumpPageNumber(res.pageNumber);
         setPrevPageNumber(res.pageNumber - 1);
         setNextPageNumber(res.pageNumber + 1);
-        console.log("page number: ", res.pageNumber);
 
         // fetch items on the specified page
         let data;
         if (enabled && collectionId) {
           data = await fetchOwnedCollectables(
             collectionId,
-            res.page,
+            res.pageNumber,
             ITEMS_PER_PAGE,
             sortBy,
             sortOrder
@@ -946,10 +940,7 @@ export default function HomePage() {
           );
         }
 
-        console.log("fetchOwneddata: ", data);
-
         if (data) {
-          console.log("collectables: ", data.collectables);
           setJumpSearchResults(data.collectables);
           setLoadedPages(new Set([res.pageNumber]));
         }
@@ -959,48 +950,77 @@ export default function HomePage() {
     }
   };
 
-  useEffect(() => {
-    console.log("Owned Highlighted Item ID:", ownedHighlightedItemId);
-  }, [ownedHighlightedItemId]);
-
+  // fetch next page for jump
   const handleLoadFromJumpPage = async () => {
     if (!nextPageNumber || loadedPages.has(nextPageNumber)) return;
+
+    // if toggle enabled, fetch owned collectables result
+    // else, fetch universe collectables result
     try {
-      const data = await fetchUniverseCollectables(
-        universeCollectionId!,
-        nextPageNumber,
-        ITEMS_PER_PAGE,
-        sortBy,
-        sortOrder
-      );
-      setJumpSearchResults((prevResults) => [
-        ...prevResults,
-        ...data.collectables,
-      ]);
-      setNextPageNumber((prev) => prev! + 1);
+      let data;
+      if (enabled && collectionId) {
+        data = await fetchOwnedCollectables(
+          collectionId,
+          nextPageNumber,
+          ITEMS_PER_PAGE,
+          sortBy,
+          sortOrder
+        );
+      } else if (universeCollectionId) {
+        data = await fetchUniverseCollectables(
+          universeCollectionId,
+          nextPageNumber,
+          ITEMS_PER_PAGE,
+          sortBy,
+          sortOrder
+        );
+      }
+
+      if (data) {
+        setJumpSearchResults((prevResults) => [
+          ...prevResults,
+          ...data.collectables,
+        ]);
+        setNextPageNumber((prev) => prev! + 1);
+      }
     } catch (error) {
       console.error("Error fetching additional pages:", error);
     }
   };
 
+  // fetch previous page for jump
   const handleLoadPreviousJumpPage = async () => {
-    // if there is no previous page or it has already been loaded, return
     if (!prevPageNumber || loadedPages.has(prevPageNumber)) return;
 
-    // fetch the previous page
     try {
-      const data = await fetchUniverseCollectables(
-        universeCollectionId!,
-        prevPageNumber,
-        ITEMS_PER_PAGE,
-        sortBy,
-        sortOrder
-      );
-      setJumpSearchResults((prevResults) => [
-        ...data.collectables,
-        ...prevResults,
-      ]);
-      setPrevPageNumber((prev) => prev! - 1);
+      let data;
+      if (enabled && collectionId) {
+        // if toggle enabled, fetch owned collectables result
+        // else, fetch universe collectables result
+        data = await fetchOwnedCollectables(
+          collectionId,
+          prevPageNumber,
+          ITEMS_PER_PAGE,
+          sortBy,
+          sortOrder
+        );
+      } else if (universeCollectionId) {
+        data = await fetchUniverseCollectables(
+          universeCollectionId,
+          prevPageNumber,
+          ITEMS_PER_PAGE,
+          sortBy,
+          sortOrder
+        );
+      }
+
+      if (data) {
+        setJumpSearchResults((prevResults) => [
+          ...data.collectables,
+          ...prevResults,
+        ]);
+        setPrevPageNumber((prev) => prev! - 1);
+      }
     } catch (error) {
       console.error("Error fetching previous page items:", error);
     }
@@ -1113,7 +1133,9 @@ export default function HomePage() {
     if (checked) {
       setEditedFavoriteAttributes((prev) => [...prev, attribute]);
     } else {
-      setEditedFavoriteAttributes((prev) => prev.filter((attr) => attr !== attribute));
+      setEditedFavoriteAttributes((prev) =>
+        prev.filter((attr) => attr !== attribute)
+      );
     }
     console.log("Favorite Attributes: ", editedFavoriteAttributes);
   };
@@ -1155,7 +1177,6 @@ export default function HomePage() {
       console.error("Error editing favorite attributes:", error);
     }
   };
-
 
   return (
     <>
@@ -2091,7 +2112,13 @@ export default function HomePage() {
                                         onChange={(e) =>
                                           handleOwnedChange(e.target.checked)
                                         }
-                                        checked={specificTag ? isOwnedMap.get(specificTag.universeCollectableId) : false}
+                                        checked={
+                                          specificTag
+                                            ? isOwnedMap.get(
+                                                specificTag.universeCollectableId
+                                              )
+                                            : false
+                                        }
                                         className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
                                       />
                                       <label
@@ -2201,25 +2228,30 @@ export default function HomePage() {
                         </h2>
 
                         <form onSubmit={handleEditFavAttributesSubmit}>
-                          {maskedAttributes
-                            .map((attribute, index) => (
-                              <div className="flex items-center mb-3">
-                                <input
-                                  type="checkbox"
-                                  id={attribute}
-                                  checked={editedFavoriteAttributes.includes(attribute)}
-                                  onChange={(e) => handleFavAttributeChange(e.target.checked, attribute)}
-                                  className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
-                                />
-                                <label
-                                  htmlFor="publishCollection"
-                                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                                >
-                                  {attribute}
-                                </label>
-                              </div>
-                            ))}
-                          
+                          {maskedAttributes.map((attribute, index) => (
+                            <div className="flex items-center mb-3">
+                              <input
+                                type="checkbox"
+                                id={attribute}
+                                checked={editedFavoriteAttributes.includes(
+                                  attribute
+                                )}
+                                onChange={(e) =>
+                                  handleFavAttributeChange(
+                                    e.target.checked,
+                                    attribute
+                                  )
+                                }
+                                className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                              />
+                              <label
+                                htmlFor="publishCollection"
+                                className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                              >
+                                {attribute}
+                              </label>
+                            </div>
+                          ))}
 
                           <div className="flex justify-end space-x-4 mt-8">
                             <button
