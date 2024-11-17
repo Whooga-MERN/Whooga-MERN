@@ -227,6 +227,8 @@ router.get('/whooga-alert/my-wishlisted/:collection_universe_id', async (req, re
 router.get('/whooga-alert/related-wishlist/:collection_universe_id', async (req, res) => {
     const { collection_universe_id } = req.params;
 
+    console.log("getting related wishlist items");
+
     if(!collection_universe_id || isNaN(collection_universe_id)) {
         return res.status(400).json({ message: 'Invalid input for collection_universe_id'} );
     }

@@ -22,6 +22,10 @@ function WishlistItems() {
 
   const { collectionUniverseId } = useParams<{ collectionUniverseId: string }>();
 
+  const [myScrapedWishlistItems, setMyScrapedWishlistItems] = useState<WishlistItemsState>({ collectionUniverseId: "", items: []});
+  const [myMatches, setMyMatches] = useState<WishlistItemsState>({ collectionUniverseId: "", items: [] });
+  const [relatedWishlistItems, setRelatedWishlistItems] =useState<WishlistItemsState>({ collectionUniverseId: "", items: [] });
+
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -97,15 +101,47 @@ function WishlistItems() {
     items: WishlistItem[];
   }
 
-  const [myWishlistItems, setMyWishlistItems] = useState<WishlistItemsState>({
-    collectionUniverseId: "",
-    items: [],
-  });
-  const [relatedWishlistItems, setRelatedWishlistItems] =
-    useState<WishlistItemsState>({ collectionUniverseId: "", items: [] });
+
 
   const fetchWishlistItems = async (collectionUniverseId: number) => {
-    // fetch items user listed
+
+    // fetch all scraped Items
+    try {
+      // fetch items for collection
+      const response = await fetch(
+        // `http://localhost:3000/wishlist/whooga-alert/my-wishlisted/${collectionUniverseId}`
+        // `http://localhost:3000/wishlist/whooga-alert/my-wishlisted/113`
+        buildPath(`wishlist/whooga-alert/my-wishlisted/${collectionUniverseId}`),
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      // if no wishlist items, return empty array
+      if (!response.ok) {
+        const result = { collectionUniverseId: collectionUniverseId.toString(), items: [] };
+        console.log("No wishlist items for collection:", collectionUniverseId);
+        setMyScrapedWishlistItems(result);
+      }
+
+      const data = await response.json();
+      const result = {
+        collectionUniverseId: collectionUniverseId.toString(),
+        items: data.length > 0 ? data : [],
+      };
+
+      console.log("Items Scraped for collection:", result);
+
+      setMyScrapedWishlistItems(result);
+    } catch (error) {
+      console.error("Error fetching wishlisted items:", error);
+    }
+
+    // fetch Matched items
     try {
       // fetch items for collection
       const response = await fetch(
@@ -124,7 +160,8 @@ function WishlistItems() {
       // if no wishlist items, return empty array
       if (!response.ok) {
         const result = { collectionUniverseId: collectionUniverseId.toString(), items: [] };
-        setMyWishlistItems(result);
+        console.log("No wishlist items for collection:", collectionUniverseId);
+        setMyMatches(result);
       }
 
       const data = await response.json();
@@ -133,7 +170,9 @@ function WishlistItems() {
         items: data.length > 0 ? data : [],
       };
 
-      setMyWishlistItems(result);
+      console.log("Matched Items for collection:", result);
+
+      setMyMatches(result);
     } catch (error) {
       console.error("Error fetching wishlisted items:", error);
     }
@@ -144,12 +183,20 @@ function WishlistItems() {
       const response = await fetch(
         // `http://localhost:3000/wishlist/whooga-alert/related-wishlisted/${collectionUniverseId}`
         //`http://localhost:3000/wishlist/whooga-alert/related-wishlisted/113`
-        buildPath(`wishlist/whooga-alert/related-wishlisted/${collectionUniverseId}`)
+        buildPath(`wishlist/whooga-alert/related-wishlist/${collectionUniverseId}`),
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
       );
 
       // if no wishlist items, return empty array
       if (!response.ok) {
         const result = { collectionUniverseId: collectionUniverseId.toString(), items: [] };
+        console.log("No related wishlist items for collection:", collectionUniverseId);
         setRelatedWishlistItems(result);
       }
 
@@ -158,6 +205,8 @@ function WishlistItems() {
         collectionUniverseId: collectionUniverseId.toString(),
         items: data.length > 0 ? data : [],
       };
+
+      console.log("Related Items for collection:", result);
 
       setRelatedWishlistItems(result);
     } catch (error) {
@@ -183,22 +232,139 @@ function WishlistItems() {
   return (
     <>
       <Header />
-      <h2 className="px-20 pt-14 font-manrope font-bold text-4xl text-center">
-        New Items For You:
-      </h2>
+      {/* <h2 className="px-20 pt-14 font-manrope font-bold text-4xl text-center">
+        {collectionName} Wishlist Items
+      </h2> */}
+
+      
 
       <div className="w-full px-16">
         {/* const collection = collections.find((col) => col.id === collectionId); */}
         <div key={collectionUniverseId} className="my-8">
-          <h3 className="font-semibold text-2xl w-fit text-black bg-yellow-300 rounded-full px-5 py-2">
-            {collectionName}
-            {collectionUniverseId}
-          </h3>
+          <h1 className="font-semibold text-4xl w-fit text-black bg-yellow-300 rounded-full px-5 py-2">
+            {collectionName} Wishlist Items
+            {/* {collectionUniverseId} */}
+          </h1>
 
-          {myWishlistItems.items.length > 0 ? (
+          <h1 className="px-20 pt-14 font-manrope font-bold text-2xl text-center" >Matched Items</h1>
+
+          {myMatches.items.length > 0 ? (
             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-              {myWishlistItems.items.slice(0, 50).map((item: any) => (
-                <div key={item.link}>
+              {myMatches.items.map((item: any, index) => (
+                <div key={`item.link-${index}`}>
+                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                    <div className="h-22 w-30">
+                      <img
+                        src={item.image_url || "/placeholder.jpg"}
+                        alt={item.title || "No Name"}
+                        width={400}
+                        height={400}
+                        className="rounded-md shadow-sm object-cover pt-3"
+                      />
+                    </div>
+
+                    <div className="space-y-1 p-4">
+                      <p
+                        key={item.title}
+                        className={
+                          "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                        }
+                      >
+                        {`${item.title}`}
+                      </p>
+
+                      <p
+                        key={item.price}
+                        className={
+                          "text-md font-semibold pl-4 capitalize truncate"
+                        }
+                      >
+                        {`${item.price}`}
+                      </p>
+                      <div className="flex justify-center mt-2">
+                        <a
+                          className="btn btn-primary mt-2 text-lg hover:btn-primary"
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          See Item
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-lg mt-6">
+              No wishlist items for this collection.
+            </p>
+          )}
+
+          <h1 className="px-20 pt-14 font-manrope font-bold text-2xl text-center" >Related Items</h1>
+
+          {relatedWishlistItems.items.length > 0 ? (
+            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+              {myScrapedWishlistItems.items.map((item: any, index) => (
+                <div key={`item.link-${index}`}>
+                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
+                    <div className="h-22 w-30">
+                      <img
+                        src={item.image_url || "/placeholder.jpg"}
+                        alt={item.title || "No Name"}
+                        width={400}
+                        height={400}
+                        className="rounded-md shadow-sm object-cover pt-3"
+                      />
+                    </div>
+
+                    <div className="space-y-1 p-4">
+                      <p
+                        key={item.title}
+                        className={
+                          "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                        }
+                      >
+                        {`${item.title}`}
+                      </p>
+
+                      <p
+                        key={item.price}
+                        className={
+                          "text-md font-semibold pl-4 capitalize truncate"
+                        }
+                      >
+                        {`${item.price}`}
+                      </p>
+                      <div className="flex justify-center mt-2">
+                        <a
+                          className="btn btn-primary mt-2 text-lg hover:btn-primary"
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          See Item
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-lg mt-6">
+              No related items
+            </p>
+          )}
+          
+
+        <h1 className="px-20 pt-14 font-manrope font-bold text-2xl text-center">All Scraped Items</h1>
+
+          {myScrapedWishlistItems.items.length > 0 ? (
+            <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
+              {myScrapedWishlistItems.items.map((item: any, index) => (
+                <div key={`item.link-${index}`}>
                   <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
                     <div className="h-22 w-30">
                       <img
