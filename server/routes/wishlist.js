@@ -189,7 +189,7 @@ router.get('/whooga-alert/my-wishlisted-matches/:collectionUniverseId', async (r
 
         // res.status(200).json(formattedResults);
 
-        res.status(200).send(results);
+        res.status(200).json(results);
     } catch (error) {
         console.log(error);
         res.status(400).send("Failed to fetch matches");
