@@ -34,6 +34,7 @@ import {
   addToWishlist,
   removeFromWishlist,
   fetchUniverseJumpResults,
+  fetchOwnedJumpResults,
 } from "../utils/ItemsPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
@@ -100,6 +101,9 @@ export default function HomePage() {
   const [highlightedItemId, setHighlightedItemId] = useState<number | null>(
     null
   );
+  const [ownedHighlightedItemId, setOwnedHighlightedItemId] = useState<
+    number | null
+  >(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -875,47 +879,89 @@ export default function HomePage() {
   const handleJump = async (
     jumpTags: { attribute: string; term: string }[]
   ) => {
-    // Clear search-related state
+    // Clear search result
     setSearchTags([]);
     setSearchResults([]);
 
+    // Set jump-related state
     setJumpSearchTags(jumpTags);
     setJumpSearchResults([]);
     setLoadedPages(new Set());
 
     try {
-      const res = await fetchUniverseJumpResults(
-        jumpTags,
-        userId,
-        universeCollectionId!,
-        sortBy,
-        sortOrder
-      );
-
-      console.log(res); // this return the matched item and page number
-      if (res) {
-        setJumpPageNumber(res.pageNumber);
-        setPrevPageNumber(res.pageNumber - 1);
-        setNextPageNumber(res.pageNumber + 1);
-        setHighlightedItemId(res.universe_collectable_id);
-
-        // use the page number to fetch items on that page
-        const data = await fetchUniverseCollectables(
-          universeCollectionId!,
-          res.pageNumber,
-          ITEMS_PER_PAGE,
+      let res;
+      if (enabled && collectionId) {
+        // Fetch owned jump results when toggle is enabled
+        res = await fetchOwnedJumpResults(
+          jumpTags,
+          userId,
+          collectionId,
           sortBy,
           sortOrder
         );
-        setJumpSearchResults(data.collectables);
-
-        setLoadedPages(new Set([res.pageNumber]));
+        if (res) {
+          console.log("result: ", res);
+          // set this matched item to be hightlighted
+          setOwnedHighlightedItemId(res.collectable_id);
+        }
+      } else if (universeCollectionId) {
+        // Fetch universe jump results when toggle is disabled
+        res = await fetchUniverseJumpResults(
+          jumpTags,
+          userId,
+          universeCollectionId,
+          sortBy,
+          sortOrder
+        );
+        if (res) {
+          // set this matched item to be hightlighted
+          setHighlightedItemId(res.universe_collectable_id);
+        }
       }
-      // setJumped(true); // Set `jumped` to true to indicate the initial jump has occurred
+
+      if (res) {
+        // set the related page number
+        setJumpPageNumber(res.pageNumber);
+        setPrevPageNumber(res.pageNumber - 1);
+        setNextPageNumber(res.pageNumber + 1);
+        console.log("page number: ", res.pageNumber);
+
+        // fetch items on the specified page
+        let data;
+        if (enabled && collectionId) {
+          data = await fetchOwnedCollectables(
+            collectionId,
+            res.page,
+            ITEMS_PER_PAGE,
+            sortBy,
+            sortOrder
+          );
+        } else if (universeCollectionId) {
+          data = await fetchUniverseCollectables(
+            universeCollectionId,
+            res.pageNumber,
+            ITEMS_PER_PAGE,
+            sortBy,
+            sortOrder
+          );
+        }
+
+        console.log("fetchOwneddata: ", data);
+
+        if (data) {
+          console.log("collectables: ", data.collectables);
+          setJumpSearchResults(data.collectables);
+          setLoadedPages(new Set([res.pageNumber]));
+        }
+      }
     } catch (error) {
       console.error("Fetch error:", error);
     }
   };
+
+  useEffect(() => {
+    console.log("Owned Highlighted Item ID:", ownedHighlightedItemId);
+  }, [ownedHighlightedItemId]);
 
   const handleLoadFromJumpPage = async () => {
     if (!nextPageNumber || loadedPages.has(nextPageNumber)) return;
@@ -1795,7 +1841,9 @@ export default function HomePage() {
                                   key={`${item.universeCollectableId}-jump`}
                                   className={` ${
                                     item.universeCollectableId ===
-                                    highlightedItemId
+                                      highlightedItemId ||
+                                    item.collectableId ===
+                                      ownedHighlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}
@@ -1890,8 +1938,11 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className={`relative hover:shadow-xl dark:bg-base-300 rounded-xl ${
-                                    item.universeCollectableId === highlightedItemId
+                                  className={` ${
+                                    item.universeCollectableId ===
+                                      highlightedItemId ||
+                                    item.collectableId ===
+                                      ownedHighlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}

@@ -842,7 +842,7 @@ router.get('/jump', async (req, res) => {
     const pageNumber = Math.floor(firstMatchIndex / itemsPerPage) + 1;
 
     res.json({
-      page: pageNumber,
+      pageNumber: pageNumber,
       collectable_id: firstMatchId
     });
   } catch (error) {
