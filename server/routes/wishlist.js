@@ -141,10 +141,23 @@ router.get('/whooga-alert/my-wishlisted-matches/:collectionUniverseId', async (r
     console.log("collectionUniverseId: ", collectionUniverseId);
 
     try {
+        // console.log("Searching for matched results");
+        // const results = await db
+        // .select({
+        //     universeCollectableId: wishlist.universe_collectable_id,
+        //     title: scraped.title,
+        //     price: scraped.price,
+        //     link: scraped.link,
+        //     image_url: scraped.image_url
+        // })
+        // .from(wishlist)
+        // .innerJoin(scraped, eq(wishlist.closest_match, scraped.id))
+        // .where(eq(wishlist.collection_universe_id, collectionUniverseId))
+        // .execute();
+
         console.log("Searching for matched results");
         const results = await db
         .select({
-            universeCollectableId: wishlist.universe_collectable_id,
             title: scraped.title,
             price: scraped.price,
             link: scraped.link,
@@ -158,23 +171,25 @@ router.get('/whooga-alert/my-wishlisted-matches/:collectionUniverseId', async (r
         if(results.length < 1)
             return res.status(200).json([]);
 
-        console.log("Finished fetching for matched results... beginning mapping");
-        const groupedResults = results.reduce((acc, result) => {
-            const { universeCollectableId, title, price, link, image_url } = result;
-            if (!acc[universeCollectableId]) {
-                acc[universeCollectableId] = {
-                    universe_collectable_id: universeCollectableId,
-                    scrapedData: []
-                };
-            }
-            acc[universeCollectableId].scrapedData.push({ title, price, link, image_url });
-            return acc;
-        }, {});
+        // console.log("Finished fetching for matched results... beginning mapping");
+        // const groupedResults = results.reduce((acc, result) => {
+        //     const { universeCollectableId, title, price, link, image_url } = result;
+        //     if (!acc[universeCollectableId]) {
+        //         acc[universeCollectableId] = {
+        //             universe_collectable_id: universeCollectableId,
+        //             scrapedData: []
+        //         };
+        //     }
+        //     acc[universeCollectableId].scrapedData.push({ title, price, link, image_url });
+        //     return acc;
+        // }, {});
 
-        const formattedResults = Object.values(groupedResults);
-        console.log("Finished Mapping data");
+        // const formattedResults = Object.values(groupedResults);
+        // console.log("Finished Mapping data");
 
-        res.status(200).json(formattedResults);
+        // res.status(200).json(formattedResults);
+
+        res.status(200).send(results);
     } catch (error) {
         console.log(error);
         res.status(400).send("Failed to fetch matches");
