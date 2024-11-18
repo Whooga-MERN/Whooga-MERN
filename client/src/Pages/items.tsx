@@ -1438,7 +1438,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1534,7 +1534,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={400}
@@ -1636,7 +1636,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1737,7 +1737,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={400}
@@ -1846,7 +1846,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1949,7 +1949,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={400}
