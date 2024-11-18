@@ -834,6 +834,7 @@ router.get('/jump', async (req, res) => {
     }
 
     const firstMatchId = matchingCollectable.collectable_id;
+    const firstMatchUniverseId = matchingCollectable.universe_collectable_id;
     const firstMatchIndex = collectablesWithAttributes.findIndex(
       c => c.collectable_id === firstMatchId
     );
@@ -843,7 +844,8 @@ router.get('/jump', async (req, res) => {
 
     res.json({
       pageNumber: pageNumber,
-      collectable_id: firstMatchId
+      collectable_id: firstMatchId,
+      universe_collectable_id: firstMatchUniverseId
     });
   } catch (error) {
     console.error(error);
