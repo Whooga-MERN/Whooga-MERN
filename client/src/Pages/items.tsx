@@ -239,7 +239,6 @@ export default function HomePage() {
       );
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
-
       const initialWishlistFormData = specificTag.attributes.reduce(
         (
           acc: { [x: string]: any },
@@ -247,13 +246,13 @@ export default function HomePage() {
         ) => {
           acc[attr.name] = {
             value: attr.value, // Store the original value
-            checked: false,    // Add a checked property initialized to false
+            checked: false, // Add a checked property initialized to false
           };
           return acc;
         },
         {} as Record<string, { value: any; checked: boolean }> // Ensure the correct type
       );
-      
+
       setWishlistForm(initialWishlistFormData); // Set the wishlist form to the initial data for wishlisting Modal
     }
   }, [specificTag]);
@@ -409,7 +408,7 @@ export default function HomePage() {
     event: React.MouseEvent,
     item: Record<string, any>,
     universeCollectableId: number,
-    collectionId?: string,
+    collectionId?: string
   ) => {
     event.stopPropagation(); // Prevent event bubbling
     console.log("universeCollectableId", universeCollectableId);
@@ -423,35 +422,36 @@ export default function HomePage() {
       removeFromWishlist(collectionId, universeCollectableId);
     } else {
       // Open up the Wishlist Modal to add the item to the wishlist
-      console.log("OPENINGGGGGG")
+      console.log("OPENINGGGGGG");
       setWishlistModal(true);
       setSpecificTag(item);
       setWishlistModal_UCollectableID(universeCollectableId);
     }
   };
 
-
-
   //----------------Wishlist Modal Handling-------------------
 
   const [wishlistModal, setWishlistModal] = useState(false);
-  const [wishlistModal_UCollectableID, setWishlistModal_UCollectableID] = useState<number | null>(null)
+  const [wishlistModal_UCollectableID, setWishlistModal_UCollectableID] =
+    useState<number | null>(null);
   const [wishlistForm, setWishlistForm] = useState<Record<string, any>>({});
 
   const submitWishlistRequest = () => {
     // RUN CODE TO SUBMIT WISHLIST REQUEST
     if (universeCollectionId && wishlistModal_UCollectableID) {
-      
-
       // Create a search string from checked attributes
       const searchString = Object.entries(wishlistForm)
         .filter(([_, obj]) => obj.checked) // Include only entries where checked is true
         .map(([_, obj]) => obj.value) // Extract the value property
-        .join(' '); // Join the values into a space-separated string
+        .join(" "); // Join the values into a space-separated string
 
       console.log("searchString:", searchString);
 
-      addToWishlist(universeCollectionId, wishlistModal_UCollectableID, searchString);
+      addToWishlist(
+        universeCollectionId,
+        wishlistModal_UCollectableID,
+        searchString
+      );
 
       setWishlistIds((prev) => [...prev, wishlistModal_UCollectableID]);
     } else {
@@ -465,19 +465,19 @@ export default function HomePage() {
 
   const starClickClose = () => {
     // Cancel the wishlist request
-    
+
     setWishlistForm({});
     setWishlistModal(false);
     setSpecificTag(null);
     setWishlistModal_UCollectableID(null);
-  }
+  };
 
   const handleWishlistFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-  
+
     // Log the change for debugging
     console.log(`${name} is now ${checked}`);
-  
+
     // Update the wishlistForm state
     setWishlistForm((prev) => ({
       ...prev, // Keep all other attributes
@@ -487,8 +487,6 @@ export default function HomePage() {
       },
     }));
   };
-  
-
 
   //--------------------- handle form field ------------------------
   // handle form field change
@@ -1181,12 +1179,12 @@ export default function HomePage() {
   return (
     <>
       <div className="h-screen flex flex-col overflow-y-hidden">
-        <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full  relative">
+        <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
           <div className="w-full mx-auto pt-8">
-            <div className="mx-auto pl-10">
-              {/* <div> */}
-              <div className="flex md:items-center justify-center gap-48 pb-4 max-md:px-4  ">
+            <div className="mx-auto px-10">
+              {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
+              <div className="">
                 {/* collection option */}
                 <div className="flex items-center gap-4">
                   <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
@@ -1199,222 +1197,239 @@ export default function HomePage() {
                   />
                 </div>
 
-                {/* Search bar */}
-                {universeCollectionId && (
-                  <SearchBar
-                    attributes={maskedAttributes}
-                    resetDropdown={resetDropdown}
-                    onResetSearch={handleReset}
-                    setResetDropdown={setResetDropdown}
-                    onSearch={handleSearch}
-                    onJump={handleJump}
-                    onSortOrder={handleSortOrderChange}
-                    onSortBy={handleSortByChange}
-                  />
-                )}
-
-                {/* icon button for view hidden lg:block md:block*/}
-                <div className="hidden lg:block md:block pt-3 mt-3">
-                  <button className="pr-5" onClick={() => setView("list")}>
-                    <FaListUl />
-                  </button>
-                  <button className="pr-16" onClick={() => setView("grid")}>
-                    <BsFillGridFill />
-                  </button>
-                  {isCollectionOwned ? (
-                    <div className="dropdown">
-                      <div
-                        tabIndex={0}
-                        role="button"
-                        className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                      >
-                        Edit Collection
-                      </div>
-                      <ul
-                        tabIndex={0}
-                        className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-                      >
-                        <li>
-                          <a
-                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            onClick={openModal}
-                          >
-                            New Collectable
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            onClick={openEditAttributes}
-                          >
-                            Edit Favorite Attributes
-                          </a>
-                        </li>
-
-                        <li>
-                          <Link
-                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            to={`/bulk-upload/${collectionId}`}
-                          >
-                            Bulk Upload
-                          </Link>
-                        </li>
-
-                        <li>
-                          <Link
-                            className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-                            to={`/bulk-edit/${universeCollectionId}`}
-                          >
-                            Bulk Edit
-                          </Link>
-                        </li>
-
-                        <li>
-                          <a
-                            className="text-lg hover:bg-red-400 hover:text-black"
-                            onClick={deleteCollection}
-                          >
-                            Delete Collection
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  ) : (
-                    <button
-                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                      onClick={handleAddToMyCollections}
-                    >
-                      Add to My Collections
-                      <IoIosAdd />
-                    </button>
+                <div className="flex items-center justify-center gap-32">
+                  {/* Search bar */}
+                  {universeCollectionId && (
+                    <SearchBar
+                      attributes={maskedAttributes}
+                      resetDropdown={resetDropdown}
+                      onResetSearch={handleReset}
+                      setResetDropdown={setResetDropdown}
+                      onSearch={handleSearch}
+                      onJump={handleJump}
+                      onSortOrder={handleSortOrderChange}
+                      onSortBy={handleSortByChange}
+                    />
                   )}
 
-                  {isModalOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
-                        <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
-                          Create New Collectible
-                        </h2>
+                  {/* Icon buttons */}
+                  <div className="items-center gap-2 pt-5 hidden lg:flex">
+                    <button className="pr-5" onClick={() => setView("list")}>
+                      <FaListUl />
+                    </button>
+                    <button className="pr-5" onClick={() => setView("grid")}>
+                      <BsFillGridFill />
+                    </button>
+                    {isCollectionOwned ? (
+                      <div className="dropdown">
+                        <div
+                          tabIndex={0}
+                          role="button"
+                          className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-40"
+                        >
+                          Edit Collection
+                        </div>
+                        <ul
+                          tabIndex={0}
+                          className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                        >
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openModal}
+                            >
+                              New Collectable
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openEditAttributes}
+                            >
+                              Edit Favorite Attributes
+                            </a>
+                          </li>
+                          <li>
+                            <Link
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              to={`/bulk-upload/${collectionId}`}
+                            >
+                              Bulk Upload
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              to={`/bulk-edit/${universeCollectionId}`}
+                            >
+                              Bulk Edit
+                            </Link>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-red-400 hover:text-black"
+                              onClick={deleteCollection}
+                            >
+                              Delete Collection
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    ) : (
+                      <button
+                        className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                        onClick={handleAddToMyCollections}
+                      >
+                        Add to My Collections
+                        <IoIosAdd />
+                      </button>
+                    )}
 
-                        <form onSubmit={handleSubmit}>
-                          {maskedAttributes
-                            .concat("owned", "image")
-                            .filter((attr) => attr !== null)
-                            .map((attribute, index) => (
-                              <div key={index} className="mb-4 lg:max-w-lg">
-                                {attribute !== "image" ? (
-                                  attribute === "owned" ? (
-                                    <div className="flex items-center mb-3">
-                                      <input
-                                        type="checkbox"
-                                        id="publishCollection"
-                                        onChange={(e) =>
-                                          handleOwnedChange(e.target.checked)
-                                        }
-                                        className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
-                                      />
-                                      <label
-                                        htmlFor="publishCollection"
-                                        className="text-gray-700 dark:text-gray-300 text-sm font-bold"
-                                      >
-                                        Is Owned
-                                      </label>
-                                    </div>
+                    {isModalOpen && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                          <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                            Create New Collectible
+                          </h2>
+
+                          <form onSubmit={handleSubmit}>
+                            {maskedAttributes
+                              .concat("owned", "image")
+                              .filter((attr) => attr !== null)
+                              .map((attribute, index) => (
+                                <div key={index} className="mb-4 lg:max-w-lg">
+                                  {attribute !== "image" ? (
+                                    attribute === "owned" ? (
+                                      <div className="flex items-center mb-3">
+                                        <input
+                                          type="checkbox"
+                                          id="publishCollection"
+                                          onChange={(e) =>
+                                            handleOwnedChange(e.target.checked)
+                                          }
+                                          className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                        />
+                                        <label
+                                          htmlFor="publishCollection"
+                                          className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                        >
+                                          Is Owned
+                                        </label>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                          {attribute.charAt(0).toUpperCase() +
+                                            attribute.slice(1)}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          name={attribute}
+                                          placeholder={`${attribute}`}
+                                          value={formData[attribute] || ""}
+                                          onChange={handleChange}
+                                          className="border rounded w-full py-2 px-3 text-gray-700"
+                                        />
+                                      </>
+                                    )
                                   ) : (
                                     <>
-                                      <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-                                        {attribute.charAt(0).toUpperCase() +
-                                          attribute.slice(1)}
+                                      <label
+                                        htmlFor="cover-photo"
+                                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                      >
+                                        Upload Photo
                                       </label>
-                                      <input
-                                        type="text"
-                                        name={attribute}
-                                        placeholder={`${attribute}`}
-                                        value={formData[attribute] || ""}
-                                        onChange={handleChange}
-                                        className="border rounded w-full py-2 px-3 text-gray-700"
-                                      />
-                                    </>
-                                  )
-                                ) : (
-                                  <>
-                                    <label
-                                      htmlFor="cover-photo"
-                                      className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                                    >
-                                      Upload Photo
-                                    </label>
-                                    <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                                      <div className="text-center">
-                                        <PhotoIcon
-                                          aria-hidden="true"
-                                          className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                                        />
-                                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                                          <label
-                                            htmlFor="file-upload"
-                                            className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                                          >
-                                            <span>Upload a photo</span>
-                                            <input
-                                              id="file-upload"
-                                              name="file-upload"
-                                              type="file"
-                                              className="sr-only"
-                                              onChange={handleFileChange}
-                                            />
-                                          </label>
-                                          <p>or drag and drop</p>
+                                      <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                        <div className="text-center">
+                                          <PhotoIcon
+                                            aria-hidden="true"
+                                            className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                          />
+                                          <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                            <label
+                                              htmlFor="file-upload"
+                                              className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                            >
+                                              <span>Upload a photo</span>
+                                              <input
+                                                id="file-upload"
+                                                name="file-upload"
+                                                type="file"
+                                                className="sr-only"
+                                                onChange={handleFileChange}
+                                              />
+                                            </label>
+                                            <p>or drag and drop</p>
+                                          </div>
+                                          <p className="text-xs leading-5 text-gray-600">
+                                            PNG, JPG
+                                          </p>
                                         </div>
-                                        <p className="text-xs leading-5 text-gray-600">
-                                          PNG, JPG
-                                        </p>
                                       </div>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                          <div className="flex items-center mb-3">
-                            <input
-                              type="checkbox"
-                              id="publishCollection"
-                              checked={isPublished}
-                              onChange={handlePublishChange}
-                              className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
-                            />
-                            <label
-                              htmlFor="publishCollection"
-                              className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
-                            >
-                              Publish Collectable
-                            </label>
-                          </div>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            <div className="flex items-center mb-3">
+                              <input
+                                type="checkbox"
+                                id="publishCollection"
+                                checked={isPublished}
+                                onChange={handlePublishChange}
+                                className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                              />
+                              <label
+                                htmlFor="publishCollection"
+                                className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                              >
+                                Publish Collectable
+                              </label>
+                            </div>
 
-                          <div className="flex justify-end space-x-4 mt-8">
-                            <button
-                              type="button"
-                              onClick={closeModal}
-                              className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="submit"
-                              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
-                            >
-                              Create
-                            </button>
-                          </div>
-                        </form>
+                            <div className="flex justify-end space-x-4 mt-8">
+                              <button
+                                type="button"
+                                onClick={closeModal}
+                                className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                              >
+                                Create
+                              </button>
+                            </div>
+                          </form>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="w-full px-10 py-2 flex justify-end dark:bg-gray-800">
+          {searchTags.length > 0 &&
+          searchResultsData?.pages?.[0]?.totalMatchingCollectables ? (
+            // if there is searchResults, show total count
+            <p className="text-xl font-bold text-gray-700 dark:text-gray-200">
+              Total Matching Search Results:{" "}
+              {searchResultsData.pages[0].totalMatchingCollectables}
+            </p>
+          ) : (
+            // Show total collectables
+            collectablesData?.pages?.[0]?.totalMatchingCollectables && (
+              <p className="text-xl font-bold text-gray-700 dark:text-gray-200">
+                Total Collectables:{" "}
+                {collectablesData.pages[0].totalMatchingCollectables}
+              </p>
+            )
+          )}
         </div>
 
         <div
@@ -1445,38 +1460,15 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  <div className="w-full px-4 py-2 flex justify-end dark:bg-gray-800">
-                    {searchTags.length > 0 &&
-                    searchResultsData?.pages?.[0]?.totalMatchingCollectables ? (
-                      // if there is searchResults, show total count
-                      <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                        Total Matching Search Results:{" "}
-                        {searchResultsData.pages[0].totalMatchingCollectables}
-                      </p>
-                    ) : (
-                      // Show total collectables
-                      collectablesData?.pages?.[0]
-                        ?.totalMatchingCollectables && (
-                        <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                          Total Collectables:{" "}
-                          {collectablesData.pages[0].totalMatchingCollectables}
-                        </p>
-                      )
-                    )}
-                  </div>
-
                   {noSearchResults ? (
                     <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
                       No match found :(
                     </div>
                   ) : (
                     <div className="w-full p-2">
-
-                      
                       {/* DEFAULT COLLECTABLE RESULTS 
                         i.e what is shown when mounting onto the page */}
                       {
-
                         // If there are no search results and no jump search results, show the default collectables
                         _searchResults.length === 0 &&
                           jumpSearchResults.length === 0 &&
@@ -1494,7 +1486,12 @@ export default function HomePage() {
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       {wishlistIds.includes(
@@ -1520,7 +1517,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1587,12 +1584,19 @@ export default function HomePage() {
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       <FontAwesomeIcon
                                         icon={
-                                          wishlistIds.includes(item.universeCollectableId)
+                                          wishlistIds.includes(
+                                            item.universeCollectableId
+                                          )
                                             ? faSolidStar
                                             : faRegularStar
                                         }
@@ -1603,12 +1607,14 @@ export default function HomePage() {
                                     {/* Image */}
                                     <img
                                       src={
-                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
-                                        "/placeholder.jpg"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
                                       }
                                       alt={
-                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
-                                        "No Name"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "Name"
+                                        )?.value || "No Name"
                                       }
                                       width={400}
                                       height={400}
@@ -1622,7 +1628,8 @@ export default function HomePage() {
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
-                                          attribute.name !== "image" && attribute.name !== "owned"
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
@@ -1656,7 +1663,6 @@ export default function HomePage() {
                                     </div>
                                   </div>
                                 </div>
-
                               ))}
                             </div>
                           ))
@@ -1679,7 +1685,12 @@ export default function HomePage() {
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       {wishlistIds.includes(
@@ -1705,7 +1716,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1776,12 +1787,19 @@ export default function HomePage() {
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       <FontAwesomeIcon
                                         icon={
-                                          wishlistIds.includes(item.universeCollectableId)
+                                          wishlistIds.includes(
+                                            item.universeCollectableId
+                                          )
                                             ? faSolidStar
                                             : faRegularStar
                                         }
@@ -1792,12 +1810,14 @@ export default function HomePage() {
                                     {/* Image */}
                                     <img
                                       src={
-                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
-                                        "/placeholder.jpg"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
                                       }
                                       alt={
-                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
-                                        "No Name"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "Name"
+                                        )?.value || "No Name"
                                       }
                                       width={400}
                                       height={400}
@@ -1811,7 +1831,8 @@ export default function HomePage() {
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
-                                          attribute.name !== "image" && attribute.name !== "owned"
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
@@ -1874,7 +1895,12 @@ export default function HomePage() {
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       {wishlistIds.includes(
@@ -1900,7 +1926,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1974,12 +2000,19 @@ export default function HomePage() {
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       <FontAwesomeIcon
                                         icon={
-                                          wishlistIds.includes(item.universeCollectableId)
+                                          wishlistIds.includes(
+                                            item.universeCollectableId
+                                          )
                                             ? faSolidStar
                                             : faRegularStar
                                         }
@@ -1990,12 +2023,14 @@ export default function HomePage() {
                                     {/* Image */}
                                     <img
                                       src={
-                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
-                                        "/placeholder.jpg"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
                                       }
                                       alt={
-                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
-                                        "No Name"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "Name"
+                                        )?.value || "No Name"
                                       }
                                       width={400}
                                       height={400}
@@ -2009,7 +2044,8 @@ export default function HomePage() {
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
-                                          attribute.name !== "image" && attribute.name !== "owned"
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
