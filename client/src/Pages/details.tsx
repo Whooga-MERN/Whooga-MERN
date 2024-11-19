@@ -39,7 +39,7 @@ export default function Details() {
                   (attribute: any) =>
                     attribute.name !== "image" && attribute.name !== "owned"
                 )
-                .slice(0, 2)
+                .slice(0, 1)
                 .map((attribute: any) => (
                   <p
                     key={attribute.name}

@@ -239,7 +239,6 @@ export default function HomePage() {
       );
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
-
       const initialWishlistFormData = specificTag.attributes.reduce(
         (
           acc: { [x: string]: any },
@@ -247,13 +246,13 @@ export default function HomePage() {
         ) => {
           acc[attr.name] = {
             value: attr.value, // Store the original value
-            checked: false,    // Add a checked property initialized to false
+            checked: false, // Add a checked property initialized to false
           };
           return acc;
         },
         {} as Record<string, { value: any; checked: boolean }> // Ensure the correct type
       );
-      
+
       setWishlistForm(initialWishlistFormData); // Set the wishlist form to the initial data for wishlisting Modal
     }
   }, [specificTag]);
@@ -409,7 +408,7 @@ export default function HomePage() {
     event: React.MouseEvent,
     item: Record<string, any>,
     universeCollectableId: number,
-    collectionId?: string,
+    collectionId?: string
   ) => {
     event.stopPropagation(); // Prevent event bubbling
     console.log("universeCollectableId", universeCollectableId);
@@ -423,35 +422,36 @@ export default function HomePage() {
       removeFromWishlist(collectionId, universeCollectableId);
     } else {
       // Open up the Wishlist Modal to add the item to the wishlist
-      console.log("OPENINGGGGGG")
+      console.log("OPENINGGGGGG");
       setWishlistModal(true);
       setSpecificTag(item);
       setWishlistModal_UCollectableID(universeCollectableId);
     }
   };
 
-
-
   //----------------Wishlist Modal Handling-------------------
 
   const [wishlistModal, setWishlistModal] = useState(false);
-  const [wishlistModal_UCollectableID, setWishlistModal_UCollectableID] = useState<number | null>(null)
+  const [wishlistModal_UCollectableID, setWishlistModal_UCollectableID] =
+    useState<number | null>(null);
   const [wishlistForm, setWishlistForm] = useState<Record<string, any>>({});
 
   const submitWishlistRequest = () => {
     // RUN CODE TO SUBMIT WISHLIST REQUEST
     if (universeCollectionId && wishlistModal_UCollectableID) {
-      
-
       // Create a search string from checked attributes
       const searchString = Object.entries(wishlistForm)
         .filter(([_, obj]) => obj.checked) // Include only entries where checked is true
         .map(([_, obj]) => obj.value) // Extract the value property
-        .join(' '); // Join the values into a space-separated string
+        .join(" "); // Join the values into a space-separated string
 
       console.log("searchString:", searchString);
 
-      addToWishlist(universeCollectionId, wishlistModal_UCollectableID, searchString);
+      addToWishlist(
+        universeCollectionId,
+        wishlistModal_UCollectableID,
+        searchString
+      );
 
       setWishlistIds((prev) => [...prev, wishlistModal_UCollectableID]);
     } else {
@@ -465,19 +465,19 @@ export default function HomePage() {
 
   const starClickClose = () => {
     // Cancel the wishlist request
-    
+
     setWishlistForm({});
     setWishlistModal(false);
     setSpecificTag(null);
     setWishlistModal_UCollectableID(null);
-  }
+  };
 
   const handleWishlistFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-  
+
     // Log the change for debugging
     console.log(`${name} is now ${checked}`);
-  
+
     // Update the wishlistForm state
     setWishlistForm((prev) => ({
       ...prev, // Keep all other attributes
@@ -487,8 +487,6 @@ export default function HomePage() {
       },
     }));
   };
-  
-
 
   //--------------------- handle form field ------------------------
   // handle form field change
@@ -1417,6 +1415,25 @@ export default function HomePage() {
           </div>
         </div>
 
+        <div className="w-full px-4 py-2 flex justify-end dark:bg-gray-800">
+          {searchTags.length > 0 &&
+          searchResultsData?.pages?.[0]?.totalMatchingCollectables ? (
+            // if there is searchResults, show total count
+            <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
+              Total Matching Search Results:{" "}
+              {searchResultsData.pages[0].totalMatchingCollectables}
+            </p>
+          ) : (
+            // Show total collectables
+            collectablesData?.pages?.[0]?.totalMatchingCollectables && (
+              <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
+                Total Collectables:{" "}
+                {collectablesData.pages[0].totalMatchingCollectables}
+              </p>
+            )
+          )}
+        </div>
+
         <div
           ref={scrollRef}
           className="flex-1 w-full overflow-y-auto p-4 relative dark:bg-gray-800"
@@ -1445,38 +1462,15 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  <div className="w-full px-4 py-2 flex justify-end dark:bg-gray-800">
-                    {searchTags.length > 0 &&
-                    searchResultsData?.pages?.[0]?.totalMatchingCollectables ? (
-                      // if there is searchResults, show total count
-                      <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                        Total Matching Search Results:{" "}
-                        {searchResultsData.pages[0].totalMatchingCollectables}
-                      </p>
-                    ) : (
-                      // Show total collectables
-                      collectablesData?.pages?.[0]
-                        ?.totalMatchingCollectables && (
-                        <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                          Total Collectables:{" "}
-                          {collectablesData.pages[0].totalMatchingCollectables}
-                        </p>
-                      )
-                    )}
-                  </div>
-
                   {noSearchResults ? (
                     <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
                       No match found :(
                     </div>
                   ) : (
                     <div className="w-full p-2">
-
-                      
                       {/* DEFAULT COLLECTABLE RESULTS 
                         i.e what is shown when mounting onto the page */}
                       {
-
                         // If there are no search results and no jump search results, show the default collectables
                         _searchResults.length === 0 &&
                           jumpSearchResults.length === 0 &&
@@ -1494,7 +1488,12 @@ export default function HomePage() {
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       {wishlistIds.includes(
@@ -1520,7 +1519,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1587,12 +1586,19 @@ export default function HomePage() {
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       <FontAwesomeIcon
                                         icon={
-                                          wishlistIds.includes(item.universeCollectableId)
+                                          wishlistIds.includes(
+                                            item.universeCollectableId
+                                          )
                                             ? faSolidStar
                                             : faRegularStar
                                         }
@@ -1603,12 +1609,14 @@ export default function HomePage() {
                                     {/* Image */}
                                     <img
                                       src={
-                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
-                                        "/placeholder.jpg"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
                                       }
                                       alt={
-                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
-                                        "No Name"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "Name"
+                                        )?.value || "No Name"
                                       }
                                       width={400}
                                       height={400}
@@ -1622,7 +1630,8 @@ export default function HomePage() {
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
-                                          attribute.name !== "image" && attribute.name !== "owned"
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
@@ -1656,7 +1665,6 @@ export default function HomePage() {
                                     </div>
                                   </div>
                                 </div>
-
                               ))}
                             </div>
                           ))
@@ -1679,7 +1687,12 @@ export default function HomePage() {
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       {wishlistIds.includes(
@@ -1705,7 +1718,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1776,12 +1789,19 @@ export default function HomePage() {
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       <FontAwesomeIcon
                                         icon={
-                                          wishlistIds.includes(item.universeCollectableId)
+                                          wishlistIds.includes(
+                                            item.universeCollectableId
+                                          )
                                             ? faSolidStar
                                             : faRegularStar
                                         }
@@ -1792,12 +1812,14 @@ export default function HomePage() {
                                     {/* Image */}
                                     <img
                                       src={
-                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
-                                        "/placeholder.jpg"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
                                       }
                                       alt={
-                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
-                                        "No Name"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "Name"
+                                        )?.value || "No Name"
                                       }
                                       width={400}
                                       height={400}
@@ -1811,7 +1833,8 @@ export default function HomePage() {
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
-                                          attribute.name !== "image" && attribute.name !== "owned"
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
@@ -1874,7 +1897,12 @@ export default function HomePage() {
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       {wishlistIds.includes(
@@ -1900,7 +1928,7 @@ export default function HomePage() {
                                         }
                                         alt={
                                           item.attributes?.find(
-                                            (attr: any) => attr.name === "name"
+                                            (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
                                         width={100}
@@ -1974,12 +2002,19 @@ export default function HomePage() {
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
                                       onClick={(event) => {
                                         event.stopPropagation(); // Prevent event bubbling
-                                        handleStarClick(event, item, item.universeCollectableId, collectionId)
+                                        handleStarClick(
+                                          event,
+                                          item,
+                                          item.universeCollectableId,
+                                          collectionId
+                                        );
                                       }}
                                     >
                                       <FontAwesomeIcon
                                         icon={
-                                          wishlistIds.includes(item.universeCollectableId)
+                                          wishlistIds.includes(
+                                            item.universeCollectableId
+                                          )
                                             ? faSolidStar
                                             : faRegularStar
                                         }
@@ -1990,12 +2025,14 @@ export default function HomePage() {
                                     {/* Image */}
                                     <img
                                       src={
-                                        item.attributes?.find((attr: any) => attr.name === "image")?.value ||
-                                        "/placeholder.jpg"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "image"
+                                        )?.value || "/placeholder.jpg"
                                       }
                                       alt={
-                                        item.attributes?.find((attr: any) => attr.name === "name")?.value ||
-                                        "No Name"
+                                        item.attributes?.find(
+                                          (attr: any) => attr.name === "Name"
+                                        )?.value || "No Name"
                                       }
                                       width={400}
                                       height={400}
@@ -2009,7 +2046,8 @@ export default function HomePage() {
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
-                                          attribute.name !== "image" && attribute.name !== "owned"
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (

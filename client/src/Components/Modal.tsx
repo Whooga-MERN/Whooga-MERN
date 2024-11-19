@@ -49,7 +49,7 @@ const Modal: React.FC<ModalProps> = ({ isVisible, onClose, itemData }) => {
                       (attribute: any) =>
                         attribute.name !== "image" && attribute.name !== "owned"
                     )
-                    .slice(0, 2)
+                    .slice(0, 1)
                     .map((attribute: any) => (
                       <p key={attribute.name}>
                         {attribute.value.toUpperCase() || "N/A"}
@@ -65,7 +65,7 @@ const Modal: React.FC<ModalProps> = ({ isVisible, onClose, itemData }) => {
                       (attribute: any) =>
                         attribute.name !== "image" && attribute.name !== "owned"
                     )
-                    .slice(2)
+                    .slice(1)
                     .map((attribute: any) => (
                       <p key={attribute.name}>
                         {attribute.name}: {attribute.value || "N/A"}
