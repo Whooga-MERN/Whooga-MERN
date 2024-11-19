@@ -150,6 +150,10 @@ export default function Collections() {
         "hiddenAttributes",
         JSON.stringify(collection.hiddenAttributes)
       );
+      localStorage.setItem(
+        "collectionUniverseId",
+        collectionUniverseId
+      )
       console.log("sending CID: ", collection.id);
       localStorage.setItem(
         "collectionId",

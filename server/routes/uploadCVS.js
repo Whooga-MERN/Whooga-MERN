@@ -161,6 +161,7 @@ router.post('', cpUpload, async (req, res) => {
             const ownedCollectable = [];
             const mappedCollectableImage = [];
 
+            console.log("parsedCsvJsonData: ", parsedCsvJsonData);
             let imageUrl = null
             for (const row of parsedCsvJsonData) {
                 const imageObject = urlCollectableImages.find(image => image.originalName === row.image);
@@ -189,6 +190,8 @@ router.post('', cpUpload, async (req, res) => {
                 //collectable_pic: ownedCollectableImage[j]
                 // The owned should only be used for the collectables table. 
                 for (const [key, value] of Object.entries(row)) {
+                    console.log("key: ", key);
+                    console.log("value: ", value);
                     if (key !== 'owned' && key !== 'image') {
                         collectableAttributesData.push({
                             collection_universe_id: collectionUniverseID,
@@ -231,6 +234,7 @@ router.post('', cpUpload, async (req, res) => {
                 }
             });
 
+            console.log("colletableAttributes: ", collectableAttributesData);
             await trx.insert(collectableAttributes).values(collectableAttributesData);
 
             await trx.insert(collectables).values(ownedCollectable);
