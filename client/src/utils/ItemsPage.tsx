@@ -278,11 +278,14 @@ export const addToWishlist = async (
   sourceAttributesString: string
 ) => {
   if (!collectionId || !universeCollectableId || !sourceAttributesString) {
-    console.error("Missing collectionId or universeCollectableId or sourceAttributesString", {
-      collectionId,
-      universeCollectableId,
-      sourceAttributesString,
-    });
+    console.error(
+      "Missing collectionId or universeCollectableId or sourceAttributesString",
+      {
+        collectionId,
+        universeCollectableId,
+        sourceAttributesString,
+      }
+    );
     throw new Error("Missing a request parameter");
   }
 
