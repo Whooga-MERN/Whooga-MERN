@@ -8,6 +8,7 @@ import Auth, { AuthUser } from "@aws-amplify/auth";
 import { Form, useNavigate } from "react-router-dom";
 import { buildPath } from "../utils/utils";
 import { set } from "lodash";
+import Papa from 'papaparse';
 
 function UploadCollection() {
   const [featureTags, setFeatureTags] = useState<string[]>([]);
@@ -114,16 +115,31 @@ function UploadCollection() {
     }
   };
 
+  // const CSVToJSON = (csv: string) => {
+  //   const lines = csv.split("\n");
+  //   const keys = lines[0].split(",");
+  //   return lines.slice(1).map((line) => {
+  //     return line.split(",").reduce((acc, cur, i) => {
+  //       const toAdd: { [key: string]: string } = {};
+  //       console.log("cur: ", cur);
+  //       toAdd[keys[i].trim()] = cur.trim();
+  //       return { ...acc, ...toAdd };
+  //     }, {});
+  //   });
+  // };
+
   const CSVToJSON = (csv: string) => {
-    const lines = csv.split("\n");
-    const keys = lines[0].split(",");
-    return lines.slice(1).map((line) => {
-      return line.split(",").reduce((acc, cur, i) => {
-        const toAdd: { [key: string]: string } = {};
-        toAdd[keys[i].trim()] = cur.trim();
-        return { ...acc, ...toAdd };
-      }, {});
+    const result = Papa.parse(csv, {
+      header: true,
+      skipEmptyLines: true,
     });
+  
+    if (result.errors.length) {
+      console.error('Error parsing CSV:', result.errors);
+      return [];
+    }
+  
+    return result.data;
   };
 
   useEffect(() => {

@@ -199,7 +199,7 @@ router.post('', cpUpload, async (req, res) => {
                             universe_collectable_id: universeCollectableID,
                             name: key,
                             slug: key.toLowerCase().replace(/\s+/g, '_'),
-                            value: value,
+                            value: value || '',
                             is_custom: false,
                         });
                     }
