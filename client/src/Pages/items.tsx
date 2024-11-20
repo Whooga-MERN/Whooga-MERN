@@ -895,7 +895,7 @@ export default function HomePage() {
         if (res) {
           console.log("result: ", res);
           // set this matched item to be hightlighted
-          setOwnedHighlightedItemId(res.collectable_id);
+          setHighlightedItemId(res.universe_collectable_id);
         }
       } else if (universeCollectionId) {
         // Fetch universe jump results when toggle is disabled
@@ -1883,9 +1883,7 @@ export default function HomePage() {
                                   key={`${item.universeCollectableId}-jump`}
                                   className={` ${
                                     item.universeCollectableId ===
-                                      highlightedItemId ||
-                                    item.collectableId ===
-                                      ownedHighlightedItemId
+                                    highlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}
@@ -1987,9 +1985,7 @@ export default function HomePage() {
                                   key={`${item.universeCollectableId}-jump`}
                                   className={` ${
                                     item.universeCollectableId ===
-                                      highlightedItemId ||
-                                    item.collectableId ===
-                                      ownedHighlightedItemId
+                                    highlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}
