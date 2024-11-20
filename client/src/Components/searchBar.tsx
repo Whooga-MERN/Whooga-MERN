@@ -202,7 +202,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   type="radio"
                   id="ascending"
                   name="sortOrder"
-                  checked={sortOrder === "asc"}
+                  checked={sortOrder === "ascending"}
                   onChange={() => handleSortOrderChange("asc")}
                   className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-1 focus:ring-yellow-400"
                 />
