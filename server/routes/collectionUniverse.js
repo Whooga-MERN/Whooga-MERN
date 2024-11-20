@@ -25,7 +25,8 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
+    const uniqueSuffix = `${Date.now()}-${uuidv4()}`;
+    cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
   }
 });
 
@@ -388,6 +389,9 @@ router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
     const originalCSV = req.files.originalCSV ? req.files.originalCSV[0] : null;
     const editedCSV = req.files.editedCSV ? req.files.editedCSV[0] : null;
 
+    console.log("originalCSV: ", originalCSV);
+    console.log("editedCSV: ", editedCSV);
+
     if (collectableImages && collectableImages.length > 0) {
       console.log("uploading images");
       const uploadPromises = collectableImages.map(async file => {
@@ -424,11 +428,13 @@ router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
     // console.log("Original CSV:", originalCSV);
     // console.log("Edited CSV:", editedCSV);
 
+    console.log("originalCSV.path: ", originalCSV.path);
     const originalCSVData = await parseCSV(originalCSV.path);
     console.log("originalCSVData: ", originalCSVData);
 
     const editedCSVData = await parseCSV(editedCSV.path);
     console.log("editedCSVData: ", editedCSVData);
+    console.log("editedCSV.path: ", editedCSV.path);
 
     if(fs.existsSync(originalCSV.path))
       fs.unlinkSync(originalCSV.path);
