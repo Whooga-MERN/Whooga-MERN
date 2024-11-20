@@ -56,7 +56,9 @@ export default function HomePage() {
   const [isPublished, setIsPublished] = useState(false);
 
   const [isOwnedMap, setIsOwnedMap] = useState<Map<string, boolean>>(new Map());
-  const [publishedCollectableIds, setPublishedCollectableIds] = useState<string[]>([]);
+  const [publishedCollectableIds, setPublishedCollectableIds] = useState<
+    string[]
+  >([]);
 
   const [userId, setUserId] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
@@ -224,7 +226,9 @@ export default function HomePage() {
 
     const getPublishedCollectables = async () => {
       const response = await fetch(
-        buildPath(`universe-collectable/published-collectables/${universeCollectionId}`),
+        buildPath(
+          `universe-collectable/published-collectables/${universeCollectionId}`
+        ),
         {
           method: "GET",
           headers: {
@@ -235,10 +239,11 @@ export default function HomePage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Published Collectables: ", data);
-        const publishedIds = data.map((item: { collectableId: any; }) => item.collectableId);
+
+        const publishedIds = data.map(
+          (item: { collectableId: any }) => item.collectableId
+        );
         setPublishedCollectableIds(publishedIds);
-        console.log("Published Collectable Ids: ", publishedIds);
       } else {
         console.error("Error fetching published collectables:", response);
       }
@@ -252,7 +257,6 @@ export default function HomePage() {
 
   useEffect(() => {
     if (specificTag) {
-      console.log("specificTag", specificTag);
       const initialFormData = specificTag.attributes.reduce(
         (
           acc: { [x: string]: any },
@@ -263,11 +267,28 @@ export default function HomePage() {
         },
         {} as Record<string, string>
       );
-      console.log("bool test with: ", specificTag.universeCollectableId.toString(), " ", publishedCollectableIds);
-      initialFormData["owned"] = isOwnedMap.get(specificTag.universeCollectableId) ? "T" : "F";
-      initialFormData["published"] = publishedCollectableIds.includes(specificTag.universeCollectableId) ? "T" : "F";
+      console.log(
+        "bool test with: ",
+        specificTag.universeCollectableId.toString(),
+        " ",
+        publishedCollectableIds
+      );
+      initialFormData["owned"] = isOwnedMap.get(
+        specificTag.universeCollectableId
+      )
+        ? "T"
+        : "F";
+      initialFormData["published"] = publishedCollectableIds.includes(
+        specificTag.universeCollectableId
+      )
+        ? "T"
+        : "F";
 
-      console.log("setting form published to: " +  specificTag.universeCollectableId.toString() + initialFormData["published"]);
+      console.log(
+        "setting form published to: " +
+          specificTag.universeCollectableId.toString() +
+          initialFormData["published"]
+      );
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
       const initialWishlistFormData = specificTag.attributes.reduce(
@@ -546,8 +567,11 @@ export default function HomePage() {
     setIsPublished(!isPublished);
   };
 
-    const handlePublishChangeEditCollectable = (published : boolean) => {
-    setFormData((prevData) => ({ ...prevData, ["published"]: published ? "T" : "F" }));
+  const handlePublishChangeEditCollectable = (published: boolean) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      ["published"]: published ? "T" : "F",
+    }));
   };
 
   // handle form submit
@@ -748,13 +772,11 @@ export default function HomePage() {
 
   const handleSortOrderChange = (order: string) => {
     setSortOrder(order);
-    console.log("Sort Order:", order);
     fetchCollectablesNextPage();
   };
 
   const handleSortByChange = (attribute: string) => {
     setSortBy(attribute);
-    console.log("Sort By:", attribute);
     fetchCollectablesNextPage();
   };
 
@@ -794,7 +816,6 @@ export default function HomePage() {
             sortBy,
             sortOrder
           );
-          console.log("collectables", collectables);
         return { collectables, totalMatchingCollectables };
       }
       // Default empty structure if neither condition is met
@@ -1448,7 +1469,7 @@ export default function HomePage() {
                   {/* Search bar */}
                   {universeCollectionId && (
                     <SearchBar
-                      attributes={maskedAttributes}
+                      attributes={favoriteAttributes}
                       resetDropdown={resetDropdown}
                       onResetSearch={handleReset}
                       setResetDropdown={setResetDropdown}
@@ -2463,7 +2484,11 @@ export default function HomePage() {
                               type="checkbox"
                               id="publishCollection"
                               checked={formData["published"] === "T" || false}
-                              onChange={(e) => handlePublishChangeEditCollectable(e.target.checked)}
+                              onChange={(e) =>
+                                handlePublishChangeEditCollectable(
+                                  e.target.checked
+                                )
+                              }
                               className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
                             />
                             <label
