@@ -539,6 +539,40 @@ router.put('/bulk-update', bulkUpdateUpload, async (req, res) => {
   }
 });
 
+router.put('/update-collection-universe-name', async (req, res) => {
+  const {collectionUniverseId, newUniverseName} = req.body
+
+  if(!collectionUniverseId ||  isNaN(collectionUniverseId)) {
+    console.log("collectionUniverseId invalid: ", collectionUniverseId);
+    return res.status(404).send("collectioNUniverseId invalid:", collectionUniverseId);
+  }
+  console.log("collectionUniverseId", collectionUniverseId);
+  console.log("newUniverseName", newUniverseName);
+
+  try {
+    
+    console.log("Updating collection universe name");
+    const updateQuery = await db
+      .update(collectionUniverses)
+      .set({name: newUniverseName})
+      .where(eq(collectionUniverses.collection_universe_id, collectionUniverseId))
+      .execute();
+
+    if(updateQuery.changes != 0) {
+      console.log("Updated collection universe name");
+      return res.status(200).send("Successfully updated collection universe name");
+    }
+    
+    res.status(400).send("Failed to update collection universe name");
+  } catch (error) {
+    console.log("Error updating collection univsere name");
+    console.log(error);
+    
+    res.status(400).send("Error updating collection universe name");
+  }
+});
+
+
 // UPDATE
 router.put('/:id', async (req, res) => {
   const { id } = req.params;

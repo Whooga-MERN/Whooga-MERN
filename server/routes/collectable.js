@@ -513,11 +513,6 @@ router.get('/collection-paginated/:collection_id', async (req, res) => {
   }
 });
 
-
-
-
-
-
 router.put('/edit-collectable', upload.single('collectableImage'), async (req, res) => {
   const { collectionId, universeCollectableId, attributeValuesJson, owned} = req.body;
   let image = null;
