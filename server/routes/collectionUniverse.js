@@ -9,6 +9,8 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const Papa = require("papaparse");
 const fs = require('fs');
+const { createS3File, deleteS3File } = require('../utility/s3BucketUtil');
+
 //const { authenticateJWTToken } = require("../middleware/verifyJWT");
 
 const router = express.Router();
@@ -572,6 +574,54 @@ router.put('/update-collection-universe-name', async (req, res) => {
   }
 });
 
+router.put('/update-universe-pic', upload.single('coverImage'), async (req, res) => {
+  const { collectionUniverseId } = req.body;
+
+  if(!collectionUniverseId || isNaN (collectionUniverseId)) {
+    console.log("No or improper collectionUniverseId given, userId: ", collectionUniverseId);
+    return res.status(404).send("No or improper collectionUniverseId given");
+  }
+
+  let image = null;
+  if(req.file)
+    image = req.file;
+  else {
+    console.log("No Image Provided");
+    return res.status(404).send("No Image Provided");
+  }
+  console.log("userId: ", collectionUniverseId);
+
+  try {
+    let imageUrl = null;
+    if(image)
+    {
+      console.log("Creating S3 Image File\n");    
+      try {
+        imageUrl = await createS3File(image);
+      } catch (error) {
+        console.log(error);
+        return res.status(500).send({ error: 'Error creating image for S3 Bucket'});
+      }
+    }
+    
+    console.log("Starting update cover picture")
+    await db
+      .update(collectionUniverses)
+      .set({ universe_collection_pic: imageUrl })
+      .where(
+        eq(collectionUniverses.collection_universe_id, collectionUniverseId)
+      )
+      .execute();
+
+    console.log("Successfully updated cover picture")
+    res.status(200).send("Successfully updated cover picture");
+  } catch (error) {
+    
+    console.log("Error updating cover picture");
+    console.log(error);
+    res.status(404).send("Error updating cover picture");
+  }
+});
 
 // UPDATE
 router.put('/:id', async (req, res) => {
