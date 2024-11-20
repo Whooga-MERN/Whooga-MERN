@@ -321,6 +321,16 @@ router.put('/add-custom-attributes', async (req, res) => {
   }
 });
 
+router.delete('/remove-attribute', async (req, res) => {
+  const { attributes } = req.body;
+  if(!attributes) {
+    console.log("Invalid attributes given: ", attributes);
+    return res.status(404).send("Invalid attributes given");
+  }
+
+  
+});
+
 router.delete('/remove-custom-attribute', async (req, res) => {
   const { customAttributes, collectionUniverseId } = req.body;
 

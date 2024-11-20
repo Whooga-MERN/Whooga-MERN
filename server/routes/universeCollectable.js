@@ -45,6 +45,41 @@ router.get('', async (req, res) => {
 });
 
 // READ (Single item)
+
+router.get('/published-collectables/:collectionUniverseId', async (req, res) => {
+  const { collectionUniverseId } = req.params;
+
+  if(!collectionUniverseId || isNaN(collectionUniverseId)) {
+    console.log("collectionUniverseId is invalid: ", collectionUniverseId);
+    return res.status(404).send("universeCollectionId is invalid");
+  }
+  console.log("collectionUniverseId: ". collectionUniverseId);
+
+  try {
+    console.log("Fetching all published collectables");
+    const publishedCollectables = await db
+      .select({collectableId: universeCollectables.universe_collectable_id})
+      .from(universeCollectables)
+      .where(
+          and(
+            eq(collectionUniverseId, universeCollectables.collection_universe_id),
+            eq(universeCollectables.is_published, true)
+          )
+        )
+      .execute();
+
+    console.log("Finished Fetching all published collectables");
+
+    res.status(200).json(publishedCollectables);
+  } catch (error) {
+    console.log("Failed Fetching published collectables");
+    console.log(error);
+    res.status(400).send("Failed fetching publisehd collectables");
+  }
+
+});
+
+
 router.get('/single-collectable/:id', async (req, res) => {
   const { id } = req.params;
 
