@@ -108,11 +108,33 @@ export default function HomePage() {
     null
   );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
     setCollectionId(collectionIDInStorage);
+  }, []);
+
+    useEffect(() => {
+      if (localStorage.getItem("showSuccessAlert") === "true") {
+        setShowSuccessAlert(true);
+        localStorage.removeItem("showSuccessAlert");
+      }
+      else if (localStorage.getItem("showErrorAlert") === "true") {
+        setShowErrorAlert(true);
+        localStorage.removeItem("showErrorAlert");
+      }
+
+      const message = localStorage.getItem("alertMessage") ?? "";
+      setAlertMessage(message);
+
+      setTimeout(() => {
+        setShowErrorAlert(false);
+        setShowSuccessAlert(false);
+      }, 4000);
   }, []);
 
   useEffect(() => {
@@ -659,15 +681,21 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("Form submitted successfully");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Collectible edited successfully");
       } else {
         console.error("Error submitting form:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit collectible");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit collectible");
     }
 
     closeEdit();
-    //window.location.reload();
+    window.location.reload();
   };
 
   const logFormData = (formData: FormData) => {
@@ -1252,7 +1280,23 @@ export default function HomePage() {
       <div className="h-screen flex flex-col overflow-y-hidden">
         <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
-          <div className="w-full mx-auto pt-8">
+          <div className="flex justify-end items-center">
+            <div role="alert" className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} w-1/5 mt-1 mr-10 ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 shrink-0 stroke-current"
+                fill="none"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d={`${showSuccessAlert ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"}`} />
+              </svg>
+              <span className="ml-2">{alertMessage}</span>
+            </div>
+          </div>
+          <div className="w-full mx-auto">
             <div className="mx-auto px-10">
               {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
               <div className="">
