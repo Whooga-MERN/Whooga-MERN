@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 
 export default function Footer(): JSX.Element {
   return (
-    <footer className="text-center my-5 mt-24">
+    <footer className="w-full relative  text-white">
       <div className="container p-5 mx-auto">
-        <div className="flex items-center justify-between w-full">
+        <div className="flex items-center justify-between">
           <span className="text-xl font-bold">WHOOGA!</span>
           <div className="flex space-x-4 text-xl font-bold">
             <Link to="/privacypolicy" className="hover:underline">
@@ -18,7 +18,7 @@ export default function Footer(): JSX.Element {
       </div>
 
       {/* Copyright section */}
-      <hr />
+      <hr className="border-gray-700" />
       <div className="p-3 text-center">
         © 2024 WHOOGA! All rights reserved.
       </div>

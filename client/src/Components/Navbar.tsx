@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Zdog from "zdog";
 // On the Logged out page
 export default function Navbar() {
   const [isClick, setisClick] = useState(false);
@@ -12,6 +13,144 @@ export default function Navbar() {
   //   return classes.filter(Boolean).join(" ");
   // }
 
+
+    useEffect(() => { 
+
+      var illoElem = document.querySelector('.illo');
+      var sceneSize = 96;
+      var TAU = Zdog.TAU;
+      var ROOT3 = Math.sqrt(3);
+      var ROOT5 = Math.sqrt(5);
+      var PHI = ( 1 + ROOT5 ) / 2;
+      var isSpinning = true;
+      var viewRotation = new Zdog.Vector();
+      var displaySize;
+
+      // colors
+      var eggplant = '#636';
+      var garnet = '#C25';
+      var orange = '#E62';
+      var gold = '#EA0';
+      var yellow = '#ED0';
+
+      // var eggplant = '#4B4B4B'; // Dark Gray
+      // var garnet = '#A9A9A9';   // Gray
+      // var orange = '#E62';
+      // var gold = '#EA0';
+      // var yellow = '#ED0';
+
+      // var eggplant = '#000000'; // Black
+      // var garnet = '#808080';   // Gray
+      // var orange = '#E62';
+      // var gold = '#EA0';
+      // var yellow = '#ED0';
+
+
+      var illo = new Zdog.Illustration({
+        element: illoElem,
+        scale: 8,
+        resize: 'fullscreen',
+        onResize: function( width, height ) {
+          displaySize = Math.min( width, height );
+          this.zoom = Math.floor( displaySize / sceneSize );
+        },
+      });
+
+      var solids: Zdog.Anchor[] = [];
+    (function() {
+
+      var octahedron = new Zdog.Anchor({
+        addTo: illo,
+        translate: { x: -4, y: 4 },
+        scale: 1.75,
+      });
+
+      solids.push( octahedron );
+
+      var colorWheel = [ eggplant, garnet, orange, gold, yellow ];
+
+      // radius of triangle with side length = 1
+      var radius = ROOT3/2 * 2/3;
+      var height = radius * 3/2;
+      var tilt = Math.asin( 0.5 / height );
+
+      [ -1, 1 ].forEach( function( ySide ) {
+        for ( var i=0; i < 4; i++ ) {
+          var rotor = new Zdog.Anchor({
+            addTo: octahedron,
+            rotate: { y: TAU/4 * (i + 1.5) * -1 },
+          });
+
+          var anchor = new Zdog.Anchor({
+            addTo: rotor,
+            translate: { z: 0.5 },
+            rotate: { x: tilt * ySide },
+            // scale: { y: -ySide },
+          });
+
+          new Zdog.Polygon({
+            sides: 3,
+            radius: radius,
+            addTo: anchor,
+            translate: { y: -radius/2 * ySide },
+            scale: { y: ySide },
+            stroke: false,
+            fill: true,
+            color: colorWheel[ i + 0.5 + 0.5*ySide ],
+            backface: false,
+          });
+        }
+      });
+
+
+    })();
+
+    var keyframes = [
+      { x:   0, y:   0 },
+      { x:   0, y: TAU },
+      { x: TAU, y: TAU },
+    ];
+    
+    var ticker = 0;
+    var cycleCount = 180;
+    var turnLimit = keyframes.length - 1;
+    var maxTicks = 1 * cycleCount * turnLimit; // 2 full spins
+    
+    function animate() {
+      if (ticker < maxTicks) { // Stop after 2 spins
+        update();
+        illo.renderGraph();
+        requestAnimationFrame(animate);
+      }
+    }
+    
+    animate();
+    
+    function update() {
+    
+      if ( isSpinning ) {
+        var progress = ticker / cycleCount;
+        var tween = Zdog.easeInOut( progress % 1, 4 );
+        var turn = Math.floor( progress % turnLimit );
+        var keyA = keyframes[ turn ];
+        var keyB = keyframes[ turn + 1 ];
+        viewRotation.x = Zdog.lerp( keyA.x, keyB.x, tween );
+        viewRotation.y = Zdog.lerp( keyA.y, keyB.y, tween );
+        ticker++;
+      }
+    
+      solids.forEach( function( solid ) {
+        solid.rotate.set( viewRotation );
+      });
+    
+      illo.updateGraph();
+    }
+    
+
+  }, [])
+
+    
+
   return (
     <div>
       {" "}
@@ -20,12 +159,13 @@ export default function Navbar() {
         {/* <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8"> */}
         <div className="px-8">
           <div className="flex items-center h-16 justify-between">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Link to="/" className="text-black font-bold text-2xl">
-                  WHOOGA!
+            <div className="flex flex-box justify-center items-center">
+              {/* <div className="flex-shrink-0"> */}
+                <Link to="/" className="text-black font-bold text-4xl">
+                  WHOOGA! 
                 </Link>
-              </div>
+                <canvas className="illo h-48 mt-[-125px] ml-[-55px]"></canvas>
+              {/* </div> */}
             </div>
 
             {/* menu */}

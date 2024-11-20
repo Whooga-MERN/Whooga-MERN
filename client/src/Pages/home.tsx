@@ -2,8 +2,14 @@ import { Link } from "react-router-dom";
 import { GiPostStamp } from "react-icons/gi";
 import { PiScanSmiley } from "react-icons/pi";
 import { MdSecurity } from "react-icons/md";
+import Zdog from "zdog";
+import { useEffect } from "react";
+
 
 export default function Home() {
+
+
+
   return (
     <>
       {/* DETAIL */}
@@ -60,6 +66,7 @@ export default function Home() {
         </div>
       </div>
       {/* DETAIL END */}
+      
 
       {/* FEATURES */}
       <div className="sm:py-20 md:py-20">
@@ -67,7 +74,7 @@ export default function Home() {
           <div className="py-12 md:py-20">
             {/* Section header */}
             <div className="max-w-3xl mx-auto text-center pb-16 md:pb-16">
-              <h1 className="h1 text-5xl font-cabinet-grotesk text-black font-bold underline decoration-yellow-400 pb-10">
+              <h1 className="h1 text-5xl font-cabinet-grotesk text-black dark:text-gray-500 font-bold underline decoration-yellow-400 pb-10">
                 Tools Provided
               </h1>
             </div>
