@@ -54,7 +54,7 @@ export default function HomePage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isPublished, setIsPublished] = useState(false);
 
-  const isOwnedMap = new Map<string, boolean>();
+  const [isOwnedMap, setIsOwnedMap] = useState<Map<string, boolean>>(new Map());
 
   const [userId, setUserId] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
@@ -227,6 +227,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (specificTag) {
+      console.log("specificTag", specificTag);
       const initialFormData = specificTag.attributes.reduce(
         (
           acc: { [x: string]: any },
@@ -237,6 +238,9 @@ export default function HomePage() {
         },
         {} as Record<string, string>
       );
+      //console.log("bool test with: ", specificTag.universeCollectableId.toString(), " ", isOwnedMap);
+      initialFormData["owned"] = isOwnedMap.get(specificTag.universeCollectableId) ? "T" : "F";
+      //console.log("setting form owned to: " +  specificTag.universeCollectableId.toString() + initialFormData["owned"]);
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
       const initialWishlistFormData = specificTag.attributes.reduce(
@@ -261,6 +265,7 @@ export default function HomePage() {
   useEffect(() => {
     const getUniverseCollectionId = async () => {
       if (collectionId) {
+        const ownedMap = new Map<string, boolean>();
         const ownedCollectables = await fetchOwnedCollectables(
           collectionId,
           initialPage,
@@ -268,11 +273,11 @@ export default function HomePage() {
           sortBy,
           sortOrder
         );
-        console.log("ownedCollectables", ownedCollectables);
+        //console.log("ownedCollectables", ownedCollectables);
         ownedCollectables.collectables.forEach((collectable: any) => {
-          isOwnedMap.set(collectable.universeCollectableId, true);
+          ownedMap.set(collectable.universeCollectableId, true);
         });
-        console.log("isOwnedMap0", isOwnedMap);
+        //console.log("isOwnedMap0", ownedMap);
         setOwnedCollectables(ownedCollectables.collectables);
         if (universeCollectionId) {
           const universe_collectables = await fetchUniverseCollectables(
@@ -283,12 +288,14 @@ export default function HomePage() {
             sortOrder
           );
           universe_collectables.collectables.forEach((collectable: any) => {
-            if (!isOwnedMap.has(collectable.universeCollectableId)) {
-              isOwnedMap.set(collectable.universeCollectableId, false);
+            if (!ownedMap.has(collectable.universeCollectableId)) {
+              ownedMap.set(collectable.universeCollectableId, false);
             }
           });
+          setIsOwnedMap(ownedMap);
           setUniverseCollectables(universe_collectables.collectables);
         }
+        //console.log("isOwnedMap1", isOwnedMap);
       }
     };
 
@@ -308,7 +315,7 @@ export default function HomePage() {
   // edit collectible
   const openEdit = async (item: Record<string, any>) => {
     await setSpecificTag(item);
-    console.log("specificTag", specificTag);
+    //console.log("specificTag", specificTag);
     setShowEdit(true);
   };
 
@@ -750,6 +757,7 @@ export default function HomePage() {
             sortBy,
             sortOrder
           );
+          console.log("collectables", collectables);
         return { collectables, totalMatchingCollectables };
       }
       // Default empty structure if neither condition is met
@@ -2145,11 +2153,7 @@ export default function HomePage() {
                                           handleOwnedChange(e.target.checked)
                                         }
                                         checked={
-                                          specificTag
-                                            ? isOwnedMap.get(
-                                                specificTag.universeCollectableId
-                                              )
-                                            : false
+                                          formData["owned"] === "T" || false
                                         }
                                         className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
                                       />

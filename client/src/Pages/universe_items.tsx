@@ -298,6 +298,7 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error adding collection:", error);
     }
+    navigate("/collections");
   };
 
   // ------------------------ open card for details -----------------------------------
