@@ -16,14 +16,15 @@ import { useIntersection } from "@mantine/hooks";
 import { buildPath } from "../utils/utils";
 import {
   fetchUniverseCollectables,
-  fetchUniverseSearchResults,
   fetchOwnedCollectables,
   fetchOwnedSearchResults,
-  addToWishlist,
-  removeFromWishlist,
-  fetchUniverseJumpResults,
   fetchOwnedJumpResults,
 } from "../utils/ItemsPage";
+import {
+  fetchPublicUniverseCollectables,
+  fetchPublicUniverseJumpResults,
+  fetchPublicUniverseSearchResults,
+} from "../utils/universeItemPage";
 import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 
@@ -40,12 +41,8 @@ export default function HomePage() {
     null
   );
   const [isCollectionOwned, setIsCollectionOwned] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
-  const [showEdit, setShowEdit] = useState(false); // edit collectible
   const [view, setView] = useState<"list" | "grid">("grid");
   const [formData, setFormData] = useState<Record<string, any>>({ owned: "F" });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isPublished, setIsPublished] = useState(false);
 
   const isOwnedMap = new Map<string, boolean>();
 
@@ -58,15 +55,9 @@ export default function HomePage() {
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
-  const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
   const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
-  const [openEditFavAttributesModal, setOpenEditFavAttributesModal] =
-    useState(false);
-  const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
-    string[]
-  >([]);
 
   const [enabled, setEnabled] = useState(false);
 
@@ -182,17 +173,31 @@ export default function HomePage() {
     getAttributes();
 
     const getFavoriteAttributes = async () => {
-      const favReponse = await fetch(
-        buildPath(
-          `collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`
-        ),
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${JWT}`,
-          },
-        }
+      // const favReponse = await fetch(
+      //   buildPath(
+      //     `collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`
+      //   ),
+      //   {
+      //     method: "GET",
+      //     headers: {
+      //       Authorization: `Bearer ${JWT}`,
+      //     },
+      //   }
+      // );
+
+      const url = buildPath(
+        `collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`
       );
+
+      console.log("collectionId: ", collectionId);
+      console.log("Fetching URL:", url);
+
+      const favReponse = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
 
       if (favReponse.ok) {
         const data = await favReponse.json();
@@ -204,6 +209,7 @@ export default function HomePage() {
           )
         );
         setMaskedAttributes(allAttributes);
+        console.log("result: ", allAttributes);
       } else {
         console.error("Error fetching favorite attributes:", favReponse);
       }
@@ -232,43 +238,6 @@ export default function HomePage() {
   }, [specificTag]);
 
   // -------------------------- show universecollectables and search ------------------
-  useEffect(() => {
-    const getUniverseCollectionId = async () => {
-      if (collectionId) {
-        const ownedCollectables = await fetchOwnedCollectables(
-          collectionId,
-          initialPage,
-          ITEMS_PER_PAGE,
-          sortBy,
-          sortOrder
-        );
-        console.log("ownedCollectables", ownedCollectables);
-        ownedCollectables.collectables.forEach((collectable: any) => {
-          isOwnedMap.set(collectable.universeCollectableId, true);
-        });
-        console.log("isOwnedMap0", isOwnedMap);
-        setOwnedCollectables(ownedCollectables.collectables);
-        if (universeCollectionId) {
-          const universe_collectables = await fetchUniverseCollectables(
-            universeCollectionId,
-            initialPage,
-            ITEMS_PER_PAGE,
-            sortBy,
-            sortOrder
-          );
-          universe_collectables.collectables.forEach((collectable: any) => {
-            if (!isOwnedMap.has(collectable.universeCollectableId)) {
-              isOwnedMap.set(collectable.universeCollectableId, false);
-            }
-          });
-          setUniverseCollectables(universe_collectables.collectables);
-        }
-      }
-    };
-
-    getUniverseCollectionId();
-  }, [collectionId]);
-
   const handleAddToMyCollections = async () => {
     const request = {
       collectionUniverseId: universeCollectionId,
@@ -365,21 +334,9 @@ export default function HomePage() {
       sortOrder,
     ],
     queryFn: async ({ pageParam = 1 }) => {
-      if (enabled && collectionId) {
-        // Fetch owned collectables when enabled
+      if (universeCollectionId) {
         const { collectables, totalMatchingCollectables } =
-          await fetchOwnedCollectables(
-            collectionId,
-            pageParam,
-            ITEMS_PER_PAGE,
-            sortBy,
-            sortOrder
-          );
-        return { collectables, totalMatchingCollectables };
-      } else if (universeCollectionId) {
-        // Fetch universe collectables when not enabled
-        const { collectables, totalMatchingCollectables } =
-          await fetchUniverseCollectables(
+          await fetchPublicUniverseCollectables(
             universeCollectionId,
             pageParam,
             ITEMS_PER_PAGE,
@@ -464,7 +421,7 @@ export default function HomePage() {
         return { collectables, totalMatchingCollectables };
       } else if (universeCollectionId) {
         const { collectables, totalMatchingCollectables } =
-          await fetchUniverseSearchResults(
+          await fetchPublicUniverseSearchResults(
             searchTags,
             userId,
             universeCollectionId,
@@ -535,7 +492,7 @@ export default function HomePage() {
         }
       } else if (universeCollectionId) {
         // Fetch universe jump results when toggle is disabled
-        res = await fetchUniverseJumpResults(
+        res = await fetchPublicUniverseJumpResults(
           jumpTags,
           userId,
           universeCollectionId,
@@ -755,49 +712,61 @@ export default function HomePage() {
   return (
     <>
       <div className="h-screen flex flex-col overflow-y-hidden">
-        <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full  relative">
+        <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
           <div className="w-full mx-auto pt-8">
-            <div className="mx-auto pl-10">
-              {/* <div> */}
-              <div className="flex md:items-center justify-center gap-48 pb-4 max-md:px-4  ">
+            <div className="mx-auto px-10">
+              {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
+              <div className="">
                 {/* collection option */}
                 <div className="flex items-center gap-4">
                   <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
                     {universeCollectionName}
                   </p>
+
+                  <div className="flex lg:hidden items-center">
+                    <button
+                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                      onClick={handleAddToMyCollections}
+                    >
+                      Add to My Collections
+                      <IoIosAdd />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Search bar */}
-                {universeCollectionId && (
-                  <SearchBar
-                    attributes={maskedAttributes}
-                    resetDropdown={resetDropdown}
-                    onResetSearch={handleReset}
-                    setResetDropdown={setResetDropdown}
-                    onSearch={handleSearch}
-                    onJump={handleJump}
-                    onSortOrder={handleSortOrderChange}
-                    onSortBy={handleSortByChange}
-                  />
-                )}
+                <div className="flex items-center justify-center gap-32">
+                  {/* Search bar */}
+                  {universeCollectionId && (
+                    <SearchBar
+                      attributes={maskedAttributes}
+                      resetDropdown={resetDropdown}
+                      onResetSearch={handleReset}
+                      setResetDropdown={setResetDropdown}
+                      onSearch={handleSearch}
+                      onJump={handleJump}
+                      onSortOrder={handleSortOrderChange}
+                      onSortBy={handleSortByChange}
+                    />
+                  )}
 
-                {/* icon button for view hidden lg:block md:block*/}
-                <div className="hidden lg:block md:block pt-3 mt-3">
-                  <button className="pr-5" onClick={() => setView("list")}>
-                    <FaListUl />
-                  </button>
-                  <button className="pr-16" onClick={() => setView("grid")}>
-                    <BsFillGridFill />
-                  </button>
+                  {/* Buttons for large screens */}
+                  <div className="items-center gap-2 pt-5 hidden lg:flex">
+                    <button className="pr-5" onClick={() => setView("list")}>
+                      <FaListUl />
+                    </button>
+                    <button className="pr-5" onClick={() => setView("grid")}>
+                      <BsFillGridFill />
+                    </button>
 
-                  <button
-                    className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
-                    onClick={handleAddToMyCollections}
-                  >
-                    Add to My Collections
-                    <IoIosAdd />
-                  </button>
+                    <button
+                      className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                      onClick={handleAddToMyCollections}
+                    >
+                      Add to My Collections
+                      <IoIosAdd />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -926,7 +895,6 @@ export default function HomePage() {
                             // GRID VIEW
                             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
                               {_default_collectables.map((item) => {
-                                console.log("Item:", item); // Log each item to the console
                                 return (
                                   <div
                                     key={`${item.universeCollectableId}-default-search`}
