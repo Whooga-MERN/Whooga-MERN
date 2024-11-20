@@ -464,6 +464,11 @@ router.get('/jump', async (req, res) => {
   const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
   const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
 
+  // Call makeSlug for each attribute
+  attributesToSearch.forEach((attribute, index, array) => {
+    array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+});
+
   if (attributesToSearch.length !== searchTerms.length) {
       return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
   }
@@ -576,6 +581,11 @@ router.get('/jump-published', async (req, res) => {
 
   const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
   const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
+
+  // Call makeSlug for each attribute
+  attributesToSearch.forEach((attribute, index, array) => {
+    array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+});
 
   if (attributesToSearch.length !== searchTerms.length) {
       return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
