@@ -8,6 +8,26 @@ const router = express.Router();
 
 // Universe Collectable CRUD APIs
 
+function makeSlug(text) {
+  if (!text)
+    return null;
+
+  // Convert to lowercase
+  text = text.toLowerCase();
+  
+  // Remove special characters (except underscores)
+  text = text.replace(/[^a-z0-9\s_]/g, '');
+  
+  // Replace spaces with underscores
+  text = text.replace(/\s+/g, '_');
+  
+  // Remove any leading or trailing underscores
+  text = text.replace(/^_+|_+$/g, '');
+
+  return text;
+}
+
+
 // Create
 router.post('', async (req, res) => {
     const {collectionUniverseId, universeCollectableId, typeId, name, universeCollectablePic} = req.body;
@@ -157,6 +177,9 @@ router.get('/universe-collection-paginated/:universe_collection_id', async (req,
   const sortBy = req.query.sortBy;
   const order = req.query.order || 'asc';
 
+
+  const sortBySlug = makeSlug(sortBy);
+
   try {
       // Retrieve favorite attributes for the collection
       const collectionResult = await db
@@ -218,10 +241,10 @@ router.get('/universe-collection-paginated/:universe_collection_id', async (req,
       });
 
       // Apply sorting if sortBy parameter is provided
-      if (sortBy) {
+      if (sortBySlug) {
           collectablesWithFavoriteAttributes.sort((a, b) => {
-              const attrA = a.attributes.find(attr => attr.slug === sortBy);
-              const attrB = b.attributes.find(attr => attr.slug === sortBy);
+              const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+              const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
 
               if (!attrA || !attrB) return 0;
 
@@ -268,6 +291,8 @@ router.get('/universe-collection-paginated-published/:universe_collection_id', a
   const itemsPerPage = parseInt(req.query.itemsPerPage) || 8;
   const sortBy = req.query.sortBy;
   const order = req.query.order || 'asc';
+
+  const sortBySlug = makeSlug(sortBy);
 
   try {
       // Retrieve favorite attributes for the collection
@@ -335,10 +360,10 @@ router.get('/universe-collection-paginated-published/:universe_collection_id', a
       });
 
       // Apply sorting if sortBy parameter is provided
-      if (sortBy) {
+      if (sortBySlug) {
           collectablesWithFavoriteAttributes.sort((a, b) => {
-              const attrA = a.attributes.find(attr => attr.slug === sortBy);
-              const attrB = b.attributes.find(attr => attr.slug === sortBy);
+              const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+              const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
 
               if (!attrA || !attrB) return 0;
 
@@ -434,8 +459,15 @@ router.get('/jump', async (req, res) => {
       return res.status(400).send({ error: 'Missing a request parameter' });
   }
 
+  const sortBySlug = makeSlug(sortBy);
+
   const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
   const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
+
+  // Call makeSlug for each attribute
+  attributesToSearch.forEach((attribute, index, array) => {
+    array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+});
 
   if (attributesToSearch.length !== searchTerms.length) {
       return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
@@ -475,10 +507,10 @@ router.get('/jump', async (req, res) => {
       });
 
       // Sort the entire collection based on the requested attribute
-      if (sortBy) {
+      if (sortBySlug) {
           collectablesWithAttributes.sort((a, b) => {
-              const attrA = a.attributes.find(attr => attr.slug === sortBy);
-              const attrB = b.attributes.find(attr => attr.slug === sortBy);
+              const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+              const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
 
               if (!attrA || !attrB) return 0;
 
@@ -537,6 +569,128 @@ router.get('/jump', async (req, res) => {
       res.status(500).send({ error: 'Error fetching collectables and attributes' });
   }
 });
+
+router.get('/jump-published', async (req, res) => {
+  const { collectionUniverseId, attributeToSearch, searchTerm, itemsPerPage = 8, sortBy, order = 'asc' } = req.query;
+
+  if (!searchTerm || !attributeToSearch || !collectionUniverseId) {
+      return res.status(400).send({ error: 'Missing a request parameter' });
+  }
+
+  const sortBySlug = makeSlug(sortBy);
+
+  const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
+  const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
+
+  // Call makeSlug for each attribute
+  attributesToSearch.forEach((attribute, index, array) => {
+    array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+});
+
+  if (attributesToSearch.length !== searchTerms.length) {
+      return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
+  }
+
+  try {
+      // Fetch all collectables in the collection universe and their attributes
+      const allCollectables = await db
+          .select({
+              universe_collectable_id: universeCollectables.universe_collectable_id,
+          })
+          .from(universeCollectables)
+          .where(and(
+            eq(universeCollectables.collection_universe_id, collectionUniverseId),
+            eq(universeCollectables.is_published, true)
+          ));
+
+      // Fetch all attributes for the collectables in the collection
+      const allAttributes = await db
+          .select()
+          .from(collectableAttributes)
+          .where(inArray(collectableAttributes.universe_collectable_id, allCollectables.map(c => c.universe_collectable_id)));
+
+      // Map collectables with their attributes
+      let collectablesWithAttributes = allCollectables.map(collectable => {
+          const relatedAttributes = allAttributes.filter(
+              attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
+          );
+
+          return {
+              universe_collectable_id: collectable.universe_collectable_id,
+              attributes: relatedAttributes.map(attr => ({
+                  collectable_attribute_id: attr.collectable_attribute_id,
+                  name: attr.name,
+                  slug: attr.slug,
+                  value: attr.value,
+                  is_custom: attr.is_custom
+              }))
+          };
+      });
+
+      // Sort the entire collection based on the requested attribute
+      if (sortBySlug) {
+          collectablesWithAttributes.sort((a, b) => {
+              const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+              const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
+
+              if (!attrA || !attrB) return 0;
+
+              const valueA = attrA.value;
+              const valueB = attrB.value;
+
+              const isNumericA = !isNaN(valueA);
+              const isNumericB = !isNaN(valueB);
+
+              if (isNumericA && isNumericB) {
+                  return order === 'desc'
+                      ? parseFloat(valueB) - parseFloat(valueA)
+                      : parseFloat(valueA) - parseFloat(valueB);
+              } else {
+                  return order === 'desc'
+                      ? valueB.localeCompare(valueA)
+                      : valueA.localeCompare(valueB);
+              }
+          });
+      }
+
+      // Filter the collectables based on search term and attribute
+      const filteredCollectables = collectablesWithAttributes.filter(collectable => {
+          return attributesToSearch.every((attribute, index) => {
+              return collectable.attributes.some(attr =>
+                  attr.slug === attribute && attr.value.toLowerCase().includes(searchTerms[index].toLowerCase())
+              );
+          });
+      });
+
+      if (filteredCollectables.length === 0) {
+          return res.status(404).send({ error: 'No matching collectables found' });
+      }
+
+      // Find the first matching collectable's index in the sorted collection
+      const firstMatchId = filteredCollectables[0].universe_collectable_id;
+      const firstMatchIndex = collectablesWithAttributes.findIndex(
+          collectable => collectable.universe_collectable_id === firstMatchId
+      );
+
+      if (firstMatchIndex === -1) {
+          return res.status(404).send({ error: 'First match not found in overall collection' });
+      }
+
+      // Calculate the page number where the first matching collectable is located
+      const pageNumber = Math.floor(firstMatchIndex / itemsPerPage) + 1;
+
+      // Return the universe_collectable_id and the calculated page number
+      res.status(200).send({
+          universe_collectable_id: firstMatchId,
+          pageNumber: pageNumber
+      });
+
+  } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: 'Error fetching collectables and attributes' });
+  }
+});
+
 
 
 

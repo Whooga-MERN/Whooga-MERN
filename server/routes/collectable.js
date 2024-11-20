@@ -35,6 +35,26 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
 // Collectable CRUD APIs
 
+function makeSlug(text) {
+  if (!text)
+    return null;
+
+  // Convert to lowercase
+  text = text.toLowerCase();
+  
+  // Remove special characters (except underscores)
+  text = text.replace(/[^a-z0-9\s_]/g, '');
+  
+  // Replace spaces with underscores
+  text = text.replace(/\s+/g, '_');
+  
+  // Remove any leading or trailing underscores
+  text = text.replace(/^_+|_+$/g, '');
+
+  return text;
+}
+
+
 router.post('/newCollectable', upload.single('collectableImage'), async(req, res) => {
   const {collection_id, attributes_values_json, isPublished} = req.body;
   
@@ -420,6 +440,8 @@ router.get('/collection-paginated/:collection_id', async (req, res) => {
   const { collection_id } = req.params;
   const { page = 1, itemsPerPage = 8, sortBy, order = 'asc' } = req.query;
 
+  const sortBySlug = makeSlug(sortBy);
+
   try {
     // Retrieve the favorite attributes for the collection
     const collectionResult = await db
@@ -471,10 +493,10 @@ router.get('/collection-paginated/:collection_id', async (req, res) => {
     });
 
     // Apply sorting if sortBy parameter is provided
-    if (sortBy) {
+    if (sortBySlug) {
       collectablesWithAttributes.sort((a, b) => {
-        const attrA = a.attributes.find(attr => attr.slug === sortBy);
-        const attrB = b.attributes.find(attr => attr.slug === sortBy);
+        const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+        const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
 
         if (!attrA || !attrB) return 0;
 
@@ -748,9 +770,16 @@ router.get('/jump', async (req, res) => {
     return res.status(400).send({ error: 'Missing a request parameter' });
   }
 
+  const sortBySlug = makeSlug(sortBy);
+
   try {
     const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
     const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
+
+    // Call makeSlug for each attribute
+    attributesToSearch.forEach((attribute, index, array) => {
+      array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+  });
 
     if (attributesToSearch.length !== searchTerms.length) {
       return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
@@ -801,10 +830,10 @@ router.get('/jump', async (req, res) => {
     });
 
     //Apply sorting
-    if (sortBy) {
+    if (sortBySlug) {
       collectablesWithAttributes.sort((a, b) => {
-        const attrA = a.attributes.find(attr => attr.slug === sortBy);
-        const attrB = b.attributes.find(attr => attr.slug === sortBy);
+        const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+        const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
 
         if (!attrA || !attrB) return 0;
 

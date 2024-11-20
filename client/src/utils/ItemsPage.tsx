@@ -100,7 +100,6 @@ export const fetchOwnedCollectables = async (
   sortBy: string,
   sortOrder: string
 ) => {
-  console.log("page: ", page);
   if (!collectionId) {
     console.error("Missing collectionId", { collectionId });
     throw new Error("Missing a request parameter");
@@ -112,8 +111,6 @@ export const fetchOwnedCollectables = async (
     const url = buildPath(
       `collectable/collection-paginated/${collectionId}?page=${page}&itemsPerPage=${itemsPerPage}&sortBy=${handleSortBy}&order=${sortOrder}`
     );
-
-    console.log("owned: ", url);
 
     const response = await fetch(url, {
       method: "GET",
