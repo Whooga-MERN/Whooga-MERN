@@ -36,24 +36,24 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 // Collectable CRUD APIs
 
 function makeSlug(text) {
-
   if (!text)
     return null;
+
   // Convert to lowercase
   text = text.toLowerCase();
   
-  // Remove special characters (except hyphens)
-  text = text.replace(/[^a-z0-9\s-]/g, '');
+  // Remove special characters (except underscores)
+  text = text.replace(/[^a-z0-9\s_]/g, '');
   
-  // Replace spaces with hyphens
-  text = text.replace(/\s+/g, '-');
+  // Replace spaces with underscores
+  text = text.replace(/\s+/g, '_');
   
-  // Remove any leading or trailing hyphens
-  text = text.replace(/^-+|-+$/g, '');
+  // Remove any leading or trailing underscores
+  text = text.replace(/^_+|_+$/g, '');
 
   return text;
-
 }
+
 
 router.post('/newCollectable', upload.single('collectableImage'), async(req, res) => {
   const {collection_id, attributes_values_json, isPublished} = req.body;
