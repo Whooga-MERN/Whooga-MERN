@@ -107,8 +107,7 @@ router.get('/universe-collection/:universe_collection_id', async (req, res) => {
         }))
       };
     });
-
-    console.log(collectableAttributes);
+    
     res.status(200).json(collectablesWithAttributes);
   } catch (error) {
     console.error(error);

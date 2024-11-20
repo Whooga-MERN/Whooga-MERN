@@ -130,7 +130,9 @@ async function csvToString(file: File): Promise<string> {
     } else {
       console.error("Collection ID is undefined");
     }
+    console.log("images: ", images);
     images.forEach((image, index) => {
+      console.log("image: ", image);
       formData.append("collectableImages", image);
     });
     console.log("Original CSV getting put in form:", originalEditCSV);
