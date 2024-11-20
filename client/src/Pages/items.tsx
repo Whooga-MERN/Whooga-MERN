@@ -68,6 +68,7 @@ export default function HomePage() {
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
+  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<string[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
@@ -79,6 +80,7 @@ export default function HomePage() {
   const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
     string[]
   >([]);
+  
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -217,7 +219,7 @@ export default function HomePage() {
             (attr) => !data[0].favoriteAttributes.includes(attr)
           )
         );
-        setMaskedAttributes(allAttributes);
+        setfavoriteMaskedAttributes(allAttributes);
       } else {
         console.error("Error fetching favorite attributes:", favReponse);
       }
@@ -1186,7 +1188,7 @@ export default function HomePage() {
   }, [jumpSearchResults, prevHeight, jumped]);
 
   const openEditAttributes = () => {
-    setEditedFavoriteAttributes(favoriteAttributes);
+    setEditedFavoriteAttributes(favoriteMaskedAttributes);
     console.log("Edited Favorite Attributes: ", editedFavoriteAttributes);
     console.log("maskedAttributes: ", maskedAttributes);
     setOpenEditFavAttributesModal(true);
