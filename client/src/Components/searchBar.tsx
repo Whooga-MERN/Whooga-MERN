@@ -36,6 +36,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if (attributes && attributes.length > 0) {
       setSelectedOption(attributes[0]);
       setSortBy(attributes[0]);
+      onSortBy(attributes[0]);
+      setSortOrder("asc");
     }
   }, [attributes]);
 
@@ -45,7 +47,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setSearchTags([]);
       setResetDropdown(false);
       setSortBy(attributes[0]);
-      setSortOrder("ascending");
+      setSortOrder("asc");
     }
   }, [resetDropdown, setResetDropdown, attributes]);
 
@@ -202,9 +204,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   type="radio"
                   id="ascending"
                   name="sortOrder"
-                  checked={sortOrder === "ascending"}
+                  checked={sortOrder === "asc"}
                   onChange={() => handleSortOrderChange("asc")}
-                  className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-1 focus:ring-yellow-400"
+                  className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-2 focus:ring-yellow-400"
                 />
                 <label htmlFor="ascending" className="text-md font-semibold">
                   Ascending
