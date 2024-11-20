@@ -56,6 +56,7 @@ export default function HomePage() {
   const [isPublished, setIsPublished] = useState(false);
 
   const [isOwnedMap, setIsOwnedMap] = useState<Map<string, boolean>>(new Map());
+  const [publishedCollectableIds, setPublishedCollectableIds] = useState<string[]>([]);
 
   const [userId, setUserId] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
@@ -220,6 +221,29 @@ export default function HomePage() {
       }
     };
     getFavoriteAttributes();
+
+    const getPublishedCollectables = async () => {
+      const response = await fetch(
+        buildPath(`universe-collectable/published-collectables/${universeCollectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Published Collectables: ", data);
+        const publishedIds = data.map((item: { collectableId: any; }) => item.collectableId);
+        setPublishedCollectableIds(publishedIds);
+        console.log("Published Collectable Ids: ", publishedIds);
+      } else {
+        console.error("Error fetching published collectables:", response);
+      }
+    };
+    getPublishedCollectables();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -239,9 +263,11 @@ export default function HomePage() {
         },
         {} as Record<string, string>
       );
-      //console.log("bool test with: ", specificTag.universeCollectableId.toString(), " ", isOwnedMap);
+      console.log("bool test with: ", specificTag.universeCollectableId.toString(), " ", publishedCollectableIds);
       initialFormData["owned"] = isOwnedMap.get(specificTag.universeCollectableId) ? "T" : "F";
-      //console.log("setting form owned to: " +  specificTag.universeCollectableId.toString() + initialFormData["owned"]);
+      initialFormData["published"] = publishedCollectableIds.includes(specificTag.universeCollectableId) ? "T" : "F";
+
+      console.log("setting form published to: " +  specificTag.universeCollectableId.toString() + initialFormData["published"]);
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
       const initialWishlistFormData = specificTag.attributes.reduce(
@@ -264,7 +290,7 @@ export default function HomePage() {
 
   // -------------------------- show universecollectables and search ------------------
   useEffect(() => {
-    const getUniverseCollectionId = async () => {
+    const getOwnedCollectables = async () => {
       if (collectionId) {
         const ownedMap = new Map<string, boolean>();
         const ownedCollectables = await fetchOwnedCollectables(
@@ -300,7 +326,7 @@ export default function HomePage() {
       }
     };
 
-    getUniverseCollectionId();
+    getOwnedCollectables();
   }, [collectionId]);
 
   // add collectible form modal open handler
@@ -520,6 +546,10 @@ export default function HomePage() {
     setIsPublished(!isPublished);
   };
 
+    const handlePublishChangeEditCollectable = (published : boolean) => {
+    setFormData((prevData) => ({ ...prevData, ["published"]: published ? "T" : "F" }));
+  };
+
   // handle form submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -581,9 +611,15 @@ export default function HomePage() {
       "universe collectable id: ",
       specificTag?.universeCollectableId
     );
-    const { owned, image, ...restFormData } = formData;
+    const { owned, image, published, ...restFormData } = formData;
     console.log("owned", owned);
+    console.log("published", published);
     request.append("attributeValuesJson", JSON.stringify(restFormData));
+    if (published) {
+      request.append("isPublished", published);
+    } else {
+      request.append("isPublished", "F");
+    }
     if (owned) {
       request.append("owned", owned);
     } else {
@@ -616,7 +652,7 @@ export default function HomePage() {
     }
 
     closeEdit();
-    window.location.reload();
+    //window.location.reload();
   };
 
   const logFormData = (formData: FormData) => {
@@ -2426,8 +2462,8 @@ export default function HomePage() {
                             <input
                               type="checkbox"
                               id="publishCollection"
-                              checked={isPublished}
-                              onChange={handlePublishChange}
+                              checked={formData["published"] === "T" || false}
+                              onChange={(e) => handlePublishChangeEditCollectable(e.target.checked)}
                               className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
                             />
                             <label
