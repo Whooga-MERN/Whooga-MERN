@@ -171,6 +171,14 @@ async function csvToString(file: File): Promise<string> {
 
     //downloadFile(originalCSVBlob, "original.csv");
   };
+  
+    const logFormData = (formData: FormData) => {
+        const formDataEntries: Record<string, any> = {};
+        formData.forEach((value, key) => {
+        formDataEntries[key] = value;
+        });
+        console.log("FormData Contents:", formDataEntries);
+    };
 
   return (
     <>
