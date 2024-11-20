@@ -756,7 +756,7 @@ export default function HomePage() {
   };
 
   // -------------------------- show universecollectables and search ------------------
-  const [sortOrder, setSortOrder] = useState<string>("ascending");
+  const [sortOrder, setSortOrder] = useState<string>("asc");
   const [sortBy, setSortBy] = useState<string>("");
 
   const handleSortOrderChange = (order: string) => {
