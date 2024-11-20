@@ -114,6 +114,11 @@ const BulkUploadStep2 = () => {
   }, [jsonData]);
 
   const handleUpload = async () => {
+    console.log("filename: ", fileName);
+    if(!fileName) {
+      alert("Please Upload a CSV File before uploading");
+      return;
+    }
     setIsUploading(true);
     event?.preventDefault();
     const formData = new FormData();

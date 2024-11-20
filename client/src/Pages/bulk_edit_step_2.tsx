@@ -122,6 +122,11 @@ async function csvToString(file: File): Promise<string> {
   }, [jsonData]);
 
   const handleUpload = async () => {
+    console.log("filename: ", fileName);
+    if(!fileName) {
+      alert("Please Upload a CSV File before uploading");
+      return;
+    }
     setIsUploading(true);
     event?.preventDefault();
     const formData = new FormData();

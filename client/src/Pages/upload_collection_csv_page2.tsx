@@ -147,6 +147,11 @@ function UploadCollection() {
   }, [jsonData]);
 
   const handleUpload = async () => {
+    console.log("filename: ", fileName);
+    if(!fileName) {
+      alert("Please Upload a CSV File before uploading");
+      return;
+    }
     setIsUploading(true);
     event?.preventDefault();
     const formData = new FormData();
@@ -160,6 +165,8 @@ function UploadCollection() {
     images.forEach((image, index) => {
       formData.append("collectableImages", image);
     });
+
+    console.log("collectionImageURL: ", collectionImageURL);
 
     console.log("Request image:", collectionImageURL);
     try {

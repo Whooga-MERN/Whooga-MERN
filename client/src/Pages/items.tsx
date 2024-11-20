@@ -1294,7 +1294,7 @@ export default function HomePage() {
                               className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={openModal}
                             >
-                              New Collectable
+                              New Collectible
                             </a>
                           </li>
                           <li>
