@@ -514,7 +514,7 @@ router.get('/collection-paginated/:collection_id', async (req, res) => {
 });
 
 router.put('/edit-collectable', upload.single('collectableImage'), async (req, res) => {
-  const { collectionId, universeCollectableId, attributeValuesJson, owned} = req.body;
+  const { collectionId, universeCollectableId, attributeValuesJson, owned, isPublished} = req.body;
   let image = null;
   if(req.file)
     image = req.file;
@@ -529,6 +529,10 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
     return res.status(500).json({ message: "Invalid input for parsedAttributeValuesJson" });
   if(!owned)
     return res.status(500).json({ message: "owned parameter not given"});
+  if(!isPublished)
+    return res.status(500).json({ message: "isPublished parameter not given"});
+
+  const isPublishedBool = isPublished === "T";
 
   const parsedAttributeValuesJson = JSON.parse(attributeValuesJson);
   console.log(parsedAttributeValuesJson);
@@ -536,10 +540,10 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
     try {
       console.log("Querying for collectableId");
       const collectableIdQuery = await trx
-      .select({ collectable_id: collectables.collectable_id })
-      .from(collectables)
-      .where(eq(universeCollectableId, collectables.universe_collectable_id))
-      .execute();
+        .select({ collectable_id: collectables.collectable_id })
+        .from(collectables)
+        .where(eq(universeCollectableId, collectables.universe_collectable_id))
+        .execute();
       console.log("Finished querying for collectableId");
       
       console.log("collectableIdQuery.length: ", collectableIdQuery.length);
@@ -658,6 +662,12 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
           console.log("Finished Updating Image");
         }
       }
+
+      await trx
+        .update(universeCollectables)
+        .set({is_published: isPublishedBool})
+        .where(eq(universeCollectables.universe_collectable_id, universeCollectableId))
+        .execute();
 
       console.log("Succesfully updated attributes");
       res.status(200).send("Succesfully updated attributes");
