@@ -267,12 +267,6 @@ export default function HomePage() {
         },
         {} as Record<string, string>
       );
-      console.log(
-        "bool test with: ",
-        specificTag.universeCollectableId.toString(),
-        " ",
-        publishedCollectableIds
-      );
       initialFormData["owned"] = isOwnedMap.get(
         specificTag.universeCollectableId
       )
@@ -284,11 +278,6 @@ export default function HomePage() {
         ? "T"
         : "F";
 
-      console.log(
-        "setting form published to: " +
-          specificTag.universeCollectableId.toString() +
-          initialFormData["published"]
-      );
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
       const initialWishlistFormData = specificTag.attributes.reduce(
@@ -1693,7 +1682,7 @@ export default function HomePage() {
             // Show total collectables
             collectablesData?.pages?.[0]?.totalMatchingCollectables && (
               <p className="text-xl font-bold text-gray-700 dark:text-gray-200">
-                Total Collectables:{" "}
+                Total Collectibles:{" "}
                 {collectablesData.pages[0].totalMatchingCollectables}
               </p>
             )
@@ -1781,7 +1770,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1877,7 +1866,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(
@@ -1980,7 +1969,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2080,7 +2069,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(
@@ -2188,7 +2177,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2289,7 +2278,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(

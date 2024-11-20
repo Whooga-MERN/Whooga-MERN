@@ -20,11 +20,13 @@ export default function Details() {
   }
 
   const { itemData } = state;
-  const { attributes, image } = itemData;
+  const { attributes } = itemData;
   const imageUrl =
     attributes.find((attribute) => attribute.name === "image")?.value ||
-    "/placeholder.jpg";
-  console.log("image: ", imageUrl);
+    "/noImage.jpg";
+  const altHolder =
+    itemData.attributes?.find((attr: { name: string }) => attr.name === "Name")
+      ?.value || "No Title";
 
   return (
     <>
@@ -73,12 +75,7 @@ export default function Details() {
           {/* Display Image */}
           <div className="mt-10 lg:col-start-2 lg:row-span-2 lg:mt-0 lg:self-center sm:pt-10">
             <div className="aspect-h-1 aspect-w-1 overflow-hidden rounded-lg">
-              <img
-                alt={attributes[0]?.value}
-                src={imageUrl}
-                width={400}
-                height={400}
-              />
+              <img alt={altHolder} src={imageUrl} width={400} height={400} />
             </div>
           </div>
         </div>
