@@ -11,21 +11,24 @@ router.use(authenticateJWTToken);
 // Collection CRUD APIs
 
 function makeSlug(text) {
-    // Convert to lowercase
-    text = text.toLowerCase();
-    
-    // Remove special characters (except hyphens)
-    text = text.replace(/[^a-z0-9\s-]/g, '');
-    
-    // Replace spaces with hyphens
-    text = text.replace(/\s+/g, '-');
-    
-    // Remove any leading or trailing hyphens
-    text = text.replace(/^-+|-+$/g, '');
+  if (!text)
+    return null;
 
-    return text;
+  // Convert to lowercase
+  text = text.toLowerCase();
+  
+  // Remove special characters (except underscores)
+  text = text.replace(/[^a-z0-9\s_]/g, '');
+  
+  // Replace spaces with underscores
+  text = text.replace(/\s+/g, '_');
+  
+  // Remove any leading or trailing underscores
+  text = text.replace(/^_+|_+$/g, '');
 
+  return text;
 }
+
 
 // Create
 router.post('', async (req, res) => {

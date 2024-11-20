@@ -9,24 +9,24 @@ const router = express.Router();
 // Universe Collectable CRUD APIs
 
 function makeSlug(text) {
-
   if (!text)
     return null;
+
   // Convert to lowercase
   text = text.toLowerCase();
   
-  // Remove special characters (except hyphens)
-  text = text.replace(/[^a-z0-9\s-]/g, '');
+  // Remove special characters (except underscores)
+  text = text.replace(/[^a-z0-9\s_]/g, '');
   
-  // Replace spaces with hyphens
-  text = text.replace(/\s+/g, '-');
+  // Replace spaces with underscores
+  text = text.replace(/\s+/g, '_');
   
-  // Remove any leading or trailing hyphens
-  text = text.replace(/^-+|-+$/g, '');
+  // Remove any leading or trailing underscores
+  text = text.replace(/^_+|_+$/g, '');
 
   return text;
-
 }
+
 
 // Create
 router.post('', async (req, res) => {
@@ -464,6 +464,11 @@ router.get('/jump', async (req, res) => {
   const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
   const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
 
+  // Call makeSlug for each attribute
+  attributesToSearch.forEach((attribute, index, array) => {
+    array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+});
+
   if (attributesToSearch.length !== searchTerms.length) {
       return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
   }
@@ -576,6 +581,11 @@ router.get('/jump-published', async (req, res) => {
 
   const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
   const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
+
+  // Call makeSlug for each attribute
+  attributesToSearch.forEach((attribute, index, array) => {
+    array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+});
 
   if (attributesToSearch.length !== searchTerms.length) {
       return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
