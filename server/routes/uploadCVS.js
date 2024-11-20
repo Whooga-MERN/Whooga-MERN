@@ -333,6 +333,7 @@ try {
         });
     }
 
+    console.log("Parsed CSV Data:", JSON.stringify(parsedCsvJsonData, null, 2));
 
     await db.transaction(async (trx) => {
          
@@ -344,6 +345,15 @@ try {
 
         let imageUrl = null
         for (const row of parsedCsvJsonData) {
+            if (
+                !row || // Row is null or undefined
+                typeof row !== "object" || // Row is not an object
+                Object.keys(row).length <= 1 // Row only has one field (like `owned`)
+            ) {
+                console.log("Skipping row:", JSON.stringify(row));
+                continue; // Skip this row
+            }
+            
             const imageObject = urlCollectableImages.find(image => image.originalName === row.image);
             imageUrl = null
             if(imageObject)
@@ -359,7 +369,7 @@ try {
         }
 
         // After data is packaged insert data into universeCollectables table
-    
+        //parsedCsvJsonData.length
         const newUniverseCollectables = await trx
             .insert(universeCollectables)
             .values(universeCollectablesData)
