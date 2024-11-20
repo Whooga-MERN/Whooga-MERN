@@ -222,23 +222,39 @@ router.get('/universe-collection-paginated/:universe_collection_id', async (req,
               )
           );
 
-      // Map the collectables with only their favorite attributes
-      let collectablesWithFavoriteAttributes = fetchedUniverseCollectables.map(collectable => {
-          const relatedAttributes = attributes.filter(
-              attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
-          );
+     // Map the collectables with sorted attributes
+    let collectablesWithFavoriteAttributes = fetchedUniverseCollectables.map(collectable => {
+        const relatedAttributes = attributes
+            .filter(attribute => attribute.universe_collectable_id === collectable.universe_collectable_id)
+            .map(attr => ({
+                collectable_attribute_id: attr.collectable_attribute_id,
+                name: attr.name,
+                slug: attr.slug,
+                value: attr.value,
+                is_custom: attr.is_custom
+            }));
+        
+        // Sort attributes: image first, then by favoriteAttributes order
+        const sortedAttributes = relatedAttributes.sort((a, b) => {
+            if (a.name === 'image') return -1; // 'image' goes to the top
+            if (b.name === 'image') return 1;  // 'image' goes to the top
 
-          return {
-              ...collectable,
-              attributes: relatedAttributes.map(attr => ({
-                  collectable_attribute_id: attr.collectable_attribute_id,
-                  name: attr.name,
-                  slug: attr.slug,
-                  value: attr.value,
-                  is_custom: attr.is_custom
-              }))
-          };
-      });
+            const indexA = favoriteAttributes.indexOf(a.name);
+            const indexB = favoriteAttributes.indexOf(b.name);
+
+
+            return (
+                (indexA === -1 ? Number.MAX_VALUE : indexA) -
+                (indexB === -1 ? Number.MAX_VALUE : indexB)
+            );
+        });
+
+        return {
+            ...collectable,
+            attributes: sortedAttributes
+        };
+    });
+
 
       // Apply sorting if sortBy parameter is provided
       if (sortBySlug) {
@@ -341,23 +357,39 @@ router.get('/universe-collection-paginated-published/:universe_collection_id', a
               )
           );
 
-      // Map the collectables with only their favorite attributes
-      let collectablesWithFavoriteAttributes = fetchedUniverseCollectables.map(collectable => {
-          const relatedAttributes = attributes.filter(
-              attribute => attribute.universe_collectable_id === collectable.universe_collectable_id
-          );
+       // Map the collectables with sorted attributes
+    let collectablesWithFavoriteAttributes = fetchedUniverseCollectables.map(collectable => {
+      const relatedAttributes = attributes
+          .filter(attribute => attribute.universe_collectable_id === collectable.universe_collectable_id)
+          .map(attr => ({
+              collectable_attribute_id: attr.collectable_attribute_id,
+              name: attr.name,
+              slug: attr.slug,
+              value: attr.value,
+              is_custom: attr.is_custom
+          }));
+      
+      // Sort attributes: image first, then by favoriteAttributes order
+      const sortedAttributes = relatedAttributes.sort((a, b) => {
+          if (a.name === 'image') return -1; // 'image' goes to the top
+          if (b.name === 'image') return 1;  // 'image' goes to the top
 
-          return {
-              ...collectable,
-              attributes: relatedAttributes.map(attr => ({
-                  collectable_attribute_id: attr.collectable_attribute_id,
-                  name: attr.name,
-                  slug: attr.slug,
-                  value: attr.value,
-                  is_custom: attr.is_custom
-              }))
-          };
+          const indexA = favoriteAttributes.indexOf(a.name);
+          const indexB = favoriteAttributes.indexOf(b.name);
+
+
+          return (
+              (indexA === -1 ? Number.MAX_VALUE : indexA) -
+              (indexB === -1 ? Number.MAX_VALUE : indexB)
+          );
       });
+
+      return {
+          ...collectable,
+          attributes: sortedAttributes
+      };
+  });
+
 
       // Apply sorting if sortBy parameter is provided
       if (sortBySlug) {
