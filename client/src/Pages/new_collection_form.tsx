@@ -33,6 +33,7 @@ function NewCollectionForm() {
         new Collection(0, storedCollectionName, "", "", false)
       );
     }
+    localStorage.removeItem("collectionImageURL");
   }, []);
 
   useEffect(() => {

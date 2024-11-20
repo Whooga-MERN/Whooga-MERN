@@ -68,6 +68,7 @@ export default function HomePage() {
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
+  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<string[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
@@ -79,6 +80,7 @@ export default function HomePage() {
   const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
     string[]
   >([]);
+  
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -106,11 +108,33 @@ export default function HomePage() {
     null
   );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
     setCollectionId(collectionIDInStorage);
+  }, []);
+
+    useEffect(() => {
+      if (localStorage.getItem("showSuccessAlert") === "true") {
+        setShowSuccessAlert(true);
+        localStorage.removeItem("showSuccessAlert");
+      }
+      else if (localStorage.getItem("showErrorAlert") === "true") {
+        setShowErrorAlert(true);
+        localStorage.removeItem("showErrorAlert");
+      }
+
+      const message = localStorage.getItem("alertMessage") ?? "";
+      setAlertMessage(message);
+
+      setTimeout(() => {
+        setShowErrorAlert(false);
+        setShowSuccessAlert(false);
+      }, 4000);
   }, []);
 
   useEffect(() => {
@@ -217,7 +241,7 @@ export default function HomePage() {
             (attr) => !data[0].favoriteAttributes.includes(attr)
           )
         );
-        setMaskedAttributes(allAttributes);
+        setfavoriteMaskedAttributes(allAttributes);
       } else {
         console.error("Error fetching favorite attributes:", favReponse);
       }
@@ -267,12 +291,6 @@ export default function HomePage() {
         },
         {} as Record<string, string>
       );
-      console.log(
-        "bool test with: ",
-        specificTag.universeCollectableId.toString(),
-        " ",
-        publishedCollectableIds
-      );
       initialFormData["owned"] = isOwnedMap.get(
         specificTag.universeCollectableId
       )
@@ -284,11 +302,6 @@ export default function HomePage() {
         ? "T"
         : "F";
 
-      console.log(
-        "setting form published to: " +
-          specificTag.universeCollectableId.toString() +
-          initialFormData["published"]
-      );
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
       const initialWishlistFormData = specificTag.attributes.reduce(
@@ -395,12 +408,19 @@ export default function HomePage() {
 
         if (response.ok) {
           console.log("Item deleted successfully");
-          window.location.reload();
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem("alertMessage", "Deleted collectible successfully");
         } else {
           console.error("Error deleting item:", response);
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem("alertMessage", "Failed to delete collectible");
         }
+        window.location.reload();
       } catch (error) {
         console.error("Error deleting item:", error);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to delete collectible");
+        window.location.reload();
       }
     } else {
       return;
@@ -604,11 +624,17 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("Form submitted successfully");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Added new collectible successfully");
       } else {
         console.error("Error submitting form:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to add new collectible");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to add new collectible");
     }
 
     closeModal();
@@ -668,15 +694,21 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("Form submitted successfully");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Collectible edited successfully");
       } else {
         console.error("Error submitting form:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit collectible");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit collectible");
     }
 
     closeEdit();
-    //window.location.reload();
+    window.location.reload();
   };
 
   const logFormData = (formData: FormData) => {
@@ -767,7 +799,7 @@ export default function HomePage() {
   };
 
   // -------------------------- show universecollectables and search ------------------
-  const [sortOrder, setSortOrder] = useState<string>("ascending");
+  const [sortOrder, setSortOrder] = useState<string>("asc");
   const [sortBy, setSortBy] = useState<string>("");
 
   const handleSortOrderChange = (order: string) => {
@@ -1197,7 +1229,7 @@ export default function HomePage() {
   }, [jumpSearchResults, prevHeight, jumped]);
 
   const openEditAttributes = () => {
-    setEditedFavoriteAttributes(favoriteAttributes);
+    setEditedFavoriteAttributes(favoriteMaskedAttributes);
     console.log("Edited Favorite Attributes: ", editedFavoriteAttributes);
     console.log("maskedAttributes: ", maskedAttributes);
     setOpenEditFavAttributesModal(true);
@@ -1247,12 +1279,18 @@ export default function HomePage() {
         );
         await setMaskedAttributes(allAttributes);
         closeEditAttributes();
-        //window.location.reload();
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
+        window.location.reload();
       } else {
         console.error("Error editing favorite attributes:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
       }
     } catch (error) {
       console.error("Error editing favorite attributes:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
     }
   };
 
@@ -1261,7 +1299,23 @@ export default function HomePage() {
       <div className="h-screen flex flex-col overflow-y-hidden">
         <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
-          <div className="w-full mx-auto pt-8">
+          <div className="flex justify-end items-center">
+            <div role="alert" className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} w-1/5 mt-1 mr-10 ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 shrink-0 stroke-current"
+                fill="none"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d={`${showSuccessAlert ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"}`} />
+              </svg>
+              <span className="ml-2">{alertMessage}</span>
+            </div>
+          </div>
+          <div className="w-full mx-auto">
             <div className="mx-auto px-10">
               {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
               <div className="">
@@ -1294,7 +1348,7 @@ export default function HomePage() {
                               className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={openModal}
                             >
-                              New Collectable
+                              New Collectible
                             </a>
                           </li>
                           <li>
@@ -1506,7 +1560,7 @@ export default function HomePage() {
                               className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={openModal}
                             >
-                              New Collectable
+                              New Collectible
                             </a>
                           </li>
                           <li>
@@ -1693,7 +1747,7 @@ export default function HomePage() {
             // Show total collectables
             collectablesData?.pages?.[0]?.totalMatchingCollectables && (
               <p className="text-xl font-bold text-gray-700 dark:text-gray-200">
-                Total Collectables:{" "}
+                Total Collectibles:{" "}
                 {collectablesData.pages[0].totalMatchingCollectables}
               </p>
             )
@@ -1781,7 +1835,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1877,7 +1931,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(
@@ -1980,7 +2034,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2080,7 +2134,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(
@@ -2188,7 +2242,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2289,7 +2343,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(

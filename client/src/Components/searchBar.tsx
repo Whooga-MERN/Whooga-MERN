@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
-import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
+import { IoMdClose } from "react-icons/io";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
 interface SearchBarProps {
   attributes: string[];
@@ -25,7 +27,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>(attributes[0]);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [searchTags, setSearchTags] = useState<
     { attribute: string; term: string }[]
   >([]);
@@ -59,11 +60,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleSortByChange = (attribute: string) => {
     setSortBy(attribute);
     onSortBy(attribute);
-  };
-
-  const handleOptionSelect = (option: string) => {
-    setSelectedOption(option);
-    setIsDropdownOpen(false);
   };
 
   const handleEnterPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -114,122 +110,124 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-center mt-8 ">
+    <div className="flex flex-col justify-center mt-8">
       <div className="relative items-center">
         <div className="flex items-center">
-          {/* Dropdown Button */}
-          <div className="flex items-center">
-            {/* Dropdown Button */}
-            <button
-              id="dropdown-button"
-              className="flex-shrink-0 z-50 inline-flex items-center h-14 px-4 text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200 dark:bg-yellow-300 dark:hover:bg-yellow-200 dark:text-black"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              {selectedOption}
-              <IoMdArrowDropdown className="text-2xl pl-1" />
-            </button>
-
-            {/* Input Box */}
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleEnterPress}
-              placeholder="What are you looking for today?"
-              className="flex-grow border-none ring-1 ring-gray-200 w-96 p-4 rounded-sm"
-            />
-
-            {/* Search Button */}
-            <button
-              className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
-              onClick={handleSearch}
-            >
-              Search
-              <FaMagnifyingGlass />
-            </button>
-            <button
-              className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
-              onClick={handleJump}
-            >
-              Jump
-              <FaMagnifyingGlass />
-            </button>
-          </div>
-        </div>
-
-        {/* Dropdown List */}
-        {isDropdownOpen && (
-          <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-48 z-10 dark:text-black">
-            <ul className="py-1">
-              <p className="px-3 py-2 font-bold">Attributes:</p>
-              {attributes.map((attribute) => (
-                <li
-                  key={attribute}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                  onClick={() => handleOptionSelect(attribute)}
-                >
-                  {attribute}
-                </li>
-              ))}
-            </ul>
-
-            <ul className="py-1">
-              <p className="px-3 py-2 font-bold">Sort by:</p>
-              {attributes.map((attribute) => (
-                <li key={attribute} className="px-4 py-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id={attribute}
-                      name="attribute"
-                      checked={sortBy === attribute}
-                      onChange={() => handleSortByChange(attribute)}
-                      className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-1 focus:ring-yellow-400"
-                    />
-                    <label
-                      htmlFor={attribute}
-                      className="cursor-pointer font-semibold text-gray-700 dark:text-black"
+          <Menu as="div" className="relative inline-block text-left">
+            <div>
+              <MenuButton className="flex-shrink-0 z-50 inline-flex items-center h-14 px-4 text-md font-semibold text-black bg-yellow-300 border rounded-l-lg hover:bg-yellow-200">
+                {selectedOption}
+                <ChevronDownIcon className="ml-1 h-5 w-5 text-gray-500" />
+              </MenuButton>
+            </div>
+            <MenuItems className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-48 z-10">
+              <ul className="py-1">
+                <p className="px-3 py-2 font-bold">Attributes:</p>
+                {attributes.map((attribute) => (
+                  <MenuItem key={attribute}>
+                    <li
+                      className="px-4 py-2 cursor-pointer font-semibold 
+                           hover:bg-gray-100 text-gray-900"
+                      onClick={() => setSelectedOption(attribute)}
                     >
                       {attribute}
-                    </label>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    </li>
+                  </MenuItem>
+                ))}
+              </ul>
 
-            <div className="px-4 py-2 border-t border-gray-200">
-              <p className="pb-3 font-bold">Sort order:</p>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="ascending"
-                  name="sortOrder"
-                  checked={sortOrder === "asc"}
-                  onChange={() => handleSortOrderChange("asc")}
-                  className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-2 focus:ring-yellow-400"
-                />
-                <label htmlFor="ascending" className="text-md font-semibold">
-                  Ascending
-                </label>
+              <ul className="py-1">
+                <p className="px-3 py-2 font-bold">Sort by:</p>
+                {attributes.map((attribute) => (
+                  <div key={attribute}>
+                    <li className="px-4 py-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id={attribute}
+                          name="attribute"
+                          checked={sortBy === attribute}
+                          onChange={() => handleSortByChange(attribute)}
+                          className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-1 focus:ring-yellow-400"
+                        />
+                        <label
+                          htmlFor={attribute}
+                          className="cursor-pointer font-semibold"
+                        >
+                          {attribute}
+                        </label>
+                      </div>
+                    </li>
+                  </div>
+                ))}
+              </ul>
+
+              <div className="px-4 py-2 border-t border-gray-200">
+                <p className="pb-3 font-bold">Sort order:</p>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="ascending"
+                    name="sortOrder"
+                    checked={sortOrder === "asc"}
+                    onChange={() => handleSortOrderChange("asc")}
+                    className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-2 focus:ring-yellow-400"
+                  />
+                  <label
+                    htmlFor="ascending"
+                    className="text-md font-semibold cursor-pointer"
+                  >
+                    Ascending
+                  </label>
+                </div>
               </div>
-            </div>
-            <div className="px-4 py-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="descending"
-                  name="sortOrder"
-                  checked={sortOrder === "desc"}
-                  onChange={() => handleSortOrderChange("desc")}
-                  className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-2 focus:ring-yellow-400"
-                />
-                <label htmlFor="descending" className="text-md font-semibold">
-                  Descending
-                </label>
+              <div className="px-4 py-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="descending"
+                    name="sortOrder"
+                    checked={sortOrder === "desc"}
+                    onChange={() => handleSortOrderChange("desc")}
+                    className="h-4 w-4 text-yellow-400 border-gray-300 focus:ring-2 focus:ring-yellow-400"
+                  />
+                  <label
+                    htmlFor="descending"
+                    className="text-md font-semibold cursor-pointer"
+                  >
+                    Descending
+                  </label>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </MenuItems>
+          </Menu>
+
+          {/* Input Box */}
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleEnterPress}
+            placeholder="What are you looking for today?"
+            className="flex-grow border-none ring-1 ring-gray-200 w-96 p-4 rounded-sm"
+          />
+
+          {/* Search Button */}
+          <button
+            className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
+            onClick={handleSearch}
+          >
+            Search
+            <FaMagnifyingGlass />
+          </button>
+          <button
+            className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full px-4 py-2 ml-2"
+            onClick={handleJump}
+          >
+            Jump
+            <FaMagnifyingGlass />
+          </button>
+        </div>
       </div>
 
       {/* Search Tags */}

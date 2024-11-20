@@ -814,7 +814,7 @@ export default function HomePage() {
                       collectablesData?.pages?.[0]
                         ?.totalMatchingCollectables && (
                         <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                          Total Collectables:{" "}
+                          Total Collectibles:{" "}
                           {collectablesData.pages[0].totalMatchingCollectables}
                         </p>
                       )
@@ -848,7 +848,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -907,7 +907,7 @@ export default function HomePage() {
                                             item.attributes?.find(
                                               (attr: any) =>
                                                 attr.name === "image"
-                                            )?.value || "/placeholder.jpg"
+                                            )?.value || "/noImage.jpg"
                                           }
                                           alt={
                                             item.attributes?.find(
@@ -974,7 +974,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1034,7 +1034,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1105,7 +1105,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1169,7 +1169,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
