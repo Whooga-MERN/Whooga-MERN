@@ -6,6 +6,7 @@ import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
+import { MdEdit } from "react-icons/md";
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as faSolidStar } from "@fortawesome/free-solid-svg-icons";
@@ -84,6 +85,8 @@ export default function HomePage() {
   );
 
   const [noSearchResults, setNoSearchResults] = useState(false);
+  const [noJumpResults, setNoJumpResults] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTags, setSearchTags] = useState<
     { attribute: string; term: string }[]
@@ -99,9 +102,7 @@ export default function HomePage() {
   const [highlightedItemId, setHighlightedItemId] = useState<number | null>(
     null
   );
-  const [ownedHighlightedItemId, setOwnedHighlightedItemId] = useState<
-    number | null
-  >(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -883,11 +884,13 @@ export default function HomePage() {
     // Clear search result
     setSearchTags([]);
     setSearchResults([]);
+    setNoSearchResults(false);
 
     // Set jump-related state
     setJumpSearchTags(jumpTags);
     setJumpSearchResults([]);
     setLoadedPages(new Set());
+    setNoJumpResults(false);
 
     try {
       let res;
@@ -920,6 +923,12 @@ export default function HomePage() {
         }
       }
 
+      console.log(res);
+      if (!res || Object.keys(res).length === 0) {
+        // If res is null, undefined, or empty, set noJumpResults to true
+        setNoJumpResults(true);
+        return;
+      }
       if (res) {
         // set the related page number
         setJumpPageNumber(res.pageNumber);
@@ -947,8 +956,14 @@ export default function HomePage() {
         }
 
         if (data) {
-          setJumpSearchResults(data.collectables);
-          setLoadedPages(new Set([res.pageNumber]));
+          console.log(data);
+          if (data.collectables.length === 0) {
+            setNoJumpResults(true);
+          } else {
+            setJumpSearchResults(data.collectables);
+            setLoadedPages(new Set([res.pageNumber]));
+            setNoJumpResults(false);
+          }
         }
       }
     } catch (error) {
@@ -1203,6 +1218,194 @@ export default function HomePage() {
                     setEnabled={setEnabled}
                     onToggle={handleToggleChange}
                   />
+                  <div className="flex lg:hidden items-center">
+                    {isCollectionOwned ? (
+                      <div className="dropdown">
+                        <div
+                          tabIndex={0}
+                          role="button"
+                          className="btn text-xl text-black bg-yellow-300 hover:bg-yellow-200 rounded-xl w-fit"
+                        >
+                          <MdEdit />
+                        </div>
+                        <ul
+                          tabIndex={0}
+                          className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                        >
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openModal}
+                            >
+                              New Collectable
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openEditAttributes}
+                            >
+                              Edit Favorite Attributes
+                            </a>
+                          </li>
+                          <li>
+                            <Link
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              to={`/bulk-upload/${collectionId}`}
+                            >
+                              Bulk Upload
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              to={`/bulk-edit/${universeCollectionId}`}
+                            >
+                              Bulk Edit
+                            </Link>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-red-400 hover:text-black"
+                              onClick={deleteCollection}
+                            >
+                              Delete Collection
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    ) : (
+                      <button
+                        className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                        onClick={handleAddToMyCollections}
+                      >
+                        Add to My Collections
+                        <IoIosAdd />
+                      </button>
+                    )}
+
+                    {isModalOpen && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                          <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                            Create New Collectible
+                          </h2>
+
+                          <form onSubmit={handleSubmit}>
+                            {maskedAttributes
+                              .concat("owned", "image")
+                              .filter((attr) => attr !== null)
+                              .map((attribute, index) => (
+                                <div key={index} className="mb-4 lg:max-w-lg">
+                                  {attribute !== "image" ? (
+                                    attribute === "owned" ? (
+                                      <div className="flex items-center mb-3">
+                                        <input
+                                          type="checkbox"
+                                          id="publishCollection"
+                                          onChange={(e) =>
+                                            handleOwnedChange(e.target.checked)
+                                          }
+                                          className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                        />
+                                        <label
+                                          htmlFor="publishCollection"
+                                          className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                        >
+                                          Is Owned
+                                        </label>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                          {attribute.charAt(0).toUpperCase() +
+                                            attribute.slice(1)}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          name={attribute}
+                                          placeholder={`${attribute}`}
+                                          value={formData[attribute] || ""}
+                                          onChange={handleChange}
+                                          className="border rounded w-full py-2 px-3 text-gray-700"
+                                        />
+                                      </>
+                                    )
+                                  ) : (
+                                    <>
+                                      <label
+                                        htmlFor="cover-photo"
+                                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                      >
+                                        Upload Photo
+                                      </label>
+                                      <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                        <div className="text-center">
+                                          <PhotoIcon
+                                            aria-hidden="true"
+                                            className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                          />
+                                          <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                            <label
+                                              htmlFor="file-upload"
+                                              className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                            >
+                                              <span>Upload a photo</span>
+                                              <input
+                                                id="file-upload"
+                                                name="file-upload"
+                                                type="file"
+                                                className="sr-only"
+                                                onChange={handleFileChange}
+                                              />
+                                            </label>
+                                            <p>or drag and drop</p>
+                                          </div>
+                                          <p className="text-xs leading-5 text-gray-600">
+                                            PNG, JPG
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            <div className="flex items-center mb-3">
+                              <input
+                                type="checkbox"
+                                id="publishCollection"
+                                checked={isPublished}
+                                onChange={handlePublishChange}
+                                className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                              />
+                              <label
+                                htmlFor="publishCollection"
+                                className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                              >
+                                Publish Collectable
+                              </label>
+                            </div>
+
+                            <div className="flex justify-end space-x-4 mt-8">
+                              <button
+                                type="button"
+                                onClick={closeModal}
+                                className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                              >
+                                Create
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-center gap-32">
@@ -1220,7 +1423,7 @@ export default function HomePage() {
                     />
                   )}
 
-                  {/* Icon buttons */}
+                  {/* Buttons for large screens */}
                   <div className="items-center gap-2 pt-5 hidden lg:flex">
                     <button className="pr-5" onClick={() => setView("list")}>
                       <FaListUl />
@@ -1468,7 +1671,7 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {noSearchResults ? (
+                  {noSearchResults || noJumpResults ? (
                     <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
                       No match found :(
                     </div>
@@ -1489,7 +1692,7 @@ export default function HomePage() {
                                   // className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
                                   className="w-full md:w-1/2 px-4 mb-6"
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
@@ -1584,7 +1787,7 @@ export default function HomePage() {
                               {_default_collectables.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
-                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl"
+                                  className="relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl"
                                 >
                                   <div className="h-22 w-30 relative">
                                     {/* Star Button */}
@@ -1686,7 +1889,7 @@ export default function HomePage() {
                               {_searchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-search`}
-                                  className="w-full md:w-1/2 px-4 mb-6"
+                                  className="w-full md:w-1/2 px-4 mb-6 cursor-pointer bg-gray-50 border-2 border-gray-200"
                                 >
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
@@ -1787,7 +1990,7 @@ export default function HomePage() {
                                     item.collectionId ||
                                     `item-${index}`
                                   }
-                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl"
+                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200"
                                 >
                                   <div className="h-22 w-30 relative">
                                     {/* Star Button */}
@@ -1896,7 +2099,7 @@ export default function HomePage() {
                                       : ""
                                   }`}
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
@@ -1998,7 +2201,7 @@ export default function HomePage() {
                                       : ""
                                   }`}
                                 >
-                                  <div className="h-22 w-30 relative">
+                                  <div className="h-22 w-30 relative cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     {/* Star Button */}
                                     <button
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
