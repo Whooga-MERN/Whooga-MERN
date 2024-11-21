@@ -121,7 +121,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 <ChevronDownIcon className="ml-1 h-5 w-5 text-gray-500" />
               </MenuButton>
             </div>
-            <MenuItems className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-48 z-10">
+
+            {/* attributes section */}
+            <MenuItems
+              className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-48 z-10"
+              style={{ maxHeight: "450px", overflowY: "auto" }}
+            >
               <ul className="py-1">
                 <p className="px-3 py-2 font-bold dark:text-black">
                   Attributes:
@@ -139,6 +144,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 ))}
               </ul>
 
+              {/* sort by section */}
               <ul className="py-1 dark:text-black">
                 <p className="px-3 py-2 font-bold">Sort by:</p>
                 {attributes.map((attribute) => (
@@ -165,6 +171,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 ))}
               </ul>
 
+              {/* sort order section */}
               <div className="px-4 py-2 border-t border-gray-200 dark:text-black">
                 <p className="pb-3 font-bold">Sort order:</p>
                 <div className="flex items-center space-x-2">
