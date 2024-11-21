@@ -164,7 +164,7 @@ router.get('/masked-attributes/:collectionId', async (req, res) => {
 
     if(customAttributes.length > 0 && hiddenAttributes.length > 0) {
       combinedAttributes = [...defaultAttributes, ...customAttributes];
-      maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
+      const maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
       console.log("Combined Attributes: ", maskedAttributes);
       return res.status(200).json(maskedAttributes);
     }
