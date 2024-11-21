@@ -74,7 +74,7 @@ function Header() {
     <Authenticator>
       {({ signOut }) => (
         <div className="navbar bg-primary">
-          <div className="flex-1">
+          <div className="flex-1 ml-2">
             <Link
               to="/collections"
               className="pl-3 text-black font-bold text-4xl"

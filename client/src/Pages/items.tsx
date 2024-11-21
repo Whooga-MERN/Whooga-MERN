@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _, { add } from "lodash";
+import _, { add, set } from "lodash";
 
 import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
@@ -406,9 +406,44 @@ export default function HomePage() {
   };
 
   // edit collectible
-  const openEdit = async (item: Record<string, any>) => {
-    await setSpecificTag(item);
-    //console.log("specificTag", specificTag);
+  const openEdit = async (item: Record<string, any>, event: React.MouseEvent<HTMLButtonElement>) => {
+    console.log("\n\n\nOPEN EDIT")
+    console.log("item data", item);
+
+    const get_collectable_masked_data = async (item: Record<string, any>) => {
+      const response = await fetch(
+        buildPath(`collectable/masked-collectable/${item.universeCollectableId}`),
+        // buildPath(`universe-collectable/attributes/${item.universeCollectableId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error("Error fetching specific tag:", response);
+      }
+    };
+
+    const collectable_masked_data = await get_collectable_masked_data(item);
+
+    const specificTag = {
+      ...item,
+      attributes: collectable_masked_data,
+    };
+
+    
+    console.log("collectable_masked_data", collectable_masked_data);
+    console.log("specificTag", specificTag);
+
+
+    await setSpecificTag(specificTag);
+    // await setSpecificTag(item);
     setShowEdit(true);
   };
 
@@ -758,8 +793,47 @@ export default function HomePage() {
   };
 
   // ------------------------ open card for details -----------------------------------
-  const handleOpenModal = (item: Record<string, any>) => {
-    setSpecificTag(item);
+  const handleOpenModal = async (item: Record<string, any>, event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    console.log("\n\n\nOPEN EDIT")
+    console.log("item data", item);
+
+    event.stopPropagation(); // Prevent event bubbling
+
+    const get_collectable_masked_data = async (item: Record<string, any>) => {
+      const response = await fetch(
+        buildPath(`collectable/masked-collectable/${item.universeCollectableId}`),
+        // buildPath(`universe-collectable/attributes/${item.universeCollectableId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error("Error fetching specific tag:", response);
+      }
+    };
+
+    const collectable_masked_data = await get_collectable_masked_data(item);
+
+    const specificTag = {
+      ...item,
+      attributes: collectable_masked_data,
+    };
+
+    
+    console.log("collectable_masked_data", collectable_masked_data);
+    console.log("specificTag", specificTag);
+
+
+    await setSpecificTag(specificTag);
+
+    // setSpecificTag(item);
     setShowModal(true);
   };
 
@@ -2059,13 +2133,13 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
 
                                     <div
                                       className="flex-1"
-                                      onClick={() => handleOpenModal(item)}
+                                      onClick={(e) => handleOpenModal(item, e)}
                                     >
                                       {item.attributes
                                         .filter(
@@ -2095,7 +2169,10 @@ export default function HomePage() {
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2158,7 +2235,7 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
                                   </div>
@@ -2166,7 +2243,7 @@ export default function HomePage() {
                                   {/* Attributes Section */}
                                   <div
                                     className="space-y-1 p-5 overflow-visible"
-                                    onClick={() => handleOpenModal(item)}
+                                    onClick={(e) => handleOpenModal(item, e)}
                                   >
                                     {item.attributes
                                       .filter(
@@ -2206,7 +2283,10 @@ export default function HomePage() {
                                     <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2276,13 +2356,13 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
 
                                     <div
                                       className="flex-1"
-                                      onClick={() => handleOpenModal(item)}
+                                      onClick={(e) => handleOpenModal(item, e)}
                                     >
                                       {item.attributes
                                         .filter(
@@ -2312,7 +2392,10 @@ export default function HomePage() {
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2375,7 +2458,7 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
                                   </div>
@@ -2383,7 +2466,7 @@ export default function HomePage() {
                                   {/* Attributes Section */}
                                   <div
                                     className="space-y-1 p-5 overflow-visible"
-                                    onClick={() => handleOpenModal(item)}
+                                    onClick={(e) => handleOpenModal(item, e)}
                                   >
                                     {item.attributes
                                       .filter(
@@ -2423,7 +2506,10 @@ export default function HomePage() {
                                     <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2498,13 +2584,13 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
 
                                     <div
                                       className="flex-1"
-                                      onClick={() => handleOpenModal(item)}
+                                      onClick={(e) => handleOpenModal(item, e)}
                                     >
                                       {item.attributes
                                         .filter(
@@ -2534,7 +2620,10 @@ export default function HomePage() {
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2602,7 +2691,7 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
                                   </div>
@@ -2610,7 +2699,7 @@ export default function HomePage() {
                                   {/* Attributes Section */}
                                   <div
                                     className="space-y-1 p-5 overflow-visible"
-                                    onClick={() => handleOpenModal(item)}
+                                    onClick={(e) => handleOpenModal(item, e)}
                                   >
                                     {item.attributes
                                       .filter(
@@ -2650,7 +2739,10 @@ export default function HomePage() {
                                     <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>

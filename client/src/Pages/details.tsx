@@ -65,7 +65,7 @@ export default function Details() {
                       {attribute.name === "createAt"
                         ? "Created At"
                         : attribute.name}
-                      : {attribute.value}
+                      : {attribute.value || "N/A"}
                     </p>
                   ))}
               </div>
