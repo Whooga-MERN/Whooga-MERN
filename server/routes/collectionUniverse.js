@@ -195,7 +195,7 @@ router.post('/copy-universe', async (req, res) => {
         collection_pic: universeCollectionPic,
         custom_attributes: customAttributes,
         favorite_attributes: defaultAttributes.slice(0, 4),
-        hidden_attribute: hiddenAttributes
+        hidden_attributes: hiddenAttributes
       }).returning({ collection_id: collections.collection_id });
 
       console.log("finding creatorUniverseCollectables");
