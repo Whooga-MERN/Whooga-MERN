@@ -307,7 +307,7 @@ export default function HomePage() {
     };
     getPublishedCollectables();
 
-      const getisCollectionPublished = async () => {
+    const getisCollectionPublished = async () => {
       const response = await fetch(
         buildPath(`publish/is-collection-published/${universeCollectionId}`),
         {
@@ -315,7 +315,8 @@ export default function HomePage() {
           headers: {
             Authorization: `Bearer ${JWT}`,
           },
-        });
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         setIsCollectionPublished(data[0].isPublished);
@@ -462,7 +463,7 @@ export default function HomePage() {
       ...item,
       attributes: collectable_masked_data,
     };
-   
+
     console.log("collectable_masked_data", collectable_masked_data);
     console.log("specificTag", specificTag);
 
@@ -470,13 +471,17 @@ export default function HomePage() {
       (attr: { name: string }) => attr.name === "image"
     );
 
-    if (imageAttribute && (!imageAttribute.value || imageAttribute.value === "")) {
+    if (
+      imageAttribute &&
+      (!imageAttribute.value || imageAttribute.value === "")
+    ) {
       imageAttribute.value = collectionCoverImage;
-      console.log("The image attribute was empty and has been set to collectionCoverImage.");
+      console.log(
+        "The image attribute was empty and has been set to collectionCoverImage."
+      );
     } else {
       console.log("The image attribute has a value:", imageAttribute?.value);
     }
-
 
     await setSpecificTag(specificTag);
     // await setSpecificTag(item);
@@ -952,7 +957,7 @@ export default function HomePage() {
     // Add visual feedback
     setAlertMessage(enabled ? "Showing owned items only" : "Showing all items");
     setShowSuccessAlert(true);
-    
+
     setTimeout(() => {
       setShowSuccessAlert(false);
     }, 2000);
@@ -1609,45 +1614,54 @@ export default function HomePage() {
     }
   };
 
-const publishCollection = async () => {
-  const confirmMessage = isCollectionPublished ? "Are you sure you want to unpublish this collection?" 
-    : "Are you sure you want to publish this collection?";
-  if (confirm(confirmMessage)) {
-    const request = {
-      collectionUniverseId: universeCollectionId,
-      isPublished: isCollectionPublished ? "false" : "true",
-    };
-    console.log("Request: ", request);
-    try {
-      const response = await fetch(
-        buildPath('publish/publish-universe'),
-        {
+  const publishCollection = async () => {
+    const confirmMessage = isCollectionPublished
+      ? "Are you sure you want to unpublish this collection?"
+      : "Are you sure you want to publish this collection?";
+    if (confirm(confirmMessage)) {
+      const request = {
+        collectionUniverseId: universeCollectionId,
+        isPublished: isCollectionPublished ? "false" : "true",
+      };
+      console.log("Request: ", request);
+      try {
+        const response = await fetch(buildPath("publish/publish-universe"), {
           method: "PUT",
           body: JSON.stringify(request),
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${JWT}`,
           },
+        });
+        if (response.ok) {
+          console.log("Collection published successfully");
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem(
+            "alertMessage",
+            `Successfully ${
+              isCollectionPublished ? "un" : ""
+            }published collection`
+          );
+          //window.location.reload();
+        } else {
+          console.error("Error publishing collection:", response);
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem(
+            "alertMessage",
+            `Failed to ${isCollectionPublished ? "un" : ""}publish collection`
+          );
+          //window.location.reload();
         }
-      );
-      if (response.ok) {
-        console.log("Collection published successfully");
-        localStorage.setItem("showSuccessAlert", "true");
-        localStorage.setItem("alertMessage", `Successfully ${isCollectionPublished ? "un" : ""}published collection`);
-        //window.location.reload();
-      } else {
-        console.error("Error publishing collection:", response);
+      } catch (error) {
+        console.error("Error publishing collection:", error);
         localStorage.setItem("showErrorAlert", "true");
-        localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+        localStorage.setItem(
+          "alertMessage",
+          `Failed to ${isCollectionPublished ? "un" : ""}publish collection`
+        );
         //window.location.reload();
       }
-    } catch (error) {
-      console.error("Error publishing collection:", error);
-      localStorage.setItem("showErrorAlert", "true");
-      localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
-      //window.location.reload();
     }
-  }
   };
 
   return (
@@ -1660,9 +1674,7 @@ const publishCollection = async () => {
               role="alert"
               className={`alert ${
                 showErrorAlert ? "alert-error" : "alert-success"
-              }  ${
-                showSuccessAlert || showErrorAlert ? "" : "invisible"
-              }`}
+              }  ${showSuccessAlert || showErrorAlert ? "" : "invisible"}`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1718,6 +1730,14 @@ const publishCollection = async () => {
                               onClick={openModal}
                             >
                               New Collectible
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openEditAttributes}
+                            >
+                              Add/Remove Attributes
                             </a>
                           </li>
                           <li>
@@ -1969,7 +1989,9 @@ const publishCollection = async () => {
                               className="text-lg hover:bg-gray-200 hover:text-black"
                               onClick={publishCollection}
                             >
-                              {isCollectionPublished ? "Unpublish Collection" : "Publish Collection"}
+                              {isCollectionPublished
+                                ? "Unpublish Collection"
+                                : "Publish Collection"}
                             </a>
                           </li>
                           <li>
@@ -2076,7 +2098,9 @@ const publishCollection = async () => {
                                       </div>
                                       {imageFile && (
                                         <div className="mt-4">
-                                          <p className="text-sm">Selected file: {imageFile.name}</p>
+                                          <p className="text-sm">
+                                            Selected file: {imageFile.name}
+                                          </p>
                                           <img
                                             src={URL.createObjectURL(imageFile)} // Create a URL for the image preview
                                             alt="Preview"
@@ -3001,18 +3025,20 @@ const publishCollection = async () => {
                                         <p className="text-xs leading-5 text-gray-600">
                                           PNG, JPG
                                         </p>
-                                      </div> 
+                                      </div>
                                     </div>
                                     {imageFile && (
-                                        <div className="mt-4">
-                                          <p className="text-sm">Selected file: {imageFile.name}</p>
-                                          <img
-                                            src={URL.createObjectURL(imageFile)} // Create a URL for the image preview
-                                            alt="Preview"
-                                            className="mt-2 h-40 w-40 object-cover"
-                                          />
-                                        </div>
-                                      )}
+                                      <div className="mt-4">
+                                        <p className="text-sm">
+                                          Selected file: {imageFile.name}
+                                        </p>
+                                        <img
+                                          src={URL.createObjectURL(imageFile)} // Create a URL for the image preview
+                                          alt="Preview"
+                                          className="mt-2 h-40 w-40 object-cover"
+                                        />
+                                      </div>
+                                    )}
                                   </>
                                 )}
                               </div>
