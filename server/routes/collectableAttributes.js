@@ -146,41 +146,18 @@ router.get('/masked-attributes/:collectionId', async (req, res) => {
     console.log(hiddenAttributes);
     console.log(defaultAttributes);
   
-    if(!customAttributes && !hiddenAttributes) {
-      console.log("CustomAttributes and Hidden attributes are null\n");
-      console.log("Combined Attributes: ", defaultAttributes);
-      return res.status(200).json(defaultAttributes);
-    }
-  
-    if(!hiddenAttributes) {
-      console.log("Hidden attributes are null\n");
-      combinedAttributes = [...defaultAttributes, ...customAttributes];
-      console.log("Combined Atributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
-    }
-  
-    if(!customAttributes) {
-      combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
-      console.log("Combined Attributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
-    }
-
     if (customAttributes.length === 0 && hiddenAttributes.length === 0) {
       console.log("Both customAttributes and hiddenAttributes are empty\n");
-      console.log("Combined Attributes: ", defaultAttributes);
-      return res.status(200).json(defaultAttributes);
+      console.log("#4 Combined Attributes: ", defaultAttributes);
+      combinedAttributes = defaultAttributes;
     }
-    
-    if (customAttributes.length === 0) {
+    else if (customAttributes.length === 0) {
       combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
-      console.log("Combined Attributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
+      console.log("#5 Combined Attributes: ", combinedAttributes);
     }
-    
-    if (hiddenAttributes.length === 0) {
+    else if (hiddenAttributes.length === 0) {
       combinedAttributes = [...defaultAttributes, ...customAttributes];
-      console.log("Combined Attributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
+      console.log("#6 Combined Attributes: ", combinedAttributes);
     }
     
     combinedAttributes = [...defaultAttributes, ...customAttributes];
