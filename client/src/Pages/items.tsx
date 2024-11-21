@@ -117,8 +117,12 @@ export default function HomePage() {
   const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
+
+  // Getting the collection id from local storage
+  // Storing it in the state
   useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
+    console.log("Collection ID in storage: ", collectionIDInStorage);
     setCollectionId(collectionIDInStorage);
     const collectionCover = localStorage.getItem("collectionCover") ?? "";
     console.log(collectionCover);
@@ -126,28 +130,46 @@ export default function HomePage() {
     console.log("collectionId: ", collectionIDInStorage)
   }, []);
 
-    useEffect(() => {
-      if (localStorage.getItem("showSuccessAlert") === "true") {
-        setShowSuccessAlert(true);
-        localStorage.removeItem("showSuccessAlert");
-      }
-      else if (localStorage.getItem("showErrorAlert") === "true") {
-        setShowErrorAlert(true);
-        localStorage.removeItem("showErrorAlert");
-      }
+  useEffect(() => {
+    if (localStorage.getItem("showSuccessAlert") === "true") {
+      setShowSuccessAlert(true);
+      localStorage.removeItem("showSuccessAlert");
+    }
+    else if (localStorage.getItem("showErrorAlert") === "true") {
+      setShowErrorAlert(true);
+      localStorage.removeItem("showErrorAlert");
+    }
 
-      const message = localStorage.getItem("alertMessage") ?? "";
-      setAlertMessage(message);
+    const message = localStorage.getItem("alertMessage") ?? "";
+    setAlertMessage(message);
 
-      setTimeout(() => {
-        setShowErrorAlert(false);
-        setShowSuccessAlert(false);
-      }, 4000);
+    setTimeout(() => {
+      setShowErrorAlert(false);
+      setShowSuccessAlert(false);
+    }, 4000);
   }, []);
 
+
+  /**
+   *  ======= FETCHING DATA =====
+   *  Fetching Items from local storage 
+   *  Fetching User details and JWT 
+   *  Fetching Attributes 
+   *  Fetching Favorite Attributes
+   */
   useEffect(() => {
+    console.log("\n\n=========FETCHING ALL DATA========");
+    if (!collectionId) {
+      // console.log("Collection ID is undefined");
+      return
+    } else if (!universeCollectionId) {
+      // console.log("Universe Collection ID is undefined");
+      return
+    }
+    
     // Gather user data from local storage
     const getItemsFromStorage = async () => {
+      console.log("\n\n=========Getting items from storage========");
       // Getting the collection name and collection ids from local storage
       const collectionName = localStorage.getItem("collectionName") ?? "";
       const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
@@ -186,6 +208,7 @@ export default function HomePage() {
 
     // fetch user details and token
     const fetchUserDetails = async () => {
+      console.log("========Fetching user details=======");
       try {
         const user = await fetchUserLoginDetails();
         setUserId(user || "");
@@ -196,6 +219,7 @@ export default function HomePage() {
     fetchUserDetails();
 
     const fetchToken = async () => {
+      console.log("========Fetching JWT=======");
       try {
         const token = await fetchJWT();
         setJWT(token || "");
@@ -206,6 +230,7 @@ export default function HomePage() {
     fetchToken();
 
     const getAttributes = async () => {
+      console.log("\n\n==============Getting Masked attributes==============");
       const response = await fetch(
         buildPath(`collectable-attributes/masked-attributes/${collectionId}`),
         {
@@ -228,6 +253,9 @@ export default function HomePage() {
     getAttributes();
 
     const getFavoriteAttributes = async () => {
+      console.log("\n\n=======Getting favorite attributes===========");
+      console.log("Collection ID: ", collectionId);
+
       const favReponse = await fetch(
         buildPath(
           `collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`
@@ -254,6 +282,8 @@ export default function HomePage() {
         console.error("Error fetching favorite attributes:", favReponse);
       }
     };
+
+
     getFavoriteAttributes();
 
     const getPublishedCollectables = async () => {
@@ -408,7 +438,7 @@ export default function HomePage() {
   };
 
   const closeEdit = () => {
-    console.log(specificTag);
+    console.log("SPECIFIC TAG:", specificTag);
     setShowEdit(false);
     setSpecificTag(null);
   };
@@ -1311,7 +1341,7 @@ export default function HomePage() {
     const added = updated.filter(item => !original.includes(item));
 
     return { removed, added };
-}
+  }
 
   const handleEditAttributesSubmit = async () => {
     if (editedAttributes.length === 0) {
@@ -1350,8 +1380,8 @@ export default function HomePage() {
   
         if (response.ok) {
           console.log("hidden attributes edited successfully");
-  
           await setMaskedAttributes(editedAttributes);
+          closeEditAttributes();
         } else {
           console.error("Error editing hidden attributes:", response)
           closeEditAttributes();
@@ -1361,8 +1391,6 @@ export default function HomePage() {
         closeEditAttributes();
       }
     }
-
-
 
     // Adding new custom attributes
     if (added.length !== 0) {
@@ -1389,14 +1417,19 @@ export default function HomePage() {
           console.log("Custom Attributes edited successfully");
           await setMaskedAttributes(editedAttributes);
           closeEditAttributes();
-    
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem("alertMessage", "Attributes edited successfully");
         } else {
           console.error("Error editing Custom attributes:", response);
           closeEditAttributes();
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem("alertMessage", "Failed to edit attributes");
         }
       } catch (error) {
         console.error("Error editing Custom attributes:", error);
         closeEditAttributes();
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit attributes");
       }
     }
   };
@@ -1407,6 +1440,7 @@ export default function HomePage() {
     setEditedFavoriteAttributes(favoriteAttributes);
     console.log("Edited Favorite Attributes: ", editedFavoriteAttributes);
     console.log("maskedAttributes: ", maskedAttributes);
+    console.log("collectionId: ", collectionId);
     setOpenEditFavAttributesModal(true);
   };
 
@@ -1459,12 +1493,16 @@ export default function HomePage() {
         localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
         //window.location.reload();
       } else {
-        console.error("Error editing favorite attributes:", response);
+        console.error("Error editing favorite attributes 1#:", response);
         localStorage.setItem("showErrorAlert", "true");
         localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
       }
     } catch (error) {
-      console.error("Error editing favorite attributes:", error);
+      if (error  == "TypeError: Failed to fetch") {
+        console.error("This is a weird PUT error:", error);
+        return;
+      }
+      console.error("Error editing favorite attributes 2#:", error);
       localStorage.setItem("showErrorAlert", "true");
       localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
     }
@@ -2862,7 +2900,7 @@ export default function HomePage() {
                   )}
 
 
-                  {/* Edit Attributes Modal */}
+                  {/* Add and Remove Attributes Modal */}
                   {openEditAttributesModal && (
                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                       <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">

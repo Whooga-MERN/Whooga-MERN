@@ -112,6 +112,9 @@ router.get('/custom-attributes/:collectionId', async (req, res) => {
 router.get('/masked-attributes/:collectionId', async (req, res) => {
   const { collectionId } = req.params;
 
+  console.log("\n\n\nRUNNING MASKED ATTRIBUTES");
+  console.log("collectionId: ", collectionId);
+
   if(!collectionId || isNaN(collectionId))
     return res.status(400).json({ message: "Invalid input for collectionId"});
 
@@ -192,40 +195,50 @@ router.get('/masked-attributes/:collectionId', async (req, res) => {
 
 router.get('/get-favorite-attributes', async (req, res) => {
   const { collectionId } = req.query;
-  console.log(collectionId);
+  console.log("\n\nRUNNING get-favorite-attributes");
+  console.log("Collection", collectionId);
+
   if(!collectionId)
   {
-    console.log("Invalid or no input for collectionId");
+    console.log("Invalid or no input for collectionId @get-favorite-attributes");
     return res.status(400).json({ message: "Invalid or no input for collectionId"});
   }
 
   try {
     console.log("Fetching Favorite Attributes");
+    // console.log("collections.collection_id: ", collections.collection_id);
     const favoriteAttributesQuery = await db
     .select({ favoriteAttributes: collections.favorite_attributes})
     .from(collections)
     .where(eq(collectionId,collections.collection_id));
-    console.log("Finished Fetching Favorite Attributes");
+    console.log("FINISHED FETCHING FAVORITE ATTRIBUTES\n", favoriteAttributesQuery);
 
     res.status(200).json(favoriteAttributesQuery);
   } catch (error) {
-    console.log("Failed to fetch favorite attributes");
+    console.log("Failed to fetch favorite attributes @get-favorite-attributes");
     console.log(error);
-    res.status(400).send("Failed to fetch favorite attributes");
+    res.status(400).send("Failed to fetch favorite attributes @get-favorite-attributes");
   }
 });
 
 
 router.put('/update-favorite-attributes', async (req, res) => {
+  console.log("\n\n\nRUNNING UPDATE FAVORITE ATTRIBUTES");
   const { collectionId, favoriteAttributes } = req.body;
  
-  if(!favoriteAttributes && favoriteAttributes.length < 1)
+  if(!favoriteAttributes && favoriteAttributes.length < 1) {
+    console.error("++++++No favoriteAttributes given");
     return res.status(404).send("No favoriteAttributes given");
-  if(!collectionId || isNaN(collectionId))
+  }
+  if(!collectionId || isNaN(collectionId)) {
+    console.error("+++++++Invalid input for collectionId");
     return res.status(400).json({ message: "Invalid input for collectionId"});
+  }
 
   try {
     console.log("Updating attributes\n");
+    console.log("collectionId: ", collectionId);
+    console.log("favoriteAttributes: ", favoriteAttributes);
     const updatedAttributes = await db
     .update(collections)
     .set({
@@ -234,9 +247,10 @@ router.put('/update-favorite-attributes', async (req, res) => {
     .where(eq(collections.collection_id, collectionId))
     .execute();
 
-    console.log("Attributes updated\n");
+    console.log("---->>>>SUCCESS: FAVORITE ATTRIBUTES UPDATED \n");
 
-    res.status(200).send("Favorite Attributes Succesfully updated");
+
+    res.status(200)
   } catch (error) {
     res.status(500).send("FAILED to update favorite attributes");
   }
@@ -337,6 +351,10 @@ router.put('/add-custom-attributes', async (req, res) => {
 
 router.put('/add-hidden-attribute', async (req, res) => {
   const { attributes, collectionUniverseId } = req.body;
+  console.log("\n\n\n======ADD HIDDING Attribute======")
+  console.log("attributes: ", attributes);
+  console.log("collectionUniverseId: ", collectionUniverseId);
+
   if(!attributes) {
     console.log("Invalid attributes given: ", attributes);
     return res.status(404).send("Invalid attributes given");
@@ -354,7 +372,9 @@ router.put('/add-hidden-attribute', async (req, res) => {
         .from(collections)
         .where(eq(collections.collection_universe_id, collectionUniverseId))
         .execute();
-
+        
+      console.log("favoriteAttributes: ", favoriteAttributesQuery);
+      console.log("favoriteAttributesQuery[0].favoriteAttributes: ", favoriteAttributesQuery[0].favoriteAttributes);
       let combinedAttributes;
       let hiddenAttributes;
       let tempHiddenAttributes = favoriteAttributesQuery[0].hiddenAttributes;
@@ -363,7 +383,8 @@ router.put('/add-hidden-attribute', async (req, res) => {
       else
         hiddenAttributes = attributes;
       try {
-        console.log("favoriteAttributes: ", favoriteAttributesQuery[0].favoriteAttributes);
+        console.log("try favoriteAttributes: ", favoriteAttributesQuery);
+        console.log("try favoriteAttributesQuery[0].favoriteAttributes: ", favoriteAttributesQuery[0].favoriteAttributes);
         combinedAttributes = favoriteAttributesQuery[0].favoriteAttributes.filter(attr => !hiddenAttributes.includes(attr));
         console.log("combinedAttributes: ", combinedAttributes);
       } catch (error) {
