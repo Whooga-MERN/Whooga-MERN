@@ -24,6 +24,9 @@ export default function Collections() {
   const [isUserFetched, setIsUserFetched] = useState(false);
   const [isTokenFetched, setIsTokenFetched] = useState(false);
   const [isUserIdFetched, setIsUserIdFetched] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +53,25 @@ export default function Collections() {
     fetchToken();
     //console.log(JWT);
   }, []);
+
+    useEffect(() => {
+    if (localStorage.getItem("showSuccessAlert") === "true") {
+      setShowSuccessAlert(true);
+      localStorage.removeItem("showSuccessAlert");
+    }
+    else if (localStorage.getItem("showErrorAlert") === "true") {
+      setShowErrorAlert(true);
+      localStorage.removeItem("showErrorAlert");
+    }
+
+    const message = localStorage.getItem("alertMessage") ?? "";
+    setAlertMessage(message);
+
+    setTimeout(() => {
+      setShowErrorAlert(false);
+      setShowSuccessAlert(false);
+    }, 4000);
+}, []);
 
   useEffect(() => {
     if (isUserFetched && isTokenFetched && user && JWT) {
@@ -202,6 +224,11 @@ export default function Collections() {
     <>
       <Header />
       <div className="w-full">
+        <div className="toast toast-top toast-center">
+          <div className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
+            <span>{alertMessage}</span>
+          </div>
+        </div>
         <div className="flex items-center justify-between">
           <h2 className="px-20 font-manrope font-bold text-4xl text-center flex justify-center items-center">
             My Collections
