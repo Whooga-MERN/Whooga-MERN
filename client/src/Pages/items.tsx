@@ -807,6 +807,14 @@ export default function HomePage() {
     setSearchResults([]);
     setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
     setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
+    
+    // Add visual feedback
+    setAlertMessage(enabled ? "Showing owned items only" : "Showing all items");
+    setShowSuccessAlert(true);
+    
+    setTimeout(() => {
+      setShowSuccessAlert(false);
+    }, 2000);
   };
 
   // -------------------------- show universecollectables and search ------------------
