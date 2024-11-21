@@ -166,6 +166,28 @@ router.put('/publish-custom-attributes', async (req, res) => {
     
 });
 
+router.get('/is-collection-published/:collectionUniverseId', async (req, res) => {
+    const { collectionUniverseId } = req.params;
+
+    if(!collectionUniverseId || isNaN(collectionUniverseId)) {
+        console.log("No or improper collectionUniverseId");
+        return res.status(404).send("No or improper collectionUniverseId");
+    }
+
+    try {
+        const isPublished = await db
+        .select({isPublished: collectionUniverses.is_published})
+        .from(collectionUniverses)
+        .where(eq(collectionUniverses.collection_universe_id, collectionUniverseId))
+        .execute();
+
+        res.status(200).json(isPublished);
+    } catch (error) {
+        console.log(error);
+        res.status(400).json("failed to check if universe is published");
+    }
+});
+
 router.get('/display-published-universes', async (req, res) => {
     const {searchTerm} = req.query;
 
@@ -199,5 +221,6 @@ router.get('/display-published-universes', async (req, res) => {
     }
     
 });
+
 
 module.exports = router;
