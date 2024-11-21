@@ -24,7 +24,7 @@ export default function Home() {
                   Organize, Track, and Treasure Your Collections
                 </h1>
                 <p className="text-2xl text-pretty">
-                  Welcome to <span className="text-yellow-400"><strong>WHOOGA!</strong></span> the ultimate platform for collectors!
+                  Welcome to <span className="text-yellow-400"><strong>WHOOGA <span className="text-cyan-500 ml-[-5px]">!</span></strong></span> the ultimate platform for collectors!
                   Whether you're passionate about sports cards, coins, stamps,
                   or any other type of collectible, WHOOGA is designed to
                   enhance and streamline your collecting experience like never

@@ -20,7 +20,7 @@ export default function Navbar() {
             <div className="flex flex-box justify-center items-center">
               <div className="flex flex-row justify-center items-center">
                 <Link to="/" className="text-black font-bold text-4xl">
-                  WHOOGA! 
+                  WHOOGA <span className="text-cyan-500 ml-[-5px]">!</span>
                 </Link>
                 <img src="https://whooga-images.s3.us-east-1.amazonaws.com/Submarine_Icon.png" alt="Website Logo" className="ml-4 mb-2 h-14"></img>
               </div>
