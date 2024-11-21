@@ -47,11 +47,13 @@ router.put('/publish-universe', async (req, res) => {
     }
     console.log("collectionUniverseId: ", collectionUniverseId);
     const isPublishedBool = isPublished === "true";
+    console.log("isPublishedBool: ", isPublishedBool);
 
     try {
         let publishedUniverseCollectable;
         if(isPublishedBool)
         {
+            //check if at least 1 collectable is published
             publishedUniverseCollectable = await db
                 .select({ universe_collectable_id: universeCollectables.universe_collectable_id })
                 .from(universeCollectables)
@@ -65,6 +67,7 @@ router.put('/publish-universe', async (req, res) => {
 
 
         if(isPublishedBool) {
+            // update to published
             console.log("publishedUniverseCollectable.length: ", publishedUniverseCollectable.length);
             if(publishedUniverseCollectable.length > 0) {
                 await db
@@ -81,14 +84,16 @@ router.put('/publish-universe', async (req, res) => {
             }
         }
 
-        await db
-        .update(collectionUniverses)
-        .set({ is_published: isPublishedBool })
-        .where(eq(collectionUniverses.collection_universe_id, collectionUniverseId))
-        .execute();
-
-        console.log("Successfully published collection universe")
-        res.status(200).send("Succesfully published collection universe");
+        if(!isPublishedBool) {
+            await db
+            .update(collectionUniverses)
+            .set({ is_published: isPublishedBool })
+            .where(eq(collectionUniverses.collection_universe_id, collectionUniverseId))
+            .execute();
+    
+            console.log("Unpublished the Collection")
+            res.status(400).send("Unpublished the Collection");
+        }
 
     } catch (error) {
         console.log(error)
