@@ -92,7 +92,7 @@ router.put('/publish-universe', async (req, res) => {
             .execute();
     
             console.log("Unpublished the Collection")
-            res.status(400).send("Unpublished the Collection");
+            res.status(200).send("Unpublished the Collection");
         }
 
     } catch (error) {
