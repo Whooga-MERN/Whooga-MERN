@@ -336,6 +336,7 @@ function NewCollectionForm() {
             onKeyDown={handleEnterPress}
             placeholder="In order of priority, add at least one attribute (Name, Color, Year etc.)"
             id="collectionName"
+            autoComplete="off"
             className="w-full h-12 mt-2 border-2 border-gray-300 rounded-md px-4"
           />
         </div>

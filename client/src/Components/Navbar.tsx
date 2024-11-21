@@ -1,30 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Zdog from "zdog";
 // On the Logged out page
 export default function Navbar() {
   const [isClick, setisClick] = useState(false);
 
   const toggleNav = (): void => {
     setisClick(!isClick);
-  };
-
-  // function classNames(...classes: string[]) {
-  //   return classes.filter(Boolean).join(" ");
-  // }
+  };    
 
   return (
     <div>
       {" "}
       {/* navbar */}
-      <nav className="bg-primary opacity-80 dark:bg-primary">
+      <nav className="bg-primary h-[80px] dark:bg-primary flex-grow items-center justify-center pt-2">
         {/* <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8"> */}
-        <div className="px-8">
-          <div className="flex items-center h-16 justify-between">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Link to="/" className="text-black font-bold text-2xl">
-                  WHOOGA!
+        <div className="px-8"> 
+          <div className="flex flex-row items-center h-16 justify-between">
+            <div className="flex flex-box justify-center items-center">
+              <div className="flex flex-row justify-center items-center">
+                <Link to="/" className="text-black font-bold text-4xl">
+                  WHOOGA! 
                 </Link>
+                <img src="https://whooga-images.s3.us-east-1.amazonaws.com/Submarine_Icon.png" alt="Website Logo" className="ml-4 mb-2 h-14"></img>
               </div>
             </div>
 

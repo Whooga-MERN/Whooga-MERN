@@ -66,17 +66,22 @@ function Header() {
     fetchData();
   }, [user, JWT])
 
+
+
+
+
   return (
     <Authenticator>
       {({ signOut }) => (
         <div className="navbar bg-primary">
-          <div className="flex-1">
+          <div className="flex-1 ml-2">
             <Link
               to="/collections"
-              className="pl-3 text-black font-bold text-2xl"
+              className="pl-3 text-black font-bold text-4xl"
             >
               WHOOGA!
             </Link>
+            <img src="https://whooga-images.s3.us-east-1.amazonaws.com/Submarine_Icon.png" alt="Website Logo" className="ml-4 mb-2 h-14"></img>
           </div>
           <div className="flex-none gap-2">
             <div className="form-control">
@@ -137,7 +142,7 @@ function Header() {
               </div>
               <ul
                 tabIndex={0}
-                className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
+                className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52 dark:border-[1px] dark:border-solid dark:border-gray-600"
               >
                 <li>
                   <Link to="/profile" className="justify-between">

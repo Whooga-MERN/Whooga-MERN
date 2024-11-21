@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import _ from "lodash";
+import _, { add, set } from "lodash";
 
 import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
@@ -11,6 +11,8 @@ import { PhotoIcon } from "@heroicons/react/24/solid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as faSolidStar } from "@fortawesome/free-solid-svg-icons";
 import { faStar as faRegularStar } from "@fortawesome/free-regular-svg-icons";
+import { FaInfo } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 
 import Header from "../Components/Header";
 import Modal from "../Components/Modal";
@@ -114,8 +116,12 @@ export default function HomePage() {
   const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
+
+  // Getting the collection id from local storage
+  // Storing it in the state
   useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
+    console.log("Collection ID in storage: ", collectionIDInStorage);
     setCollectionId(collectionIDInStorage);
   }, []);
 
@@ -137,9 +143,27 @@ export default function HomePage() {
     }, 4000);
   }, []);
 
+
+  /**
+   *  ======= FETCHING DATA =====
+   *  Fetching Items from local storage 
+   *  Fetching User details and JWT 
+   *  Fetching Attributes 
+   *  Fetching Favorite Attributes
+   */
   useEffect(() => {
+    console.log("\n\n=========FETCHING ALL DATA========");
+    if (!collectionId) {
+      // console.log("Collection ID is undefined");
+      return
+    } else if (!universeCollectionId) {
+      // console.log("Universe Collection ID is undefined");
+      return
+    }
+    
     // Gather user data from local storage
     const getItemsFromStorage = async () => {
+      console.log("\n\n=========Getting items from storage========");
       // Getting the collection name and collection ids from local storage
       const collectionName = localStorage.getItem("collectionName") ?? "";
       const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
@@ -178,6 +202,7 @@ export default function HomePage() {
 
     // fetch user details and token
     const fetchUserDetails = async () => {
+      console.log("========Fetching user details=======");
       try {
         const user = await fetchUserLoginDetails();
         setUserId(user || "");
@@ -188,6 +213,7 @@ export default function HomePage() {
     fetchUserDetails();
 
     const fetchToken = async () => {
+      console.log("========Fetching JWT=======");
       try {
         const token = await fetchJWT();
         setJWT(token || "");
@@ -198,6 +224,7 @@ export default function HomePage() {
     fetchToken();
 
     const getAttributes = async () => {
+      console.log("\n\n==============Getting Masked attributes==============");
       const response = await fetch(
         buildPath(`collectable-attributes/masked-attributes/${collectionId}`),
         {
@@ -220,6 +247,9 @@ export default function HomePage() {
     getAttributes();
 
     const getFavoriteAttributes = async () => {
+      console.log("\n\n=======Getting favorite attributes===========");
+      console.log("Collection ID: ", collectionId);
+
       const favReponse = await fetch(
         buildPath(
           `collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`
@@ -246,6 +276,8 @@ export default function HomePage() {
         console.error("Error fetching favorite attributes:", favReponse);
       }
     };
+
+
     getFavoriteAttributes();
 
     const getPublishedCollectables = async () => {
@@ -374,14 +406,49 @@ export default function HomePage() {
   };
 
   // edit collectible
-  const openEdit = async (item: Record<string, any>) => {
-    await setSpecificTag(item);
-    //console.log("specificTag", specificTag);
+  const openEdit = async (item: Record<string, any>, event: React.MouseEvent<HTMLButtonElement>) => {
+    console.log("\n\n\nOPEN EDIT")
+    console.log("item data", item);
+
+    const get_collectable_masked_data = async (item: Record<string, any>) => {
+      const response = await fetch(
+        buildPath(`collectable/masked-collectable/${item.universeCollectableId}`),
+        // buildPath(`universe-collectable/attributes/${item.universeCollectableId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error("Error fetching specific tag:", response);
+      }
+    };
+
+    const collectable_masked_data = await get_collectable_masked_data(item);
+
+    const specificTag = {
+      ...item,
+      attributes: collectable_masked_data,
+    };
+
+    
+    console.log("collectable_masked_data", collectable_masked_data);
+    console.log("specificTag", specificTag);
+
+
+    await setSpecificTag(specificTag);
+    // await setSpecificTag(item);
     setShowEdit(true);
   };
 
   const closeEdit = () => {
-    console.log(specificTag);
+    console.log("SPECIFIC TAG:", specificTag);
     setShowEdit(false);
     setSpecificTag(null);
   };
@@ -726,8 +793,47 @@ export default function HomePage() {
   };
 
   // ------------------------ open card for details -----------------------------------
-  const handleOpenModal = (item: Record<string, any>) => {
-    setSpecificTag(item);
+  const handleOpenModal = async (item: Record<string, any>, event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    console.log("\n\n\nOPEN EDIT")
+    console.log("item data", item);
+
+    event.stopPropagation(); // Prevent event bubbling
+
+    const get_collectable_masked_data = async (item: Record<string, any>) => {
+      const response = await fetch(
+        buildPath(`collectable/masked-collectable/${item.universeCollectableId}`),
+        // buildPath(`universe-collectable/attributes/${item.universeCollectableId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error("Error fetching specific tag:", response);
+      }
+    };
+
+    const collectable_masked_data = await get_collectable_masked_data(item);
+
+    const specificTag = {
+      ...item,
+      attributes: collectable_masked_data,
+    };
+
+    
+    console.log("collectable_masked_data", collectable_masked_data);
+    console.log("specificTag", specificTag);
+
+
+    await setSpecificTag(specificTag);
+
+    // setSpecificTag(item);
     setShowModal(true);
   };
 
@@ -1234,14 +1340,158 @@ export default function HomePage() {
     }
   }, [jumpSearchResults, prevHeight, jumped]);
 
+  // ------------------------- Add/Delete Attributes -------------------------
+
+  const [editedAttributes, setEditedAttributes] = useState<string[]>([]);
+  const [openEditAttributesModal, setOpenEditAttributesModal] = useState(false);
+  const [isAttributeEmpty, setIsAttributesEmpty] = useState(false);
+
   const openEditAttributes = () => {
-    setEditedFavoriteAttributes(favoriteMaskedAttributes);
+    setEditedAttributes(maskedAttributes);
+    console.log("Edited Favorite Attributes: ", editedAttributes);
+    console.log("maskedAttributes: ", maskedAttributes);
+    setOpenEditAttributesModal(true);
+  };
+
+
+  const closeEditAttributes = () => {
+    setIsAttributesEmpty(false);
+    setOpenEditAttributesModal(false);
+  };
+
+
+  const handleEnterPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      const newFeature = (event.target as HTMLInputElement).value.trim();
+      if (newFeature === "") {
+        return;
+      }
+      setEditedAttributes([...editedAttributes, newFeature]);
+      setIsAttributesEmpty(false);
+      (event.target as HTMLInputElement).value = "";
+    }
+  };
+
+  const deleteAttribute = (tagToDelete: string) => {
+    const index = editedAttributes.findIndex((tag) => tag === tagToDelete);
+    if (index !== -1) {
+      setEditedAttributes([
+        ...editedAttributes.slice(0, index),
+        ...editedAttributes.slice(index + 1),
+      ]);
+    }
+  };
+
+
+  function splitChanges(original: string[], updated: string[]) {
+    const removed = original.filter(item => !updated.includes(item));
+    const added = updated.filter(item => !original.includes(item));
+
+    return { removed, added };
+  }
+
+  const handleEditAttributesSubmit = async () => {
+    if (editedAttributes.length === 0) {
+      setIsAttributesEmpty(true);
+      return;
+    }
+
+
+    const { removed, added } = splitChanges(maskedAttributes, editedAttributes);
+
+    console.log("Masked Attributes: ", maskedAttributes);
+    console.log("Edited Attributes: ", editedAttributes);
+    console.log("Removed: ", removed);
+    console.log("Added: ", added);
+
+    // Remove any attributes
+    if (removed.length !== 0) {
+
+      const request_hide = {
+        collectionUniverseId: universeCollectionId,
+        attributes: removed,
+      };
+
+      try {
+        const response = await fetch(
+          buildPath(`collectable-attributes/add-hidden-attribute`),
+          {
+            method: "PUT",
+            body: JSON.stringify(request_hide),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+  
+        if (response.ok) {
+          console.log("hidden attributes edited successfully");
+          await setMaskedAttributes(editedAttributes);
+          closeEditAttributes();
+        } else {
+          console.error("Error editing hidden attributes:", response)
+          closeEditAttributes();
+        }
+      } catch (error) {
+        console.error("Error editing hidden attributes:", error);
+        closeEditAttributes();
+      }
+    }
+
+    // Adding new custom attributes
+    if (added.length !== 0) {
+            
+      const request_add = {
+        collectionUniverseId: universeCollectionId,
+        customAttributes: added,
+      };
+
+      try {
+        const response = await fetch(
+          buildPath(`collectable-attributes/add-custom-attributes`),
+          {
+            method: "PUT",
+            body: JSON.stringify(request_add),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+  
+        if (response.ok) {
+          console.log("Custom Attributes edited successfully");
+          await setMaskedAttributes(editedAttributes);
+          closeEditAttributes();
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem("alertMessage", "Attributes edited successfully");
+        } else {
+          console.error("Error editing Custom attributes:", response);
+          closeEditAttributes();
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem("alertMessage", "Failed to edit attributes");
+        }
+      } catch (error) {
+        console.error("Error editing Custom attributes:", error);
+        closeEditAttributes();
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit attributes");
+      }
+    }
+  };
+
+  // ------------------------- Edit Favorite Attributes -------------------------
+
+  const openEditFavoriteAttributes = () => {
+    setEditedFavoriteAttributes(favoriteAttributes);
     console.log("Edited Favorite Attributes: ", editedFavoriteAttributes);
     console.log("maskedAttributes: ", maskedAttributes);
+    console.log("collectionId: ", collectionId);
     setOpenEditFavAttributesModal(true);
   };
 
-  const closeEditAttributes = () => {
+  const closeEditFavoriteAttributes = () => {
     setOpenEditFavAttributesModal(false);
   };
 
@@ -1293,7 +1543,7 @@ export default function HomePage() {
         );
         //window.location.reload();
       } else {
-        console.error("Error editing favorite attributes:", response);
+        console.error("Error editing favorite attributes 1#:", response);
         localStorage.setItem("showErrorAlert", "true");
         localStorage.setItem(
           "alertMessage",
@@ -1301,7 +1551,11 @@ export default function HomePage() {
         );
       }
     } catch (error) {
-      console.error("Error editing favorite attributes:", error);
+      if (error  == "TypeError: Failed to fetch") {
+        console.error("This is a weird PUT error:", error);
+        return;
+      }
+      console.error("Error editing favorite attributes 2#:", error);
       localStorage.setItem("showErrorAlert", "true");
       localStorage.setItem(
         "alertMessage",
@@ -1582,7 +1836,7 @@ export default function HomePage() {
                         </div>
                         <ul
                           tabIndex={0}
-                          className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                          className="dropdown-content menu bg-base-100 rounded-box z-[1] w-60 p-2 shadow"
                         >
                           <li>
                             <a
@@ -1596,6 +1850,14 @@ export default function HomePage() {
                             <a
                               className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={openEditAttributes}
+                            >
+                              Add/Remove Attributes
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openEditFavoriteAttributes}
                             >
                               Edit Favorite Attributes
                             </a>
@@ -1871,13 +2133,13 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
 
                                     <div
                                       className="flex-1"
-                                      onClick={() => handleOpenModal(item)}
+                                      onClick={(e) => handleOpenModal(item, e)}
                                     >
                                       {item.attributes
                                         .filter(
@@ -1907,7 +2169,10 @@ export default function HomePage() {
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -1970,7 +2235,7 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
                                   </div>
@@ -1978,7 +2243,7 @@ export default function HomePage() {
                                   {/* Attributes Section */}
                                   <div
                                     className="space-y-1 p-5 overflow-visible"
-                                    onClick={() => handleOpenModal(item)}
+                                    onClick={(e) => handleOpenModal(item, e)}
                                   >
                                     {item.attributes
                                       .filter(
@@ -2018,7 +2283,10 @@ export default function HomePage() {
                                     <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2088,13 +2356,13 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
 
                                     <div
                                       className="flex-1"
-                                      onClick={() => handleOpenModal(item)}
+                                      onClick={(e) => handleOpenModal(item, e)}
                                     >
                                       {item.attributes
                                         .filter(
@@ -2124,7 +2392,10 @@ export default function HomePage() {
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2187,7 +2458,7 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
                                   </div>
@@ -2195,7 +2466,7 @@ export default function HomePage() {
                                   {/* Attributes Section */}
                                   <div
                                     className="space-y-1 p-5 overflow-visible"
-                                    onClick={() => handleOpenModal(item)}
+                                    onClick={(e) => handleOpenModal(item, e)}
                                   >
                                     {item.attributes
                                       .filter(
@@ -2235,7 +2506,10 @@ export default function HomePage() {
                                     <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2310,13 +2584,13 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
 
                                     <div
                                       className="flex-1"
-                                      onClick={() => handleOpenModal(item)}
+                                      onClick={(e) => handleOpenModal(item, e)}
                                     >
                                       {item.attributes
                                         .filter(
@@ -2346,7 +2620,10 @@ export default function HomePage() {
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2414,7 +2691,7 @@ export default function HomePage() {
                                           )?.value || "No Name"
                                         }
                                         className="max-h-full max-w-full object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        onClick={(e) => handleOpenModal(item, e)}
                                       />
                                     </div>
                                   </div>
@@ -2422,7 +2699,7 @@ export default function HomePage() {
                                   {/* Attributes Section */}
                                   <div
                                     className="space-y-1 p-5 overflow-visible"
-                                    onClick={() => handleOpenModal(item)}
+                                    onClick={(e) => handleOpenModal(item, e)}
                                   >
                                     {item.attributes
                                       .filter(
@@ -2462,7 +2739,10 @@ export default function HomePage() {
                                     <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => openEdit(item)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          openEdit(item, e);
+                                        }}
                                       >
                                         <FaRegEdit />
                                       </button>
@@ -2661,7 +2941,7 @@ export default function HomePage() {
 
                         <form onSubmit={handleEditFavAttributesSubmit}>
                           {maskedAttributes.map((attribute, index) => (
-                            <div className="flex items-center mb-3">
+                            <div key={`${attribute}-${index}`} className="flex items-center mb-3">
                               <input
                                 type="checkbox"
                                 id={attribute}
@@ -2688,7 +2968,7 @@ export default function HomePage() {
                           <div className="flex justify-end space-x-4 mt-8">
                             <button
                               type="button"
-                              onClick={closeEditAttributes}
+                              onClick={closeEditFavoriteAttributes}
                               className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
                             >
                               Cancel
@@ -2701,6 +2981,69 @@ export default function HomePage() {
                             </button>
                           </div>
                         </form>
+                      </div>
+                    </div>
+                  )}
+
+
+                  {/* Add and Remove Attributes Modal */}
+                  {openEditAttributesModal && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                        <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                          Add or Remove Attributes
+                        </h2>
+
+                          <h1 className="text text-red-500"><span className="text-lg">*Warning*</span>: Saving changes will affect this Collection</h1>
+
+                          <p className="text-red-500 text-md">
+                            {isAttributeEmpty
+                              ? "* Please save at least one item attribute *"
+                              : ""}
+                          </p>
+
+
+                          {/* Features */}
+                          <div className="flex flex-col justify-center mt-4">
+                            <input
+                              type="text"
+                              onKeyDown={handleEnterPress}
+                              placeholder="Press Enter to add"
+                              id="collectionName"
+                              autoComplete="off"
+                              className="w-full h-12 mt-2 border-2 text-black rounded-md px-4"
+                            />
+                          </div>
+                          <div className="flex flex-wrap mt-2">
+                            {editedAttributes.map((attribute, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center bg-black text-white-600 font-semibold text-lg rounded-md pl-4 pr-2 py-1 mr-3 mt-2"
+                              >
+                                {attribute}
+                                <button className="pl-4 text-red-500 " onClick={() => deleteAttribute(attribute)}>
+                                  <IoMdClose />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex justify-end space-x-4 mt-8">
+                            <button
+                              type="button"
+                              onClick={closeEditAttributes}
+                              className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleEditAttributesSubmit}
+                              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
+                          
                       </div>
                     </div>
                   )}

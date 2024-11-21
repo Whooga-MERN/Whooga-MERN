@@ -2,8 +2,14 @@ import { Link } from "react-router-dom";
 import { GiPostStamp } from "react-icons/gi";
 import { PiScanSmiley } from "react-icons/pi";
 import { MdSecurity } from "react-icons/md";
+import Zdog from "zdog";
+import { useEffect } from "react";
+
 
 export default function Home() {
+
+
+
   return (
     <>
       {/* DETAIL */}
@@ -17,8 +23,8 @@ export default function Home() {
                 <h1 className="pb-10 font-cabinet-grotesk text-6xl font-extrabold mb-3">
                   Organize, Track, and Treasure Your Collections
                 </h1>
-                <p className="text-lg">
-                  Welcome to WHOOGA, the ultimate platform for collectors!
+                <p className="text-2xl text-pretty">
+                  Welcome to <span className="text-yellow-400"><strong>WHOOGA!</strong></span> the ultimate platform for collectors!
                   Whether you're passionate about sports cards, coins, stamps,
                   or any other type of collectible, WHOOGA is designed to
                   enhance and streamline your collecting experience like never
@@ -28,7 +34,7 @@ export default function Home() {
               {/* Move Get Started Button Here */}
               <div className="mt-6 text-center">
                 <Link
-                  className="btn inline-flex items-center text-white bg-yellow-400 hover:bg-yellow-500 group"
+                  className="btn inline-flex items-center text-white dark:text-black bg-yellow-400 hover:bg-yellow-500 group"
                   to="/auth"
                 >
                   Get Started
@@ -56,10 +62,13 @@ export default function Home() {
                 alt="Coin"
               />
             </div>
+
+            {/* <img src="https://whooga-images.s3.us-east-1.amazonaws.com/Submarine_Icon.png" alt="Website Logo" className=" h-[300px]"></img>      */}
           </div>
         </div>
       </div>
       {/* DETAIL END */}
+      
 
       {/* FEATURES */}
       <div className="sm:py-20 md:py-20">
@@ -67,7 +76,7 @@ export default function Home() {
           <div className="py-12 md:py-20">
             {/* Section header */}
             <div className="max-w-3xl mx-auto text-center pb-16 md:pb-16">
-              <h1 className="h1 text-5xl font-cabinet-grotesk text-black font-bold underline decoration-yellow-400 pb-10">
+              <h1 className="h1 text-5xl font-cabinet-grotesk text-black dark:text-gray-500 font-bold underline decoration-yellow-400 pb-10">
                 Tools Provided
               </h1>
             </div>
@@ -75,7 +84,7 @@ export default function Home() {
             <div className="max-w-sm mx-auto grid gap-8 sm:grid-cols-3 sm:max-w-3xl lg:grid-cols-3 lg:max-w-none items-start">
               {/* #1 */}
               <div className="text-center">
-                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white dark:text-gray-700 dark:border-gray-700 text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
                   <GiPostStamp />
                 </div>
                 <h3 className="font-cabinet-grotesk font-bold text-2xl">
@@ -85,7 +94,7 @@ export default function Home() {
 
               {/* #2 */}
               <div className="text-center">
-                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white dark:text-gray-700 dark:border-gray-700 text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
                   <PiScanSmiley />
                 </div>
                 <h3 className="font-cabinet-grotesk font-bold text-2xl">
@@ -95,7 +104,7 @@ export default function Home() {
 
               {/* #3 */}
               <div className="text-center">
-                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white dark:text-gray-700 dark:border-gray-700 text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
                   <MdSecurity />
                 </div>
                 <h3 className="font-cabinet-grotesk font-bold text-2xl">
