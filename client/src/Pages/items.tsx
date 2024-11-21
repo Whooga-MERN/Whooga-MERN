@@ -73,6 +73,7 @@ export default function HomePage() {
   const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<
     string[]
   >([]);
+  const [collectionCoverImage, setCollectionCoverImage] = useState<string>("");
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
@@ -166,11 +167,13 @@ export default function HomePage() {
       console.log("\n\n=========Getting items from storage========");
       // Getting the collection name and collection ids from local storage
       const collectionName = localStorage.getItem("collectionName") ?? "";
+      const collectionCover = localStorage.getItem("collectionCover") ?? "/noImage.jpg";
       const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
       const savedWishlist = localStorage.getItem("wishlistIds");
 
-      // Setting the collection name and collection ids
+      // Setting the collection name, image and collection ids
       setUniverseCollectionName(collectionName);
+      setCollectionCoverImage(collectionCover);
       setCollectionIds(JSON.parse(storedCollectionIds));
 
       // Checking if the collection is owned
@@ -2125,7 +2128,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2227,7 +2230,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2348,7 +2351,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2450,7 +2453,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2576,7 +2579,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2683,7 +2686,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
