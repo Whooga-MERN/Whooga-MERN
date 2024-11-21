@@ -441,9 +441,21 @@ export default function HomePage() {
       ...item,
       attributes: collectable_masked_data,
     };
-
+   
     console.log("collectable_masked_data", collectable_masked_data);
     console.log("specificTag", specificTag);
+
+    const imageAttribute = specificTag.attributes.find(
+      (attr: { name: string }) => attr.name === "image"
+    );
+
+    if (imageAttribute && (!imageAttribute.value || imageAttribute.value === "")) {
+      imageAttribute.value = collectionCoverImage;
+      console.log("The image attribute was empty and has been set to collectionCoverImage.");
+    } else {
+      console.log("The image attribute has a value:", imageAttribute?.value);
+    }
+
 
     await setSpecificTag(specificTag);
     // await setSpecificTag(item);
