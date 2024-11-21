@@ -79,7 +79,8 @@ function Header() {
               to="/collections"
               className="pl-3 text-black font-bold text-4xl"
             >
-              WHOOGA <span className="text-cyan-500 ml-[-5px]">!</span>
+              {/* WHOOGA <span className="text-cyan-500 ml-[-5px]">!</span> */}
+              WHOOGA!
             </Link>
             <img src="https://whooga-images.s3.us-east-1.amazonaws.com/Submarine_Icon.png" alt="Website Logo" className="ml-4 mb-2 h-14"></img>
           </div>
