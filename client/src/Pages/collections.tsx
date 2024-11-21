@@ -1,7 +1,6 @@
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { IconContext } from "react-icons";
 import Header from "../Components/Header";
-import Footer from "../Components/Footer";
 import { Link, useNavigate } from "react-router-dom";
 // import { useQuery } from "react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +11,7 @@ import fetchUserLoginDetails from "../fetchUserLoginDetails";
 import fetchJWT from "../fetchJWT";
 import { fetchCollectionSearchResults } from "../utils/collectionsPage";
 import { buildPath } from "../utils/utils";
+import Footer from "../Components/Footer";
 
 export default function Collections() {
   const [user, setUser] = useState<any>(null);
@@ -54,12 +54,11 @@ export default function Collections() {
     //console.log(JWT);
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     if (localStorage.getItem("showSuccessAlert") === "true") {
       setShowSuccessAlert(true);
       localStorage.removeItem("showSuccessAlert");
-    }
-    else if (localStorage.getItem("showErrorAlert") === "true") {
+    } else if (localStorage.getItem("showErrorAlert") === "true") {
       setShowErrorAlert(true);
       localStorage.removeItem("showErrorAlert");
     }
@@ -71,7 +70,7 @@ export default function Collections() {
       setShowErrorAlert(false);
       setShowSuccessAlert(false);
     }, 4000);
-}, []);
+  }, []);
 
   useEffect(() => {
     if (isUserFetched && isTokenFetched && user && JWT) {
@@ -110,16 +109,13 @@ export default function Collections() {
     if (isUserIdFetched && userId) {
       console.log("in fetch collections ", userId);
       const fetchCollections = async () => {
-        const response = await fetch(
-          buildPath(`collection/user/${userId}`),
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${JWT}`,
-            },
-          }
-        );
+        const response = await fetch(buildPath(`collection/user/${userId}`), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -146,7 +142,10 @@ export default function Collections() {
         );
 
         const collectionIds = data.map(
-          (col: { collection_id: string, collection_universe_id: string }) => [col.collection_id, col.collection_universe_id]
+          (col: { collection_id: string; collection_universe_id: string }) => [
+            col.collection_id,
+            col.collection_universe_id,
+          ]
         );
         console.log("collectionIds: ", collectionIds);
         localStorage.setItem("collectionIds", JSON.stringify(collectionIds));
@@ -161,7 +160,9 @@ export default function Collections() {
   function handleClick(collectionUniverseId: any) {
     console.log("collectionUniverseId: ", collectionUniverseId);
     console.log("collections: ", collections);
-    const collection = collections.find((col) => col.collectionUniverseId === collectionUniverseId);
+    const collection = collections.find(
+      (col) => col.collectionUniverseId === collectionUniverseId
+    );
     console.log("collection upon being clicked: ", collection);
     if (collection) {
       localStorage.setItem(
@@ -172,15 +173,9 @@ export default function Collections() {
         "hiddenAttributes",
         JSON.stringify(collection.hiddenAttributes)
       );
-      localStorage.setItem(
-        "collectionUniverseId",
-        collectionUniverseId
-      )
+      localStorage.setItem("collectionUniverseId", collectionUniverseId);
       console.log("sending CID: ", collection.id);
-      localStorage.setItem(
-        "collectionId",
-        collection.id
-      );
+      localStorage.setItem("collectionId", collection.id);
       console.log("sending stored UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionName", collection.name);
       localStorage.setItem("collectionCover", collection.image_url);
@@ -226,18 +221,25 @@ export default function Collections() {
       <Header />
       <div className="w-full">
         <div className="toast toast-top toast-center">
-          <div className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
+          <div
+            className={`alert ${
+              showErrorAlert ? "alert-error" : "alert-success"
+            } ${showSuccessAlert || showErrorAlert ? "" : "invisible"}`}
+          >
             <span>{alertMessage}</span>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <h2 className="px-20 font-manrope font-bold text-4xl text-center flex justify-center items-center">
             My Collections
-
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EDC307" className="size-8  ml-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="#EDC307"
+              className="size-8  ml-2"
+            >
               <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
             </svg>
-
           </h2>
           <div className="flex flex-col md:flex-row md:items-center justify-right py-9">
             <label className="input input-bordered flex items-center gap-2">
@@ -283,13 +285,18 @@ export default function Collections() {
           {debouncedSearchTerm.length > 0 ? (
             searchResults && searchResults.length > 0 ? (
               searchResults.map((result: any) => {
-                const { collections: collection, collectionUniverses: collectionUniverse } = result;
+                const {
+                  collections: collection,
+                  collectionUniverses: collectionUniverse,
+                } = result;
 
                 return (
                   <div key={collection.collection_id}>
                     <div
                       className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300 bg-black"
-                      onClick={() => handleClick(collection.collection_universe_id)}
+                      onClick={() =>
+                        handleClick(collection.collection_universe_id)
+                      }
                     >
                       <div
                         style={{
@@ -375,28 +382,7 @@ export default function Collections() {
           )}
         </div>
       </div>
-
-      <footer className="w-full absolute bottom-0 z-50  dark:text-white">
-        <div className="container p-5 mx-auto">
-          <div className="flex items-center justify-between">
-            <span className="text-xl font-bold">WHOOGA!</span>
-            <div className="flex space-x-4 text-xl font-bold">
-              <Link to="/privacypolicy" className="hover:underline">
-                Privacy Policy
-              </Link>
-              <Link to="/contactus" className="hover:underline">
-                Contact Us
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Copyright section */}
-        <hr className="border-gray-700" />
-        <div className="p-3 text-center">
-          © 2024 WHOOGA! All rights reserved.
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
