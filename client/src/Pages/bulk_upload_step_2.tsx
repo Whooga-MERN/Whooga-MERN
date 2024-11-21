@@ -149,12 +149,20 @@ const BulkUploadStep2 = () => {
       if (response.ok) {
         console.log("Form submitted successfully");
         setIsUploading(false);
-        navigate("/collections");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Added to collection successfully");
+        navigate(`/items/${collectionUniverseId}`);
       } else {
         console.error("Form submission failed");
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to add to collection");
+        navigate(`/items/${collectionUniverseId}`);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to add to collection");
+      navigate(`/items/${collectionUniverseId}`);
     }
   };
 

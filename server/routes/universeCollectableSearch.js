@@ -134,21 +134,37 @@ router.get('', async (req, res) => {
 
         // Map collectables with only favorite attributes, then sort them
         let collectablesWithFavoriteAttributes = filteredCollectableIds.map(universeCollectableId => {
-            const relatedAttributes = attributes.filter(
-                attribute => attribute.universe_collectable_id === parseInt(universeCollectableId)
-            );
-
-            return {
-                universe_collectable_id: parseInt(universeCollectableId),
-                attributes: relatedAttributes.map(attr => ({
+            const relatedAttributes = attributes
+                .filter(attribute => attribute.universe_collectable_id === parseInt(universeCollectableId))
+                .map(attr => ({
                     collectable_attribute_id: attr.collectable_attribute_id,
                     name: attr.name,
                     slug: attr.slug,
                     value: attr.value,
                     is_custom: attr.is_custom
-                }))
+                }));
+        
+            // Sort attributes: 'image' first, then by favoriteAttributes order
+            const sortedAttributes = relatedAttributes.sort((a, b) => {
+                if (a.name === 'image') return -1; // 'image' goes to the top
+                if (b.name === 'image') return 1;  // 'image' goes to the top
+        
+                const indexA = favoriteAttributes.indexOf(a.name);
+                const indexB = favoriteAttributes.indexOf(b.name);
+
+                
+                return (
+                    (indexA === -1 ? Number.MAX_VALUE : indexA) -
+                    (indexB === -1 ? Number.MAX_VALUE : indexB)
+                );
+            });
+        
+            return {
+                universe_collectable_id: parseInt(universeCollectableId),
+                attributes: sortedAttributes
             };
         });
+        
 
         if (sortBySlug) {
             collectablesWithFavoriteAttributes.sort((a, b) => {
@@ -294,19 +310,34 @@ router.get('/published', async (req, res) => {
 
         // Map collectables with only favorite attributes, then sort them
         let collectablesWithFavoriteAttributes = filteredCollectableIds.map(universeCollectableId => {
-            const relatedAttributes = attributes.filter(
-                attribute => attribute.universe_collectable_id === parseInt(universeCollectableId)
-            );
-
-            return {
-                universe_collectable_id: parseInt(universeCollectableId),
-                attributes: relatedAttributes.map(attr => ({
+            const relatedAttributes = attributes
+                .filter(attribute => attribute.universe_collectable_id === parseInt(universeCollectableId))
+                .map(attr => ({
                     collectable_attribute_id: attr.collectable_attribute_id,
                     name: attr.name,
                     slug: attr.slug,
                     value: attr.value,
                     is_custom: attr.is_custom
-                }))
+                }));
+        
+            // Sort attributes: 'image' first, then by favoriteAttributes order
+            const sortedAttributes = relatedAttributes.sort((a, b) => {
+                if (a.name === 'image') return -1; // 'image' goes to the top
+                if (b.name === 'image') return 1;  // 'image' goes to the top
+        
+                const indexA = favoriteAttributes.indexOf(a.name);
+                const indexB = favoriteAttributes.indexOf(b.name);
+
+
+                return (
+                    (indexA === -1 ? Number.MAX_VALUE : indexA) -
+                    (indexB === -1 ? Number.MAX_VALUE : indexB)
+                );
+            });
+        
+            return {
+                universe_collectable_id: parseInt(universeCollectableId),
+                attributes: sortedAttributes
             };
         });
 
@@ -458,27 +489,44 @@ router.get('/owned', async (req, res) => {
             const relatedCollectables = matchingCollectables.filter(
                 collectable => collectable.universe_collectable_id === parseInt(universeCollectableId)
             );
-
+        
             const collectableId = relatedCollectables.length > 0 ? relatedCollectables[0].collectable_id : null;
-
-            const relatedAttributes = attributes.filter(
-                attribute => 
-                    attribute.universe_collectable_id === parseInt(universeCollectableId) &&
-                    (favoriteAttributes.includes(attribute.name) || attribute.name === "image")
-            );
-
-            return {
-                collectable_id: collectableId,
-                universe_collectable_id: parseInt(universeCollectableId),
-                attributes: relatedAttributes.map(attr => ({
+        
+            const relatedAttributes = attributes
+                .filter(
+                    attribute =>
+                        attribute.universe_collectable_id === parseInt(universeCollectableId) &&
+                        (favoriteAttributes.includes(attribute.name) || attribute.name === "image")
+                )
+                .map(attr => ({
                     collectable_attribute_id: attr.collectable_attribute_id,
                     name: attr.name,
                     slug: attr.slug,
                     value: attr.value,
                     is_custom: attr.is_custom
-                }))
+                }));
+        
+            // Sort attributes: 'image' first, then by favoriteAttributes order
+            const sortedAttributes = relatedAttributes.sort((a, b) => {
+                if (a.name === 'image') return -1; // 'image' goes to the top
+                if (b.name === 'image') return 1;  // 'image' goes to the top
+        
+                const indexA = favoriteAttributes.indexOf(a.name);
+                const indexB = favoriteAttributes.indexOf(b.name);
+        
+                return (
+                    (indexA === -1 ? Number.MAX_VALUE : indexA) -
+                    (indexB === -1 ? Number.MAX_VALUE : indexB)
+                );
+            });
+        
+            return {
+                collectable_id: collectableId,
+                universe_collectable_id: parseInt(universeCollectableId),
+                attributes: sortedAttributes
             };
         });
+        
 
         if (sortBySlug) {
             collectablesWithAttributes.sort((a, b) => {

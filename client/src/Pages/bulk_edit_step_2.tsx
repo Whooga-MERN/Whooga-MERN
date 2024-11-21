@@ -161,12 +161,20 @@ async function csvToString(file: File): Promise<string> {
       if (response.ok) {
         console.log("Form submitted successfully");
         setIsUploading(false);
-        navigate("/collections");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Collection edited successfully");
+        navigate(`/items/${universeCollectionId}`);
       } else {
         console.error("Form submission failed");
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit collection");
+        navigate(`/items/${universeCollectionId}`);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit collection");
+      navigate(`/items/${universeCollectionId}`);
     }
 
     //downloadFile(originalCSVBlob, "original.csv");
