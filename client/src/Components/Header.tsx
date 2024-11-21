@@ -106,12 +106,12 @@ function Header() {
               </label> */}
             </div>
             <ul className="menu menu-horizontal px-1">
-              <li>
+              {/* <li>
                 <button
                   data-toggle-theme="light,dark"
                   data-act-class="ACTIVECLASS"
                 >dark mode</button>
-              </li>
+              </li> */}
               <li>
                 <Link
                   to="/collections"
