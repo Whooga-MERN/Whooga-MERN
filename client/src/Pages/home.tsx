@@ -62,6 +62,8 @@ export default function Home() {
                 alt="Coin"
               />
             </div>
+
+            {/* <img src="https://whooga-images.s3.us-east-1.amazonaws.com/Submarine_Icon.png" alt="Website Logo" className=" h-[300px]"></img>      */}
           </div>
         </div>
       </div>
@@ -82,7 +84,7 @@ export default function Home() {
             <div className="max-w-sm mx-auto grid gap-8 sm:grid-cols-3 sm:max-w-3xl lg:grid-cols-3 lg:max-w-none items-start">
               {/* #1 */}
               <div className="text-center">
-                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white dark:text-gray-700 dark:border-gray-700 text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
                   <GiPostStamp />
                 </div>
                 <h3 className="font-cabinet-grotesk font-bold text-2xl">
@@ -92,7 +94,7 @@ export default function Home() {
 
               {/* #2 */}
               <div className="text-center">
-                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white dark:text-gray-700 dark:border-gray-700 text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
                   <PiScanSmiley />
                 </div>
                 <h3 className="font-cabinet-grotesk font-bold text-2xl">
@@ -102,7 +104,7 @@ export default function Home() {
 
               {/* #3 */}
               <div className="text-center">
-                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
+                <div className="w-24 h-24 bg-yellow-400 border-2 border-white text-white dark:text-gray-700 dark:border-gray-700 text-6xl font-bold rounded-full inline-flex items-center justify-center mb-3">
                   <MdSecurity />
                 </div>
                 <h3 className="font-cabinet-grotesk font-bold text-2xl">
