@@ -49,6 +49,7 @@ export default function HomePage() {
     null
   );
   const [isCollectionOwned, setIsCollectionOwned] = useState(false);
+  const [isCollectionPublished, setIsCollectionPublished] = useState<boolean>();
   const [isModalOpen, setIsModalOpen] = useState(false); // new collectible
   const [showEdit, setShowEdit] = useState(false); // edit collectible
   const [view, setView] = useState<"list" | "grid">("grid");
@@ -305,6 +306,24 @@ export default function HomePage() {
       }
     };
     getPublishedCollectables();
+
+      const getisCollectionPublished = async () => {
+      const response = await fetch(
+        buildPath(`publish/is-collection-published/${universeCollectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
+      if (response.ok) {
+        const data = await response.json();
+        setIsCollectionPublished(data[0].isPublished);
+      } else {
+        console.error("Error fetching isCollectionPublished:", response);
+      }
+    };
+    getisCollectionPublished();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -1587,6 +1606,45 @@ export default function HomePage() {
     }
   };
 
+const publishCollection = async () => {
+  const confirmMessage = isCollectionPublished ? "Are you sure you want to unpublish this collection?" 
+    : "Are you sure you want to publish this collection?";
+  if (confirm(confirmMessage)) {
+    const request = {
+      collectionUniverseId: universeCollectionId,
+      isPublished: isCollectionPublished ? "false" : "true",
+    };
+    console.log("Request: ", request);
+    try {
+      const response = await fetch(
+        buildPath(`publish/publish-universe`),
+        {
+          method: "PUT",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+      if (response.ok) {
+        console.log("Collection published successfully");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", `Successfully ${isCollectionPublished ? "un" : ""}published collection`);
+        window.location.reload();
+      } else {
+        console.error("Error publishing collection:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+      }
+    } catch (error) {
+      console.error("Error publishing collection:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+    }
+  }
+  };
+
   return (
     <>
       <div className="h-screen flex flex-col overflow-y-hidden">
@@ -1597,7 +1655,7 @@ export default function HomePage() {
               role="alert"
               className={`alert ${
                 showErrorAlert ? "alert-error" : "alert-success"
-              } w-1/5 mt-1 mr-10 ${
+              } w-1/5 sm:w-1/2 mt-1 mr-10 ${
                 showSuccessAlert || showErrorAlert ? "" : "invisible"
               }`}
             >
@@ -1900,6 +1958,14 @@ export default function HomePage() {
                             >
                               Bulk Edit
                             </Link>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 hover:text-black"
+                              onClick={publishCollection}
+                            >
+                              {isCollectionPublished ? "Unpublish Collection" : "Publish Collection"}
+                            </a>
                           </li>
                           <li>
                             <a
