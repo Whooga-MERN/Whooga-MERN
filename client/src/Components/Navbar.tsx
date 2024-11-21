@@ -155,7 +155,7 @@ export default function Navbar() {
     <div>
       {" "}
       {/* navbar */}
-      <nav className="bg-yellow-400 opacity-80">
+      <nav className="bg-primary opacity-80 dark:bg-primary">
         {/* <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8"> */}
         <div className="px-8">
           <div className="flex items-center h-16 justify-between">

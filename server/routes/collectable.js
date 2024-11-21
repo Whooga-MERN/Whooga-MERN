@@ -35,6 +35,26 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
 // Collectable CRUD APIs
 
+function makeSlug(text) {
+  if (!text)
+    return null;
+
+  // Convert to lowercase
+  text = text.toLowerCase();
+  
+  // Remove special characters (except underscores)
+  text = text.replace(/[^a-z0-9\s_]/g, '');
+  
+  // Replace spaces with underscores
+  text = text.replace(/\s+/g, '_');
+  
+  // Remove any leading or trailing underscores
+  text = text.replace(/^_+|_+$/g, '');
+
+  return text;
+}
+
+
 router.post('/newCollectable', upload.single('collectableImage'), async(req, res) => {
   const {collection_id, attributes_values_json, isPublished} = req.body;
   
@@ -420,6 +440,8 @@ router.get('/collection-paginated/:collection_id', async (req, res) => {
   const { collection_id } = req.params;
   const { page = 1, itemsPerPage = 8, sortBy, order = 'asc' } = req.query;
 
+  const sortBySlug = makeSlug(sortBy);
+
   try {
     // Retrieve the favorite attributes for the collection
     const collectionResult = await db
@@ -452,29 +474,46 @@ router.get('/collection-paginated/:collection_id', async (req, res) => {
       .where(inArray(collectableAttributes.universe_collectable_id, collectableIds));
 
     let collectablesWithAttributes = collectedItems.map(collectable => {
-      const relatedAttributes = attributes.filter(
-        attribute => 
-          attribute.universe_collectable_id === collectable.universe_collectable_id &&
-          (favoriteAttributes.includes(attribute.name) || attribute.name === "image")
-      );
+    const relatedAttributes = attributes
+        .filter(
+            attribute =>
+                attribute.universe_collectable_id === collectable.universe_collectable_id &&
+                (favoriteAttributes.includes(attribute.name) || attribute.name === "image")
+        )
+        .map(attr => ({
+            collectable_attribute_id: attr.collectable_attribute_id,
+            name: attr.name,
+            slug: attr.slug,
+            value: attr.value,
+            is_custom: attr.is_custom
+        }));
 
-      return {
-        ...collectable,
-        attributes: relatedAttributes.map(attr => ({
-          collectable_attribute_id: attr.collectable_attribute_id,
-          name: attr.name,
-          slug: attr.slug,
-          value: attr.value,
-          is_custom: attr.is_custom
-        }))
-      };
+    // Sort attributes: 'image' first, then by favoriteAttributes order
+    const sortedAttributes = relatedAttributes.sort((a, b) => {
+        if (a.name === 'image') return -1; // 'image' goes to the top
+        if (b.name === 'image') return 1;  // 'image' goes to the top
+
+        const indexA = favoriteAttributes.indexOf(a.name);
+        const indexB = favoriteAttributes.indexOf(b.name);
+
+        return (
+            (indexA === -1 ? Number.MAX_VALUE : indexA) -
+            (indexB === -1 ? Number.MAX_VALUE : indexB)
+        );
     });
 
+    return {
+        ...collectable,
+        attributes: sortedAttributes
+    };
+});
+
+
     // Apply sorting if sortBy parameter is provided
-    if (sortBy) {
+    if (sortBySlug) {
       collectablesWithAttributes.sort((a, b) => {
-        const attrA = a.attributes.find(attr => attr.slug === sortBy);
-        const attrB = b.attributes.find(attr => attr.slug === sortBy);
+        const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+        const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
 
         if (!attrA || !attrB) return 0;
 
@@ -513,13 +552,8 @@ router.get('/collection-paginated/:collection_id', async (req, res) => {
   }
 });
 
-
-
-
-
-
 router.put('/edit-collectable', upload.single('collectableImage'), async (req, res) => {
-  const { collectionId, universeCollectableId, attributeValuesJson, owned} = req.body;
+  const { collectionId, universeCollectableId, attributeValuesJson, owned, isPublished} = req.body;
   let image = null;
   if(req.file)
     image = req.file;
@@ -534,6 +568,10 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
     return res.status(500).json({ message: "Invalid input for parsedAttributeValuesJson" });
   if(!owned)
     return res.status(500).json({ message: "owned parameter not given"});
+  if(!isPublished)
+    return res.status(500).json({ message: "isPublished parameter not given"});
+
+  const isPublishedBool = isPublished === "T";
 
   const parsedAttributeValuesJson = JSON.parse(attributeValuesJson);
   console.log(parsedAttributeValuesJson);
@@ -541,10 +579,10 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
     try {
       console.log("Querying for collectableId");
       const collectableIdQuery = await trx
-      .select({ collectable_id: collectables.collectable_id })
-      .from(collectables)
-      .where(eq(universeCollectableId, collectables.universe_collectable_id))
-      .execute();
+        .select({ collectable_id: collectables.collectable_id })
+        .from(collectables)
+        .where(eq(universeCollectableId, collectables.universe_collectable_id))
+        .execute();
       console.log("Finished querying for collectableId");
       
       console.log("collectableIdQuery.length: ", collectableIdQuery.length);
@@ -664,6 +702,12 @@ router.put('/edit-collectable', upload.single('collectableImage'), async (req, r
         }
       }
 
+      await trx
+        .update(universeCollectables)
+        .set({is_published: isPublishedBool})
+        .where(eq(universeCollectables.universe_collectable_id, universeCollectableId))
+        .execute();
+
       console.log("Succesfully updated attributes");
       res.status(200).send("Succesfully updated attributes");
     } catch (error) {
@@ -743,9 +787,16 @@ router.get('/jump', async (req, res) => {
     return res.status(400).send({ error: 'Missing a request parameter' });
   }
 
+  const sortBySlug = makeSlug(sortBy);
+
   try {
     const attributesToSearch = Array.isArray(attributeToSearch) ? attributeToSearch : [attributeToSearch];
     const searchTerms = Array.isArray(searchTerm) ? searchTerm : [searchTerm];
+
+    // Call makeSlug for each attribute
+    attributesToSearch.forEach((attribute, index, array) => {
+      array[index] = makeSlug(attribute); // Update each attribute in the array with its slugified version
+  });
 
     if (attributesToSearch.length !== searchTerms.length) {
       return res.status(400).send({ error: 'Attributes and search terms must be paired.' });
@@ -796,10 +847,10 @@ router.get('/jump', async (req, res) => {
     });
 
     //Apply sorting
-    if (sortBy) {
+    if (sortBySlug) {
       collectablesWithAttributes.sort((a, b) => {
-        const attrA = a.attributes.find(attr => attr.slug === sortBy);
-        const attrB = b.attributes.find(attr => attr.slug === sortBy);
+        const attrA = a.attributes.find(attr => attr.slug === sortBySlug);
+        const attrB = b.attributes.find(attr => attr.slug === sortBySlug);
 
         if (!attrA || !attrB) return 0;
 

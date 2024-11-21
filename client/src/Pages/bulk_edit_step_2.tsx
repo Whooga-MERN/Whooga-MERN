@@ -122,6 +122,11 @@ async function csvToString(file: File): Promise<string> {
   }, [jsonData]);
 
   const handleUpload = async () => {
+    console.log("filename: ", fileName);
+    if(!fileName) {
+      alert("Please Upload a CSV File before uploading");
+      return;
+    }
     setIsUploading(true);
     event?.preventDefault();
     const formData = new FormData();
@@ -156,27 +161,24 @@ async function csvToString(file: File): Promise<string> {
       if (response.ok) {
         console.log("Form submitted successfully");
         setIsUploading(false);
-        navigate("/collections");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Collection edited successfully");
+        navigate(`/items/${universeCollectionId}`);
       } else {
         console.error("Form submission failed");
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit collection");
+        navigate(`/items/${universeCollectionId}`);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit collection");
+      navigate(`/items/${universeCollectionId}`);
     }
 
     //downloadFile(originalCSVBlob, "original.csv");
   };
-
-    const downloadFile = (blob: Blob, filename: string) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    };
   
     const logFormData = (formData: FormData) => {
         const formDataEntries: Record<string, any> = {};

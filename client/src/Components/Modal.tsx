@@ -15,7 +15,10 @@ const Modal: React.FC<ModalProps> = ({ isVisible, onClose, itemData }) => {
   const attributes = itemData?.attributes || [];
   const imageUrl =
     attributes.find((attribute: any) => attribute.name === "image")?.value ||
-    "/placeholder.jpg";
+    "/noImage.jpg";
+  const altHolder =
+    itemData.attributes?.find((attr: { name: string }) => attr.name === "Name")
+      ?.value || "No Title";
 
   return (
     <div className="fixed inset-0 bg-opacity-10 backdrop-blur-[2px] flex justify-center items-center z-50 bg-gray-600">
@@ -80,7 +83,7 @@ const Modal: React.FC<ModalProps> = ({ isVisible, onClose, itemData }) => {
             <div className="mt-10 aspect-h-1 aspect-w-1 overflow-hidden rounded-lg">
               <img
                 src={imageUrl}
-                alt={itemData.name || "No Title"}
+                alt={altHolder}
                 width={400}
                 height={400}
                 className="rounded-md shadow-sm object-cover object-top"

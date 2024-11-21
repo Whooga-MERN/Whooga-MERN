@@ -321,6 +321,63 @@ router.put('/add-custom-attributes', async (req, res) => {
   }
 });
 
+router.put('/add-hidden-attribute', async (req, res) => {
+  const { attributes, collectionUniverseId } = req.body;
+  if(!attributes) {
+    console.log("Invalid attributes given: ", attributes);
+    return res.status(404).send("Invalid attributes given");
+  }
+
+  try {
+    await db.transaction(async (trx) => {
+      
+      console.log("Fetching favorite attributes");
+      const favoriteAttributesQuery = await trx
+        .select({
+          favoriteAttributes: collections.favorite_attributes,
+          hiddenAttributes: collections.hidden_attributes
+        })
+        .from(collections)
+        .where(eq(collections.collection_universe_id, collectionUniverseId))
+        .execute();
+
+      let combinedAttributes;
+      const hiddenAttributes = [...attributes, ...favoriteAttributesQuery[0].hiddenAttributes];
+      try {
+        console.log("favoriteAttributes: ", favoriteAttributesQuery[0].favoriteAttributes);
+        combinedAttributes = favoriteAttributesQuery[0].favoriteAttributes.filter(attr => !hiddenAttributes.includes(attr));
+        console.log("combinedAttributes: ", combinedAttributes);
+      } catch (error) {
+        console.log("Failed to fetch customAttributes");
+        console.log(error);
+        return res.status(404).send("Failed to fetch customAttributes");
+      }
+      console.log("finisehd fetchinf favorite attributes");
+      
+      console.log("updating favorite and hidden attributes")
+      await trx
+        .update(collections)
+        .set(
+          {
+            favorite_attributes: combinedAttributes,
+            hidden_attributes: hiddenAttributes
+          }
+        )
+        .where(eq(collections.collection_universe_id, collectionUniverseId))
+        .execute();
+
+      console.log("Finished updating favorite and hidden attributes");
+
+      res.status(200).send("Succesfully updated hidden attributes");
+    });
+  } catch (error) {
+    console.log("failed to hide attribute");
+    console.log(error);
+    res.status(400).send("failed to hide attribute");
+  }
+
+});
+
 router.delete('/remove-custom-attribute', async (req, res) => {
   const { customAttributes, collectionUniverseId } = req.body;
 

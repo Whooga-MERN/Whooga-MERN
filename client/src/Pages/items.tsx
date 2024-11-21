@@ -6,6 +6,7 @@ import { FaListUl, FaRegEdit } from "react-icons/fa";
 import { BsFillGridFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosAdd } from "react-icons/io";
+import { MdEdit } from "react-icons/md";
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as faSolidStar } from "@fortawesome/free-solid-svg-icons";
@@ -57,6 +58,9 @@ export default function HomePage() {
   const [isPublished, setIsPublished] = useState(false);
 
   const [isOwnedMap, setIsOwnedMap] = useState<Map<string, boolean>>(new Map());
+  const [publishedCollectableIds, setPublishedCollectableIds] = useState<
+    string[]
+  >([]);
 
   const [userId, setUserId] = useState<any>(null);
   const [JWT, setJWT] = useState<string>("");
@@ -66,6 +70,7 @@ export default function HomePage() {
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
+  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<string[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
@@ -77,6 +82,7 @@ export default function HomePage() {
   const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
     string[]
   >([]);
+  
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -86,6 +92,8 @@ export default function HomePage() {
   );
 
   const [noSearchResults, setNoSearchResults] = useState(false);
+  const [noJumpResults, setNoJumpResults] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTags, setSearchTags] = useState<
     { attribute: string; term: string }[]
@@ -101,14 +109,34 @@ export default function HomePage() {
   const [highlightedItemId, setHighlightedItemId] = useState<number | null>(
     null
   );
-  const [ownedHighlightedItemId, setOwnedHighlightedItemId] = useState<
-    number | null
-  >(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
     setCollectionId(collectionIDInStorage);
+  }, []);
+
+    useEffect(() => {
+      if (localStorage.getItem("showSuccessAlert") === "true") {
+        setShowSuccessAlert(true);
+        localStorage.removeItem("showSuccessAlert");
+      }
+      else if (localStorage.getItem("showErrorAlert") === "true") {
+        setShowErrorAlert(true);
+        localStorage.removeItem("showErrorAlert");
+      }
+
+      const message = localStorage.getItem("alertMessage") ?? "";
+      setAlertMessage(message);
+
+      setTimeout(() => {
+        setShowErrorAlert(false);
+        setShowSuccessAlert(false);
+      }, 4000);
   }, []);
 
   useEffect(() => {
@@ -215,12 +243,38 @@ export default function HomePage() {
             (attr) => !data[0].favoriteAttributes.includes(attr)
           )
         );
-
+        setfavoriteMaskedAttributes(allAttributes);
       } else {
         console.error("Error fetching favorite attributes:", favReponse);
       }
     };
     getFavoriteAttributes();
+
+    const getPublishedCollectables = async () => {
+      const response = await fetch(
+        buildPath(
+          `universe-collectable/published-collectables/${universeCollectionId}`
+        ),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+
+        const publishedIds = data.map(
+          (item: { collectableId: any }) => item.collectableId
+        );
+        setPublishedCollectableIds(publishedIds);
+      } else {
+        console.error("Error fetching published collectables:", response);
+      }
+    };
+    getPublishedCollectables();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -229,7 +283,6 @@ export default function HomePage() {
 
   useEffect(() => {
     if (specificTag) {
-      console.log("specificTag", specificTag);
       const initialFormData = specificTag.attributes.reduce(
         (
           acc: { [x: string]: any },
@@ -240,9 +293,17 @@ export default function HomePage() {
         },
         {} as Record<string, string>
       );
-      //console.log("bool test with: ", specificTag.universeCollectableId.toString(), " ", isOwnedMap);
-      initialFormData["owned"] = isOwnedMap.get(specificTag.universeCollectableId) ? "T" : "F";
-      //console.log("setting form owned to: " +  specificTag.universeCollectableId.toString() + initialFormData["owned"]);
+      initialFormData["owned"] = isOwnedMap.get(
+        specificTag.universeCollectableId
+      )
+        ? "T"
+        : "F";
+      initialFormData["published"] = publishedCollectableIds.includes(
+        specificTag.universeCollectableId
+      )
+        ? "T"
+        : "F";
+
       setFormData(initialFormData); // Set the form data to the initial data for editing Modal
 
       const initialWishlistFormData = specificTag.attributes.reduce(
@@ -265,7 +326,7 @@ export default function HomePage() {
 
   // -------------------------- show universecollectables and search ------------------
   useEffect(() => {
-    const getUniverseCollectionId = async () => {
+    const getOwnedCollectables = async () => {
       if (collectionId) {
         const ownedMap = new Map<string, boolean>();
         const ownedCollectables = await fetchOwnedCollectables(
@@ -301,7 +362,7 @@ export default function HomePage() {
       }
     };
 
-    getUniverseCollectionId();
+    getOwnedCollectables();
   }, [collectionId]);
 
   // add collectible form modal open handler
@@ -349,12 +410,19 @@ export default function HomePage() {
 
         if (response.ok) {
           console.log("Item deleted successfully");
-          window.location.reload();
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem("alertMessage", "Deleted collectible successfully");
         } else {
           console.error("Error deleting item:", response);
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem("alertMessage", "Failed to delete collectible");
         }
+        window.location.reload();
       } catch (error) {
         console.error("Error deleting item:", error);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to delete collectible");
+        window.location.reload();
       }
     } else {
       return;
@@ -521,6 +589,13 @@ export default function HomePage() {
     setIsPublished(!isPublished);
   };
 
+  const handlePublishChangeEditCollectable = (published: boolean) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      ["published"]: published ? "T" : "F",
+    }));
+  };
+
   // handle form submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -551,11 +626,17 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("Form submitted successfully");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Added new collectible successfully");
       } else {
         console.error("Error submitting form:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to add new collectible");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to add new collectible");
     }
 
     closeModal();
@@ -582,9 +663,15 @@ export default function HomePage() {
       "universe collectable id: ",
       specificTag?.universeCollectableId
     );
-    const { owned, image, ...restFormData } = formData;
+    const { owned, image, published, ...restFormData } = formData;
     console.log("owned", owned);
+    console.log("published", published);
     request.append("attributeValuesJson", JSON.stringify(restFormData));
+    if (published) {
+      request.append("isPublished", published);
+    } else {
+      request.append("isPublished", "F");
+    }
     if (owned) {
       request.append("owned", owned);
     } else {
@@ -609,11 +696,17 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("Form submitted successfully");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Collectible edited successfully");
       } else {
         console.error("Error submitting form:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit collectible");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit collectible");
     }
 
     closeEdit();
@@ -708,18 +801,16 @@ export default function HomePage() {
   };
 
   // -------------------------- show universecollectables and search ------------------
-  const [sortOrder, setSortOrder] = useState<string>("ascending");
+  const [sortOrder, setSortOrder] = useState<string>("asc");
   const [sortBy, setSortBy] = useState<string>("");
 
   const handleSortOrderChange = (order: string) => {
     setSortOrder(order);
-    console.log("Sort Order:", order);
     fetchCollectablesNextPage();
   };
 
   const handleSortByChange = (attribute: string) => {
     setSortBy(attribute);
-    console.log("Sort By:", attribute);
     fetchCollectablesNextPage();
   };
 
@@ -759,7 +850,6 @@ export default function HomePage() {
             sortBy,
             sortOrder
           );
-          console.log("collectables", collectables);
         return { collectables, totalMatchingCollectables };
       }
       // Default empty structure if neither condition is met
@@ -885,11 +975,13 @@ export default function HomePage() {
     // Clear search result
     setSearchTags([]);
     setSearchResults([]);
+    setNoSearchResults(false);
 
     // Set jump-related state
     setJumpSearchTags(jumpTags);
     setJumpSearchResults([]);
     setLoadedPages(new Set());
+    setNoJumpResults(false);
 
     try {
       let res;
@@ -922,6 +1014,12 @@ export default function HomePage() {
         }
       }
 
+      console.log(res);
+      if (!res || Object.keys(res).length === 0) {
+        // If res is null, undefined, or empty, set noJumpResults to true
+        setNoJumpResults(true);
+        return;
+      }
       if (res) {
         // set the related page number
         setJumpPageNumber(res.pageNumber);
@@ -949,8 +1047,14 @@ export default function HomePage() {
         }
 
         if (data) {
-          setJumpSearchResults(data.collectables);
-          setLoadedPages(new Set([res.pageNumber]));
+          console.log(data);
+          if (data.collectables.length === 0) {
+            setNoJumpResults(true);
+          } else {
+            setJumpSearchResults(data.collectables);
+            setLoadedPages(new Set([res.pageNumber]));
+            setNoJumpResults(false);
+          }
         }
       }
     } catch (error) {
@@ -1309,20 +1413,26 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("Favorite Attributes edited successfully");
-        // setFavoriteAttributes(editedFavoriteAttributes);
-        // const allAttributes = editedFavoriteAttributes.concat(
-        //   maskedAttributes.filter(
-        //     (attr) => !editedFavoriteAttributes.includes(attr)
-        //   )
-        // );
-        // await setMaskedAttributes(allAttributes);
-        closeEditFavoriteAttributes();
-        //window.location.reload();
+        setFavoriteAttributes(editedFavoriteAttributes);
+        const allAttributes = editedFavoriteAttributes.concat(
+          maskedAttributes.filter(
+            (attr) => !editedFavoriteAttributes.includes(attr)
+          )
+        );
+        await setMaskedAttributes(allAttributes);
+        closeEditAttributes();
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
+        window.location.reload();
       } else {
         console.error("Error editing favorite attributes:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
       }
     } catch (error) {
       console.error("Error editing favorite attributes:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
     }
   };
 
@@ -1331,7 +1441,23 @@ export default function HomePage() {
       <div className="h-screen flex flex-col overflow-y-hidden">
         <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
-          <div className="w-full mx-auto pt-8">
+          <div className="flex justify-end items-center">
+            <div role="alert" className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} w-1/5 mt-1 mr-10 ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 shrink-0 stroke-current"
+                fill="none"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d={`${showSuccessAlert ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"}`} />
+              </svg>
+              <span className="ml-2">{alertMessage}</span>
+            </div>
+          </div>
+          <div className="w-full mx-auto">
             <div className="mx-auto px-10">
               {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
               <div className="">
@@ -1345,13 +1471,201 @@ export default function HomePage() {
                     setEnabled={setEnabled}
                     onToggle={handleToggleChange}
                   />
+                  <div className="flex lg:hidden items-center">
+                    {isCollectionOwned ? (
+                      <div className="dropdown">
+                        <div
+                          tabIndex={0}
+                          role="button"
+                          className="btn text-xl text-black bg-yellow-300 hover:bg-yellow-200 rounded-xl w-fit"
+                        >
+                          <MdEdit />
+                        </div>
+                        <ul
+                          tabIndex={0}
+                          className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                        >
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openModal}
+                            >
+                              New Collectible
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={openEditAttributes}
+                            >
+                              Edit Favorite Attributes
+                            </a>
+                          </li>
+                          <li>
+                            <Link
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              to={`/bulk-upload/${collectionId}`}
+                            >
+                              Bulk Upload
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                              to={`/bulk-edit/${universeCollectionId}`}
+                            >
+                              Bulk Edit
+                            </Link>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:bg-red-400 hover:text-black"
+                              onClick={deleteCollection}
+                            >
+                              Delete Collection
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    ) : (
+                      <button
+                        className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
+                        onClick={handleAddToMyCollections}
+                      >
+                        Add to My Collections
+                        <IoIosAdd />
+                      </button>
+                    )}
+
+                    {isModalOpen && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                          <h2 className="text-xl font-bold mb-4 dark:text-gray-300">
+                            Create New Collectible
+                          </h2>
+
+                          <form onSubmit={handleSubmit}>
+                            {maskedAttributes
+                              .concat("owned", "image")
+                              .filter((attr) => attr !== null)
+                              .map((attribute, index) => (
+                                <div key={index} className="mb-4 lg:max-w-lg">
+                                  {attribute !== "image" ? (
+                                    attribute === "owned" ? (
+                                      <div className="flex items-center mb-3">
+                                        <input
+                                          type="checkbox"
+                                          id="publishCollection"
+                                          onChange={(e) =>
+                                            handleOwnedChange(e.target.checked)
+                                          }
+                                          className="h-5 w-5 text-primary border-gray-300 rounded mr-2"
+                                        />
+                                        <label
+                                          htmlFor="publishCollection"
+                                          className="text-gray-700 dark:text-gray-300 text-sm font-bold"
+                                        >
+                                          Is Owned
+                                        </label>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                                          {attribute.charAt(0).toUpperCase() +
+                                            attribute.slice(1)}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          name={attribute}
+                                          placeholder={`${attribute}`}
+                                          value={formData[attribute] || ""}
+                                          onChange={handleChange}
+                                          className="border rounded w-full py-2 px-3 text-gray-700"
+                                        />
+                                      </>
+                                    )
+                                  ) : (
+                                    <>
+                                      <label
+                                        htmlFor="cover-photo"
+                                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                                      >
+                                        Upload Photo
+                                      </label>
+                                      <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                                        <div className="text-center">
+                                          <PhotoIcon
+                                            aria-hidden="true"
+                                            className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
+                                          />
+                                          <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                                            <label
+                                              htmlFor="file-upload"
+                                              className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                                            >
+                                              <span>Upload a photo</span>
+                                              <input
+                                                id="file-upload"
+                                                name="file-upload"
+                                                type="file"
+                                                className="sr-only"
+                                                onChange={handleFileChange}
+                                              />
+                                            </label>
+                                            <p>or drag and drop</p>
+                                          </div>
+                                          <p className="text-xs leading-5 text-gray-600">
+                                            PNG, JPG
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            <div className="flex items-center mb-3">
+                              <input
+                                type="checkbox"
+                                id="publishCollection"
+                                checked={isPublished}
+                                onChange={handlePublishChange}
+                                className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
+                              />
+                              <label
+                                htmlFor="publishCollection"
+                                className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                              >
+                                Publish Collectable
+                              </label>
+                            </div>
+
+                            <div className="flex justify-end space-x-4 mt-8">
+                              <button
+                                type="button"
+                                onClick={closeModal}
+                                className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                              >
+                                Create
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-center gap-32">
                   {/* Search bar */}
                   {universeCollectionId && (
                     <SearchBar
-                      attributes={maskedAttributes}
+                      attributes={favoriteAttributes}
                       resetDropdown={resetDropdown}
                       onResetSearch={handleReset}
                       setResetDropdown={setResetDropdown}
@@ -1362,7 +1676,7 @@ export default function HomePage() {
                     />
                   )}
 
-                  {/* Icon buttons */}
+                  {/* Buttons for large screens */}
                   <div className="items-center gap-2 pt-5 hidden lg:flex">
                     <button className="pr-5" onClick={() => setView("list")}>
                       <FaListUl />
@@ -1388,7 +1702,7 @@ export default function HomePage() {
                               className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={openModal}
                             >
-                              New Collectable
+                              New Collectible
                             </a>
                           </li>
                           <li>
@@ -1583,7 +1897,7 @@ export default function HomePage() {
             // Show total collectables
             collectablesData?.pages?.[0]?.totalMatchingCollectables && (
               <p className="text-xl font-bold text-gray-700 dark:text-gray-200">
-                Total Collectables:{" "}
+                Total Collectibles:{" "}
                 {collectablesData.pages[0].totalMatchingCollectables}
               </p>
             )
@@ -1618,7 +1932,7 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {noSearchResults ? (
+                  {noSearchResults || noJumpResults ? (
                     <div className="pt-28 text-center w-full text-2xl font-extrabold text-gray-600">
                       No match found :(
                     </div>
@@ -1639,7 +1953,7 @@ export default function HomePage() {
                                   // className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
                                   className="w-full md:w-1/2 px-4 mb-6"
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
@@ -1671,7 +1985,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1734,7 +2048,7 @@ export default function HomePage() {
                               {_default_collectables.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
-                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl"
+                                  className="relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl"
                                 >
                                   <div className="h-22 w-30 relative">
                                     {/* Star Button */}
@@ -1767,7 +2081,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(
@@ -1836,7 +2150,7 @@ export default function HomePage() {
                               {_searchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-search`}
-                                  className="w-full md:w-1/2 px-4 mb-6"
+                                  className="w-full md:w-1/2 px-4 mb-6 cursor-pointer bg-gray-50 border-2 border-gray-200"
                                 >
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
                                     <button
@@ -1870,7 +2184,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1937,7 +2251,7 @@ export default function HomePage() {
                                     item.collectionId ||
                                     `item-${index}`
                                   }
-                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl"
+                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200"
                                 >
                                   <div className="h-22 w-30 relative">
                                     {/* Star Button */}
@@ -1970,7 +2284,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(
@@ -2046,7 +2360,7 @@ export default function HomePage() {
                                       : ""
                                   }`}
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
@@ -2078,7 +2392,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/placeholder.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2148,7 +2462,7 @@ export default function HomePage() {
                                       : ""
                                   }`}
                                 >
-                                  <div className="h-22 w-30 relative">
+                                  <div className="h-22 w-30 relative cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     {/* Star Button */}
                                     <button
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
@@ -2179,7 +2493,7 @@ export default function HomePage() {
                                       src={
                                         item.attributes?.find(
                                           (attr: any) => attr.name === "image"
-                                        )?.value || "/placeholder.jpg"
+                                        )?.value || "/noImage.jpg"
                                       }
                                       alt={
                                         item.attributes?.find(
@@ -2373,8 +2687,12 @@ export default function HomePage() {
                             <input
                               type="checkbox"
                               id="publishCollection"
-                              checked={isPublished}
-                              onChange={handlePublishChange}
+                              checked={formData["published"] === "T" || false}
+                              onChange={(e) =>
+                                handlePublishChangeEditCollectable(
+                                  e.target.checked
+                                )
+                              }
                               className="h-5 w-5 text-primary border-gray-300 rounded mb-2 mr-2"
                             />
                             <label
