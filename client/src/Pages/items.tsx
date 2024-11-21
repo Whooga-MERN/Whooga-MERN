@@ -1494,7 +1494,7 @@ export default function HomePage() {
                                 htmlFor="publishCollection"
                                 className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
                               >
-                                Publish Collectable
+                                Publish Collectible
                               </label>
                             </div>
 
@@ -1706,7 +1706,7 @@ export default function HomePage() {
                                 htmlFor="publishCollection"
                                 className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
                               >
-                                Publish Collectable
+                                Publish Collectible
                               </label>
                             </div>
 

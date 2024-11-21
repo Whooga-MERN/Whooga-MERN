@@ -222,7 +222,7 @@ router.put('/update-favorite-attributes', async (req, res) => {
 
     console.log("Attributes updated\n");
 
-    res.status(400).send("Favorite Attributes Succesfully updated");
+    res.status(200).send("Favorite Attributes Succesfully updated");
   } catch (error) {
     res.status(500).send("FAILED to update favorite attributes");
   }
