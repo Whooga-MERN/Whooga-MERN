@@ -215,7 +215,6 @@ function UploadCollection() {
         className="flex flex-col mb-20 lg:ml-40 md:ml-20 sm:ml-10 ml-5 justify-center w-3/4 2xl:w-1/2 bg-slate-100 dark:bg-neutral p-10"
         style={{ borderRadius: 30 }}
       >
-        {/* Download CSV */}
         <div className="flex flex-col justify-center">
           <label htmlFor="collectionName" className=" font-semibold text-4xl">
             Step 2

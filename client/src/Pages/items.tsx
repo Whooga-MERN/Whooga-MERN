@@ -421,6 +421,8 @@ export default function HomePage() {
   };
 
   const closeModal = () => {
+    setSpecificTag(null);
+    setImageFile(null);
     setIsModalOpen(false);
   };
 
@@ -484,6 +486,7 @@ export default function HomePage() {
   const closeEdit = () => {
     console.log("SPECIFIC TAG:", specificTag);
     setShowEdit(false);
+    setImageFile(null);
     setSpecificTag(null);
   };
 
@@ -2071,6 +2074,16 @@ const publishCollection = async () => {
                                           </p>
                                         </div>
                                       </div>
+                                      {imageFile && (
+                                        <div className="mt-4">
+                                          <p className="text-sm">Selected file: {imageFile.name}</p>
+                                          <img
+                                            src={URL.createObjectURL(imageFile)} // Create a URL for the image preview
+                                            alt="Preview"
+                                            className="mt-2 h-40 w-40 object-cover"
+                                          />
+                                        </div>
+                                      )}
                                     </>
                                   )}
                                 </div>
@@ -2988,8 +3001,18 @@ const publishCollection = async () => {
                                         <p className="text-xs leading-5 text-gray-600">
                                           PNG, JPG
                                         </p>
-                                      </div>
+                                      </div> 
                                     </div>
+                                    {imageFile && (
+                                        <div className="mt-4">
+                                          <p className="text-sm">Selected file: {imageFile.name}</p>
+                                          <img
+                                            src={URL.createObjectURL(imageFile)} // Create a URL for the image preview
+                                            alt="Preview"
+                                            className="mt-2 h-40 w-40 object-cover"
+                                          />
+                                        </div>
+                                      )}
                                   </>
                                 )}
                               </div>
