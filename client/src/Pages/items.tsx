@@ -65,23 +65,24 @@ export default function HomePage() {
   const { universeCollectionId } = useParams<{
     universeCollectionId: string;
   }>();
+  const [collectionCover, setCollectionCover] = useState<string>();
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
-  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<
-    string[]
-  >([]);
+  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<string[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
   const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
+  const [isCollectionPublished, setIsCollectionPublished] = useState<boolean>();
   const [openEditFavAttributesModal, setOpenEditFavAttributesModal] =
     useState(false);
   const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
     string[]
   >([]);
+  
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -117,24 +118,29 @@ export default function HomePage() {
   useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
     setCollectionId(collectionIDInStorage);
+    const collectionCover = localStorage.getItem("collectionCover") ?? "";
+    console.log(collectionCover);
+    setCollectionCover(collectionCover)
+    console.log("collectionId: ", collectionIDInStorage)
   }, []);
 
-  useEffect(() => {
-    if (localStorage.getItem("showSuccessAlert") === "true") {
-      setShowSuccessAlert(true);
-      localStorage.removeItem("showSuccessAlert");
-    } else if (localStorage.getItem("showErrorAlert") === "true") {
-      setShowErrorAlert(true);
-      localStorage.removeItem("showErrorAlert");
-    }
+    useEffect(() => {
+      if (localStorage.getItem("showSuccessAlert") === "true") {
+        setShowSuccessAlert(true);
+        localStorage.removeItem("showSuccessAlert");
+      }
+      else if (localStorage.getItem("showErrorAlert") === "true") {
+        setShowErrorAlert(true);
+        localStorage.removeItem("showErrorAlert");
+      }
 
-    const message = localStorage.getItem("alertMessage") ?? "";
-    setAlertMessage(message);
+      const message = localStorage.getItem("alertMessage") ?? "";
+      setAlertMessage(message);
 
-    setTimeout(() => {
-      setShowErrorAlert(false);
-      setShowSuccessAlert(false);
-    }, 4000);
+      setTimeout(() => {
+        setShowErrorAlert(false);
+        setShowSuccessAlert(false);
+      }, 4000);
   }, []);
 
   useEffect(() => {
@@ -273,6 +279,25 @@ export default function HomePage() {
       }
     };
     getPublishedCollectables();
+
+    const getisCollectionPublished = async () => {
+      const response = await fetch(
+        buildPath(`publish/is-collection-published/${universeCollectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsCollectionPublished(data[0].isPublished);
+      } else {
+        console.error("Error fetching isCollectionPublished:", response);
+      }
+    };
+    getisCollectionPublished();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -334,11 +359,11 @@ export default function HomePage() {
           sortBy,
           sortOrder
         );
-        //console.log("ownedCollectables", ownedCollectables);
+        console.log("ownedCollectables", ownedCollectables);
         ownedCollectables.collectables.forEach((collectable: any) => {
           ownedMap.set(collectable.universeCollectableId, true);
         });
-        //console.log("isOwnedMap0", ownedMap);
+        console.log("isOwnedMap0", ownedMap);
         setOwnedCollectables(ownedCollectables.collectables);
         if (universeCollectionId) {
           const universe_collectables = await fetchUniverseCollectables(
@@ -356,7 +381,7 @@ export default function HomePage() {
           setIsOwnedMap(ownedMap);
           setUniverseCollectables(universe_collectables.collectables);
         }
-        //console.log("isOwnedMap1", isOwnedMap);
+        console.log("isOwnedMap1", isOwnedMap);
       }
     };
 
@@ -409,10 +434,7 @@ export default function HomePage() {
         if (response.ok) {
           console.log("Item deleted successfully");
           localStorage.setItem("showSuccessAlert", "true");
-          localStorage.setItem(
-            "alertMessage",
-            "Deleted collectible successfully"
-          );
+          localStorage.setItem("alertMessage", "Deleted collectible successfully");
         } else {
           console.error("Error deleting item:", response);
           localStorage.setItem("showErrorAlert", "true");
@@ -628,10 +650,7 @@ export default function HomePage() {
       if (response.ok) {
         console.log("Form submitted successfully");
         localStorage.setItem("showSuccessAlert", "true");
-        localStorage.setItem(
-          "alertMessage",
-          "Added new collectible successfully"
-        );
+        localStorage.setItem("alertMessage", "Added new collectible successfully");
       } else {
         console.error("Error submitting form:", response);
         localStorage.setItem("showErrorAlert", "true");
@@ -802,6 +821,14 @@ export default function HomePage() {
     setSearchResults([]);
     setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
     setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
+    
+    // Add visual feedback
+    setAlertMessage(enabled ? "Showing owned items only" : "Showing all items");
+    setShowSuccessAlert(true);
+    
+    setTimeout(() => {
+      setShowSuccessAlert(false);
+    }, 4000);
   };
 
   // -------------------------- show universecollectables and search ------------------
@@ -1287,26 +1314,59 @@ export default function HomePage() {
         await setMaskedAttributes(allAttributes);
         closeEditAttributes();
         localStorage.setItem("showSuccessAlert", "true");
-        localStorage.setItem(
-          "alertMessage",
-          "Favorite attributes edited successfully"
-        );
+        localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
         //window.location.reload();
       } else {
         console.error("Error editing favorite attributes:", response);
         localStorage.setItem("showErrorAlert", "true");
-        localStorage.setItem(
-          "alertMessage",
-          "Failed to edit favorite attributes"
-        );
+        localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
       }
     } catch (error) {
       console.error("Error editing favorite attributes:", error);
       localStorage.setItem("showErrorAlert", "true");
-      localStorage.setItem(
-        "alertMessage",
-        "Failed to edit favorite attributes"
-      );
+      localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
+    }
+  };
+
+  const publishCollection = async () => {
+    const confirmMessage = isCollectionPublished ? "Are you sure you want to unpublish this collection?" 
+      : "Are you sure you want to publish this collection?";
+
+    if (confirm(confirmMessage)) {
+      const request = {
+        collectionUniverseId: universeCollectionId,
+        isPublished: isCollectionPublished ? "false" : "true",
+      };
+      console.log("Request: ", request);
+
+      try {
+        const response = await fetch(
+          buildPath(`publish/publish-universe`),
+          {
+            method: "PUT",
+            body: JSON.stringify(request),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          console.log("Collection published successfully");
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem("alertMessage", `Successfully ${isCollectionPublished ? "un" : ""}published collection`);
+          window.location.reload();
+        } else {
+          console.error("Error publishing collection:", response);
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+        }
+      } catch (error) {
+        console.error("Error publishing collection:", error);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+      }
     }
   };
 
@@ -1316,41 +1376,28 @@ export default function HomePage() {
         <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
           <div className="flex justify-end items-center">
-            <div
-              role="alert"
-              className={`alert ${
-                showErrorAlert ? "alert-error" : "alert-success"
-              } w-1/5 mt-1 mr-10 ${
-                showSuccessAlert || showErrorAlert ? "" : "invisible"
-              }`}
-            >
+            <div role="alert" className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} w-1/5 mt-1 mr-10 ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 shrink-0 stroke-current"
                 fill="none"
-                viewBox="0 0 24 24"
-              >
+                viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d={`${
-                    showSuccessAlert
-                      ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  }`}
-                />
+                  d={`${showSuccessAlert ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"}`} />
               </svg>
               <span className="ml-2">{alertMessage}</span>
             </div>
           </div>
           <div className="w-full mx-auto">
-            <div className="mx-auto px-10 dark:bg-gray-800">
+            <div className="mx-auto px-10">
               {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
               <div className="">
                 {/* collection option */}
-                <div className="flex items-center gap-4 dark:bg-gray-800">
-                  <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3 ">
+                <div className="flex items-center gap-4">
+                  <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
                     {universeCollectionName}
                   </p>
                   <OwnedToggle
@@ -1618,6 +1665,14 @@ export default function HomePage() {
                           </li>
                           <li>
                             <a
+                              className="text-lg hover:text-black"
+                              onClick={publishCollection}
+                            >
+                              {isCollectionPublished ? "Unpublish Collection" : "Publish Collection"}
+                            </a>
+                          </li>
+                          <li>
+                            <a
                               className="text-lg hover:bg-red-400 hover:text-black"
                               onClick={deleteCollection}
                             >
@@ -1863,7 +1918,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCover || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -1957,6 +2012,7 @@ export default function HomePage() {
                                     </button>
 
                                     {/* Image */}
+
                                     <div className="h-64 w-full relative bg-gray-100 rounded-md pt-3 flex items-center justify-center overflow-hidden">
                                       <img
                                         src={
@@ -1973,6 +2029,7 @@ export default function HomePage() {
                                         onClick={() => handleOpenModal(item)}
                                       />
                                     </div>
+
                                   </div>
 
                                   {/* Attributes Section */}
@@ -2080,7 +2137,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCover || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
@@ -2302,7 +2359,7 @@ export default function HomePage() {
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCover || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(

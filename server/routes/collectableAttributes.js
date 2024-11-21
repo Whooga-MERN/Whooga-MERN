@@ -162,14 +162,28 @@ router.get('/masked-attributes/:collectionId', async (req, res) => {
       return res.status(200).json(combinedAttributes);
     }
 
-    if(customAttributes.length > 0 && hiddenAttributes.length > 0) {
-      combinedAttributes = [...defaultAttributes, ...customAttributes];
-      maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
-      console.log("Combined Attributes: ", maskedAttributes);
-      return res.status(200).json(maskedAttributes);
+    if (customAttributes.length === 0 && hiddenAttributes.length === 0) {
+      console.log("Both customAttributes and hiddenAttributes are empty\n");
+      console.log("Combined Attributes: ", defaultAttributes);
+      return res.status(200).json(defaultAttributes);
     }
-  
-    return res.status(500).send("FAILED: NO IF STATEMENT WAS TRIGGERED");
+    
+    if (customAttributes.length === 0) {
+      combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
+      console.log("Combined Attributes: ", combinedAttributes);
+      return res.status(200).json(combinedAttributes);
+    }
+    
+    if (hiddenAttributes.length === 0) {
+      combinedAttributes = [...defaultAttributes, ...customAttributes];
+      console.log("Combined Attributes: ", combinedAttributes);
+      return res.status(200).json(combinedAttributes);
+    }
+    
+    combinedAttributes = [...defaultAttributes, ...customAttributes];
+    const maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
+    console.log("Combined Attributes: ", maskedAttributes);
+    return res.status(200).json(maskedAttributes);
   } catch (error) {
     console.log(error);
     return res.status(500).send("ERROR FAILED");
@@ -342,7 +356,12 @@ router.put('/add-hidden-attribute', async (req, res) => {
         .execute();
 
       let combinedAttributes;
-      const hiddenAttributes = [...attributes, ...favoriteAttributesQuery[0].hiddenAttributes];
+      let hiddenAttributes;
+      let tempHiddenAttributes = favoriteAttributesQuery[0].hiddenAttributes;
+      if(tempHiddenAttributes)
+        hiddenAttributes = [...attributes, ...favoriteAttributesQuery[0].hiddenAttributes];
+      else
+        hiddenAttributes = attributes;
       try {
         console.log("favoriteAttributes: ", favoriteAttributesQuery[0].favoriteAttributes);
         combinedAttributes = favoriteAttributesQuery[0].favoriteAttributes.filter(attr => !hiddenAttributes.includes(attr));
