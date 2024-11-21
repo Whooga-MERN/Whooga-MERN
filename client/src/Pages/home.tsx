@@ -23,8 +23,8 @@ export default function Home() {
                 <h1 className="pb-10 font-cabinet-grotesk text-6xl font-extrabold mb-3">
                   Organize, Track, and Treasure Your Collections
                 </h1>
-                <p className="text-lg">
-                  Welcome to WHOOGA, the ultimate platform for collectors!
+                <p className="text-2xl text-pretty">
+                  Welcome to <span className="text-yellow-400">WHOOGA!</span> the ultimate platform for collectors!
                   Whether you're passionate about sports cards, coins, stamps,
                   or any other type of collectible, WHOOGA is designed to
                   enhance and streamline your collecting experience like never
@@ -34,7 +34,7 @@ export default function Home() {
               {/* Move Get Started Button Here */}
               <div className="mt-6 text-center">
                 <Link
-                  className="btn inline-flex items-center text-white bg-yellow-400 hover:bg-yellow-500 group"
+                  className="btn inline-flex items-center text-white dark:text-black bg-yellow-400 hover:bg-yellow-500 group"
                   to="/auth"
                 >
                   Get Started
