@@ -1474,7 +1474,7 @@ export default function HomePage() {
                                 htmlFor="publishCollection"
                                 className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
                               >
-                                Publish Collectable
+                                Publish Collectible
                               </label>
                             </div>
 
@@ -1541,7 +1541,7 @@ export default function HomePage() {
                               className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={openModal}
                             >
-                              New Collectable
+                              New Collectible
                             </a>
                           </li>
                           <li>
@@ -1686,7 +1686,7 @@ export default function HomePage() {
                                 htmlFor="publishCollection"
                                 className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
                               >
-                                Publish Collectable
+                                Publish Collectible
                               </label>
                             </div>
 
