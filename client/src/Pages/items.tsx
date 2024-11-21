@@ -78,6 +78,7 @@ export default function HomePage() {
   const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
+  const [isCollectionPublished, setIsCollectionPublished] = useState<boolean>();
   const [openEditFavAttributesModal, setOpenEditFavAttributesModal] =
     useState(false);
   const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
@@ -280,6 +281,25 @@ export default function HomePage() {
       }
     };
     getPublishedCollectables();
+
+    const getisCollectionPublished = async () => {
+      const response = await fetch(
+        buildPath(`publish/is-collection-published/${universeCollectionId}`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsCollectionPublished(data[0].isPublished);
+      } else {
+        console.error("Error fetching isCollectionPublished:", response);
+      }
+    };
+    getisCollectionPublished();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -341,11 +361,11 @@ export default function HomePage() {
           sortBy,
           sortOrder
         );
-        //console.log("ownedCollectables", ownedCollectables);
+        console.log("ownedCollectables", ownedCollectables);
         ownedCollectables.collectables.forEach((collectable: any) => {
           ownedMap.set(collectable.universeCollectableId, true);
         });
-        //console.log("isOwnedMap0", ownedMap);
+        console.log("isOwnedMap0", ownedMap);
         setOwnedCollectables(ownedCollectables.collectables);
         if (universeCollectionId) {
           const universe_collectables = await fetchUniverseCollectables(
@@ -363,7 +383,7 @@ export default function HomePage() {
           setIsOwnedMap(ownedMap);
           setUniverseCollectables(universe_collectables.collectables);
         }
-        //console.log("isOwnedMap1", isOwnedMap);
+        console.log("isOwnedMap1", isOwnedMap);
       }
     };
 
@@ -810,7 +830,7 @@ export default function HomePage() {
     
     setTimeout(() => {
       setShowSuccessAlert(false);
-    }, 2000);
+    }, 4000);
   };
 
   // -------------------------- show universecollectables and search ------------------
@@ -1450,6 +1470,48 @@ export default function HomePage() {
     }
   };
 
+  const publishCollection = async () => {
+    const confirmMessage = isCollectionPublished ? "Are you sure you want to unpublish this collection?" 
+      : "Are you sure you want to publish this collection?";
+
+    if (confirm(confirmMessage)) {
+      const request = {
+        collectionUniverseId: universeCollectionId,
+        isPublished: isCollectionPublished ? "false" : "true",
+      };
+      console.log("Request: ", request);
+
+      try {
+        const response = await fetch(
+          buildPath(`publish/publish-universe`),
+          {
+            method: "PUT",
+            body: JSON.stringify(request),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${JWT}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          console.log("Collection published successfully");
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem("alertMessage", `Successfully ${isCollectionPublished ? "un" : ""}published collection`);
+          window.location.reload();
+        } else {
+          console.error("Error publishing collection:", response);
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+        }
+      } catch (error) {
+        console.error("Error publishing collection:", error);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+      }
+    }
+  };
+
   return (
     <>
       <div className="h-screen flex flex-col overflow-y-hidden">
@@ -1750,6 +1812,14 @@ export default function HomePage() {
                             >
                               Bulk Edit
                             </Link>
+                          </li>
+                          <li>
+                            <a
+                              className="text-lg hover:text-black"
+                              onClick={publishCollection}
+                            >
+                              {isCollectionPublished ? "Unpublish Collection" : "Publish Collection"}
+                            </a>
                           </li>
                           <li>
                             <a
