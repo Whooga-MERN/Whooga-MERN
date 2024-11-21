@@ -141,6 +141,7 @@ router.post('', cpUpload, async (req, res) => {
             console.log("Finished udating source_universe value\n");
             console.log("Creating Collection");
             const customAttributes = [];
+            const hiddenAttributes = [];
 
             const newCollection = await trx.insert(collections).values({
                 name: universeCollectionName,
@@ -148,7 +149,8 @@ router.post('', cpUpload, async (req, res) => {
                 collection_universe_id: collectionUniverseID,
                 collection_pic: urlUniverseThumbnailImage,
                 custom_attributes: customAttributes,
-                favorite_attributes: favoriteAttributes
+                favorite_attributes: favoriteAttributes,
+                hidden_attributes: hiddenAttributes
             }).returning({ collection_id: collections.collection_id});
     
             

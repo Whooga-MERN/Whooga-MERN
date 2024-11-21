@@ -356,13 +356,22 @@ router.get('/masked-collectable/:universeCollectableId', async (req, res) => {
 
   try {
 
+    const collectionUniverseIdQuery = await db
+      .select({collectionUniverseId: universeCollectables.collection_universe_id})
+      .from(universeCollectables)
+      .where(eq(universeCollectables.universe_collectable_id, universeCollectableId))
+      .execute();
+      
+    const collectionUniverseId = collectionUniverseIdQuery[0].collectionUniverseId;
+    console.log("collectionUniverseId: ", collectionUniverseId);
+
     const collectionIdQuery = await db
       .select({ collectionId: collections.collection_id })
       .from(collections)
-      .innerJoin(universeCollectables, eq(collections.collection_universe_id, universeCollectables.collection_universe_id))
+      .where(eq(collections.collection_universe_id, collectionUniverseId))
       .execute();
-        
-    collectionId = collectionIdQuery[0].collectionId;
+
+    const collectionId = collectionIdQuery[0].collectionId;
 
     console.log("collectionId: ", collectionId);
     console.log("Searching for, custom, hidden and default attributes...");
@@ -391,47 +400,63 @@ router.get('/masked-collectable/:universeCollectableId', async (req, res) => {
     console.log(hiddenAttributes);
     console.log(defaultAttributes);
   
-    if(!customAttributes && !hiddenAttributes) {
-      console.log("CustomAttributes and Hidden attributes are null\n");
-      console.log("Combined Attributes: ", defaultAttributes);
-      return res.status(200).json(defaultAttributes);
-    }
-  
-    if(!hiddenAttributes) {
-      console.log("Hidden attributes are null\n");
-      combinedAttributes = [...defaultAttributes, ...customAttributes];
-      console.log("Combined Atributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
-    }
-  
-    if(!customAttributes) {
-      combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
-      console.log("Combined Attributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
-    }
-
     if (customAttributes.length === 0 && hiddenAttributes.length === 0) {
       console.log("Both customAttributes and hiddenAttributes are empty\n");
-      console.log("Combined Attributes: ", defaultAttributes);
-      return res.status(200).json(defaultAttributes);
+      console.log("#1 Combined Attributes: ", defaultAttributes);
+      combinedAttributes = defaultAttributes;
     }
-    
-    if (customAttributes.length === 0) {
+    else if (customAttributes.length === 0) {
       combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
-      console.log("Combined Attributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
+      console.log("#2 Combined Attributes: ", combinedAttributes);
     }
-    
-    if (hiddenAttributes.length === 0) {
+    else if (hiddenAttributes.length === 0) {
       combinedAttributes = [...defaultAttributes, ...customAttributes];
-      console.log("Combined Attributes: ", combinedAttributes);
-      return res.status(200).json(combinedAttributes);
+      console.log("#3 Combined Attributes: ", combinedAttributes);
     }
+    else {
+      combinedAttributes = [...defaultAttributes, ...customAttributes];
+      combinedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
+      console.log("#4 Combined Attributes: ", combinedAttributes);
+    }
+
+    //combinedattributes ithe masked attributes, 
+    //universeCollectableId
+    combinedAttributes = ["image", ...combinedAttributes];
+    console.log("COMBINED ATTRIBUTES", combinedAttributes)
+    const attributesValuesQuery = await db
+    .select({
+      name: collectableAttributes.name,
+      value: collectableAttributes.value
+    })
+    .from(collectableAttributes)
+    .where(and(
+      inArray(collectableAttributes.name, combinedAttributes),
+      eq(collectableAttributes.universe_collectable_id, universeCollectableId)
+    ))
+    .execute();
     
-    combinedAttributes = [...defaultAttributes, ...customAttributes];
-    const maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
-    console.log("Combined Attributes: ", maskedAttributes);
-    return res.status(200).json(maskedAttributes);
+    console.log("Attributes Values Query:", attributesValuesQuery);
+
+    // Transform the output to the desired format
+    const transformedAttributes = attributesValuesQuery.map(attr => {
+      if (attr.name === 'image') {
+        return {
+          name: 'image',
+          value: attr.value,
+          image: attr.value
+        };
+      } else {
+        return {
+          name: attr.name,
+          value: attr.value,
+          image: null
+        };
+      }
+    });
+    
+    console.log("Transformed Attributes:", transformedAttributes);
+    return res.status(200).json(transformedAttributes);
+
   } catch (error) {
     console.log(error);
     return res.status(500).send("ERROR FAILED");
