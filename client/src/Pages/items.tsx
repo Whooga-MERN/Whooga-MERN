@@ -65,24 +65,23 @@ export default function HomePage() {
   const { universeCollectionId } = useParams<{
     universeCollectionId: string;
   }>();
-  const [collectionCover, setCollectionCover] = useState<string>();
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
-  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<string[]>([]);
+  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<
+    string[]
+  >([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
   const [universeCollectionName, setUniverseCollectionName] = useState("");
   const [universeCollectables, setUniverseCollectables] = useState<any[]>([]);
   const [ownedCollectables, setOwnedCollectables] = useState<any[]>([]);
-  const [isCollectionPublished, setIsCollectionPublished] = useState<boolean>();
   const [openEditFavAttributesModal, setOpenEditFavAttributesModal] =
     useState(false);
   const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
     string[]
   >([]);
-  
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -118,29 +117,24 @@ export default function HomePage() {
   useEffect(() => {
     const collectionIDInStorage = localStorage.getItem("collectionId") ?? "";
     setCollectionId(collectionIDInStorage);
-    const collectionCover = localStorage.getItem("collectionCover") ?? "";
-    console.log(collectionCover);
-    setCollectionCover(collectionCover)
-    console.log("collectionId: ", collectionIDInStorage)
   }, []);
 
-    useEffect(() => {
-      if (localStorage.getItem("showSuccessAlert") === "true") {
-        setShowSuccessAlert(true);
-        localStorage.removeItem("showSuccessAlert");
-      }
-      else if (localStorage.getItem("showErrorAlert") === "true") {
-        setShowErrorAlert(true);
-        localStorage.removeItem("showErrorAlert");
-      }
+  useEffect(() => {
+    if (localStorage.getItem("showSuccessAlert") === "true") {
+      setShowSuccessAlert(true);
+      localStorage.removeItem("showSuccessAlert");
+    } else if (localStorage.getItem("showErrorAlert") === "true") {
+      setShowErrorAlert(true);
+      localStorage.removeItem("showErrorAlert");
+    }
 
-      const message = localStorage.getItem("alertMessage") ?? "";
-      setAlertMessage(message);
+    const message = localStorage.getItem("alertMessage") ?? "";
+    setAlertMessage(message);
 
-      setTimeout(() => {
-        setShowErrorAlert(false);
-        setShowSuccessAlert(false);
-      }, 4000);
+    setTimeout(() => {
+      setShowErrorAlert(false);
+      setShowSuccessAlert(false);
+    }, 4000);
   }, []);
 
   useEffect(() => {
@@ -279,25 +273,6 @@ export default function HomePage() {
       }
     };
     getPublishedCollectables();
-
-    const getisCollectionPublished = async () => {
-      const response = await fetch(
-        buildPath(`publish/is-collection-published/${universeCollectionId}`),
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${JWT}`,
-          },
-        });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsCollectionPublished(data[0].isPublished);
-      } else {
-        console.error("Error fetching isCollectionPublished:", response);
-      }
-    };
-    getisCollectionPublished();
   }, [collectionId, universeCollectionId]);
 
   useEffect(() => {
@@ -359,11 +334,11 @@ export default function HomePage() {
           sortBy,
           sortOrder
         );
-        console.log("ownedCollectables", ownedCollectables);
+        //console.log("ownedCollectables", ownedCollectables);
         ownedCollectables.collectables.forEach((collectable: any) => {
           ownedMap.set(collectable.universeCollectableId, true);
         });
-        console.log("isOwnedMap0", ownedMap);
+        //console.log("isOwnedMap0", ownedMap);
         setOwnedCollectables(ownedCollectables.collectables);
         if (universeCollectionId) {
           const universe_collectables = await fetchUniverseCollectables(
@@ -381,7 +356,7 @@ export default function HomePage() {
           setIsOwnedMap(ownedMap);
           setUniverseCollectables(universe_collectables.collectables);
         }
-        console.log("isOwnedMap1", isOwnedMap);
+        //console.log("isOwnedMap1", isOwnedMap);
       }
     };
 
@@ -434,7 +409,10 @@ export default function HomePage() {
         if (response.ok) {
           console.log("Item deleted successfully");
           localStorage.setItem("showSuccessAlert", "true");
-          localStorage.setItem("alertMessage", "Deleted collectible successfully");
+          localStorage.setItem(
+            "alertMessage",
+            "Deleted collectible successfully"
+          );
         } else {
           console.error("Error deleting item:", response);
           localStorage.setItem("showErrorAlert", "true");
@@ -650,7 +628,10 @@ export default function HomePage() {
       if (response.ok) {
         console.log("Form submitted successfully");
         localStorage.setItem("showSuccessAlert", "true");
-        localStorage.setItem("alertMessage", "Added new collectible successfully");
+        localStorage.setItem(
+          "alertMessage",
+          "Added new collectible successfully"
+        );
       } else {
         console.error("Error submitting form:", response);
         localStorage.setItem("showErrorAlert", "true");
@@ -821,14 +802,6 @@ export default function HomePage() {
     setSearchResults([]);
     setJumped(false); // Reset `jumped` to false, this is for adjusting scroll position when items are added while scrolling up. When `jumped` is true, the initial jump has occurred
     setPrevHeight(0); // Reset the previous height, this is for adjusting scroll position when items are added while scrolling up
-    
-    // Add visual feedback
-    setAlertMessage(enabled ? "Showing owned items only" : "Showing all items");
-    setShowSuccessAlert(true);
-    
-    setTimeout(() => {
-      setShowSuccessAlert(false);
-    }, 4000);
   };
 
   // -------------------------- show universecollectables and search ------------------
@@ -1314,59 +1287,26 @@ export default function HomePage() {
         await setMaskedAttributes(allAttributes);
         closeEditAttributes();
         localStorage.setItem("showSuccessAlert", "true");
-        localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
+        localStorage.setItem(
+          "alertMessage",
+          "Favorite attributes edited successfully"
+        );
         //window.location.reload();
       } else {
         console.error("Error editing favorite attributes:", response);
         localStorage.setItem("showErrorAlert", "true");
-        localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
+        localStorage.setItem(
+          "alertMessage",
+          "Failed to edit favorite attributes"
+        );
       }
     } catch (error) {
       console.error("Error editing favorite attributes:", error);
       localStorage.setItem("showErrorAlert", "true");
-      localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
-    }
-  };
-
-  const publishCollection = async () => {
-    const confirmMessage = isCollectionPublished ? "Are you sure you want to unpublish this collection?" 
-      : "Are you sure you want to publish this collection?";
-
-    if (confirm(confirmMessage)) {
-      const request = {
-        collectionUniverseId: universeCollectionId,
-        isPublished: isCollectionPublished ? "false" : "true",
-      };
-      console.log("Request: ", request);
-
-      try {
-        const response = await fetch(
-          buildPath(`publish/publish-universe`),
-          {
-            method: "PUT",
-            body: JSON.stringify(request),
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${JWT}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          console.log("Collection published successfully");
-          localStorage.setItem("showSuccessAlert", "true");
-          localStorage.setItem("alertMessage", `Successfully ${isCollectionPublished ? "un" : ""}published collection`);
-          window.location.reload();
-        } else {
-          console.error("Error publishing collection:", response);
-          localStorage.setItem("showErrorAlert", "true");
-          localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
-        }
-      } catch (error) {
-        console.error("Error publishing collection:", error);
-        localStorage.setItem("showErrorAlert", "true");
-        localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
-      }
+      localStorage.setItem(
+        "alertMessage",
+        "Failed to edit favorite attributes"
+      );
     }
   };
 
@@ -1376,28 +1316,41 @@ export default function HomePage() {
         <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
           <div className="flex justify-end items-center">
-            <div role="alert" className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} w-1/5 mt-1 mr-10 ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
+            <div
+              role="alert"
+              className={`alert ${
+                showErrorAlert ? "alert-error" : "alert-success"
+              } w-1/5 mt-1 mr-10 ${
+                showSuccessAlert || showErrorAlert ? "" : "invisible"
+              }`}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 shrink-0 stroke-current"
                 fill="none"
-                viewBox="0 0 24 24">
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d={`${showSuccessAlert ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"}`} />
+                  d={`${
+                    showSuccessAlert
+                      ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  }`}
+                />
               </svg>
               <span className="ml-2">{alertMessage}</span>
             </div>
           </div>
           <div className="w-full mx-auto">
-            <div className="mx-auto px-10">
+            <div className="mx-auto px-10 dark:bg-gray-800">
               {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
               <div className="">
                 {/* collection option */}
-                <div className="flex items-center gap-4">
-                  <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
+                <div className="flex items-center gap-4 dark:bg-gray-800">
+                  <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3 ">
                     {universeCollectionName}
                   </p>
                   <OwnedToggle
@@ -1665,14 +1618,6 @@ export default function HomePage() {
                           </li>
                           <li>
                             <a
-                              className="text-lg hover:text-black"
-                              onClick={publishCollection}
-                            >
-                              {isCollectionPublished ? "Unpublish Collection" : "Publish Collection"}
-                            </a>
-                          </li>
-                          <li>
-                            <a
                               className="text-lg hover:bg-red-400 hover:text-black"
                               onClick={deleteCollection}
                             >
@@ -1884,8 +1829,7 @@ export default function HomePage() {
                               {_default_collectables.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
-                                  // className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
-                                  className="w-full md:w-1/2 px-4 mb-6"
+                                  className="w-full md:w-1/2 px-4 mb-6 cursor-pointer"
                                 >
                                   <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     <button
@@ -1914,26 +1858,27 @@ export default function HomePage() {
                                         />
                                       )}
                                     </button>
-                                    <div className="h-24 w-24">
+                                    <div className="h-24 w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || collectionCover || "/noImage.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={100}
-                                        height={100}
-                                        className="rounded-md shadow-sm object-cover"
+                                        className="max-h-full max-w-full object-cover"
                                         onClick={() => handleOpenModal(item)}
                                       />
                                     </div>
 
-                                    <div className="flex-1">
+                                    <div
+                                      className="flex-1"
+                                      onClick={() => handleOpenModal(item)}
+                                    >
                                       {item.attributes
                                         .filter(
                                           (attribute: any) =>
@@ -1958,6 +1903,7 @@ export default function HomePage() {
                                           )
                                         )}
                                     </div>
+
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
@@ -1982,7 +1928,7 @@ export default function HomePage() {
                               {_default_collectables.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
-                                  className="relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl"
+                                  className="relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl h-auto"
                                 >
                                   <div className="h-22 w-30 relative">
                                     {/* Star Button */}
@@ -2011,26 +1957,29 @@ export default function HomePage() {
                                     </button>
 
                                     {/* Image */}
-                                    <img
-                                      src={
-                                        item.attributes?.find(
-                                          (attr: any) => attr.name === "image"
-                                        )?.value || collectionCover || "/noImage.jpg"
-                                      }
-                                      alt={
-                                        item.attributes?.find(
-                                          (attr: any) => attr.name === "Name"
-                                        )?.value || "No Name"
-                                      }
-                                      width={400}
-                                      height={400}
-                                      className="rounded-md shadow-sm object-cover pt-3"
-                                      onClick={() => handleOpenModal(item)}
-                                    />
+                                    <div className="h-64 w-full relative bg-gray-100 rounded-md pt-3 flex items-center justify-center overflow-hidden">
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/noImage.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "Name"
+                                          )?.value || "No Name"
+                                        }
+                                        className="max-h-full max-w-full object-cover"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
                                   </div>
 
                                   {/* Attributes Section */}
-                                  <div className="space-y-1 p-4">
+                                  <div
+                                    className="space-y-1 p-5 overflow-visible"
+                                    onClick={() => handleOpenModal(item)}
+                                  >
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
@@ -2039,29 +1988,42 @@ export default function HomePage() {
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
-                                        <p
+                                        <div
                                           key={`${
                                             attribute.slug || attribute.name
                                           }-default-search`}
-                                          className={
-                                            index === 0
-                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                              : "text-md font-semibold pl-4 capitalize truncate"
-                                          }
+                                          className="group relative"
                                         >
-                                          {`${attribute.value}`}
-                                        </p>
+                                          <p
+                                            className={
+                                              index === 0
+                                                ? "mt-4 text-lg font-bold pl-4 uppercase text-ellipsis overflow-hidden line-clamp-2"
+                                                : "text-md font-semibold pl-4 capitalize truncate"
+                                            }
+                                          >
+                                            {`${attribute.value}`}
+                                          </p>
+                                          <span
+                                            className="absolute bottom-full left-0 w-auto p-2 mb-2 text-md text-black bg-yellow-300 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                            style={{
+                                              transform: "translateX(-20px)",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            {`${attribute.value}`}
+                                          </span>
+                                        </div>
                                       ))}
 
-                                    <div className="pt-3 pb-2 text-center">
+                                    <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
-                                        className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
                                         onClick={() => openEdit(item)}
                                       >
                                         <FaRegEdit />
                                       </button>
                                       <button
-                                        className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
                                         onClick={() => handleDelete(item)}
                                       >
                                         <FaRegTrashCan />
@@ -2084,9 +2046,9 @@ export default function HomePage() {
                               {_searchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-search`}
-                                  className="w-full md:w-1/2 px-4 mb-6 cursor-pointer bg-gray-50 border-2 border-gray-200"
+                                  className="w-full md:w-1/2 px-4 mb-6 cursor-pointer"
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
                                     <button
                                       className="text-3xl font-extrabold w-fit px-3 py-1 text-[#7b4106] hover:text-yellow-600 rounded-full"
                                       onClick={(event) => {
@@ -2113,26 +2075,27 @@ export default function HomePage() {
                                         />
                                       )}
                                     </button>
-                                    <div className="h-24 w-24">
+                                    <div className="h-24 w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || collectionCover || "/noImage.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={100}
-                                        height={100}
-                                        className="rounded-md shadow-sm object-cover"
+                                        className="max-h-full max-w-full object-cover"
                                         onClick={() => handleOpenModal(item)}
                                       />
                                     </div>
 
-                                    <div className="flex-1">
+                                    <div
+                                      className="flex-1"
+                                      onClick={() => handleOpenModal(item)}
+                                    >
                                       {item.attributes
                                         .filter(
                                           (attribute: any) =>
@@ -2145,7 +2108,7 @@ export default function HomePage() {
                                             <p
                                               key={`${
                                                 attribute.slug || attribute.name
-                                              }-search`}
+                                              }-default-search`}
                                               className={
                                                 index === 0
                                                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -2157,6 +2120,7 @@ export default function HomePage() {
                                           )
                                         )}
                                     </div>
+
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
@@ -2178,14 +2142,10 @@ export default function HomePage() {
                           ) : (
                             // GRID VIEW
                             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                              {_searchResults.map((item, index) => (
+                              {_searchResults.map((item) => (
                                 <div
-                                  key={
-                                    `${item.universeCollectableId}-search` ||
-                                    item.collectionId ||
-                                    `item-${index}`
-                                  }
-                                  className="relative hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200"
+                                  key={`${item.universeCollectableId}-search`}
+                                  className="relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl h-auto"
                                 >
                                   <div className="h-22 w-30 relative">
                                     {/* Star Button */}
@@ -2214,26 +2174,29 @@ export default function HomePage() {
                                     </button>
 
                                     {/* Image */}
-                                    <img
-                                      src={
-                                        item.attributes?.find(
-                                          (attr: any) => attr.name === "image"
-                                        )?.value || collectionCover || "/noImage.jpg"
-                                      }
-                                      alt={
-                                        item.attributes?.find(
-                                          (attr: any) => attr.name === "Name"
-                                        )?.value || "No Name"
-                                      }
-                                      width={400}
-                                      height={400}
-                                      className="rounded-md shadow-sm object-cover pt-3"
-                                      onClick={() => handleOpenModal(item)}
-                                    />
+                                    <div className="h-64 w-full relative bg-gray-100 rounded-md pt-3 flex items-center justify-center overflow-hidden">
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/noImage.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "Name"
+                                          )?.value || "No Name"
+                                        }
+                                        className="max-h-full max-w-full object-cover"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
                                   </div>
 
                                   {/* Attributes Section */}
-                                  <div className="space-y-1 p-4">
+                                  <div
+                                    className="space-y-1 p-5 overflow-visible"
+                                    onClick={() => handleOpenModal(item)}
+                                  >
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
@@ -2242,29 +2205,42 @@ export default function HomePage() {
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
-                                        <p
+                                        <div
                                           key={`${
                                             attribute.slug || attribute.name
                                           }-default-search`}
-                                          className={
-                                            index === 0
-                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                              : "text-md font-semibold pl-4 capitalize truncate"
-                                          }
+                                          className="group relative"
                                         >
-                                          {`${attribute.value}`}
-                                        </p>
+                                          <p
+                                            className={
+                                              index === 0
+                                                ? "mt-4 text-lg font-bold pl-4 uppercase text-ellipsis overflow-hidden line-clamp-2"
+                                                : "text-md font-semibold pl-4 capitalize truncate"
+                                            }
+                                          >
+                                            {`${attribute.value}`}
+                                          </p>
+                                          <span
+                                            className="absolute bottom-full left-0 w-auto p-2 mb-2 text-md text-black bg-yellow-300 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                            style={{
+                                              transform: "translateX(-20px)",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            {`${attribute.value}`}
+                                          </span>
+                                        </div>
                                       ))}
 
-                                    <div className="pt-3 pb-2 text-center">
+                                    <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
-                                        className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
                                         onClick={() => openEdit(item)}
                                       >
                                         <FaRegEdit />
                                       </button>
                                       <button
-                                        className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
                                         onClick={() => handleDelete(item)}
                                       >
                                         <FaRegTrashCan />
@@ -2287,7 +2263,7 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className={` ${
+                                  className={`w-full md:w-1/2 px-4 mb-6 cursor-pointer ${
                                     item.universeCollectableId ===
                                     highlightedItemId
                                       ? "border-4 border-yellow-500"
@@ -2321,26 +2297,27 @@ export default function HomePage() {
                                         />
                                       )}
                                     </button>
-                                    <div className="h-24 w-24">
+                                    <div className="h-24 w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || collectionCover || "/noImage.jpg"
+                                          )?.value || "/noImage.jpg"
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={100}
-                                        height={100}
-                                        className="rounded-md shadow-sm object-cover"
+                                        className="max-h-full max-w-full object-cover"
                                         onClick={() => handleOpenModal(item)}
                                       />
                                     </div>
 
-                                    <div className="flex-1">
+                                    <div
+                                      className="flex-1"
+                                      onClick={() => handleOpenModal(item)}
+                                    >
                                       {item.attributes
                                         .filter(
                                           (attribute: any) =>
@@ -2353,7 +2330,7 @@ export default function HomePage() {
                                             <p
                                               key={`${
                                                 attribute.slug || attribute.name
-                                              }-jump`}
+                                              }-default-search`}
                                               className={
                                                 index === 0
                                                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -2365,6 +2342,7 @@ export default function HomePage() {
                                           )
                                         )}
                                     </div>
+
                                     <div className="flex space-x-4">
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
@@ -2389,14 +2367,14 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className={` ${
+                                  className={`relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl h-auto ${
                                     item.universeCollectableId ===
                                     highlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}
                                 >
-                                  <div className="h-22 w-30 relative cursor-pointer bg-gray-50 border-2 border-gray-200">
+                                  <div className="h-22 w-30 relative">
                                     {/* Star Button */}
                                     <button
                                       className="absolute top-2 right-2 flex items-center justify-center text-3xl font-extrabold w-10 h-10 text-[#7b4106] bg-white hover:text-yellow-600 hover:shadow-md z-10 rounded-full border border-red-50"
@@ -2423,26 +2401,29 @@ export default function HomePage() {
                                     </button>
 
                                     {/* Image */}
-                                    <img
-                                      src={
-                                        item.attributes?.find(
-                                          (attr: any) => attr.name === "image"
-                                        )?.value || collectionCover || "/noImage.jpg"
-                                      }
-                                      alt={
-                                        item.attributes?.find(
-                                          (attr: any) => attr.name === "Name"
-                                        )?.value || "No Name"
-                                      }
-                                      width={400}
-                                      height={400}
-                                      className="rounded-md shadow-sm object-cover pt-3"
-                                      onClick={() => handleOpenModal(item)}
-                                    />
+                                    <div className="h-64 w-full relative bg-gray-100 rounded-md pt-3 flex items-center justify-center overflow-hidden">
+                                      <img
+                                        src={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "image"
+                                          )?.value || "/noImage.jpg"
+                                        }
+                                        alt={
+                                          item.attributes?.find(
+                                            (attr: any) => attr.name === "Name"
+                                          )?.value || "No Name"
+                                        }
+                                        className="max-h-full max-w-full object-cover"
+                                        onClick={() => handleOpenModal(item)}
+                                      />
+                                    </div>
                                   </div>
 
                                   {/* Attributes Section */}
-                                  <div className="space-y-1 p-4">
+                                  <div
+                                    className="space-y-1 p-5 overflow-visible"
+                                    onClick={() => handleOpenModal(item)}
+                                  >
                                     {item.attributes
                                       .filter(
                                         (attribute: any) =>
@@ -2451,29 +2432,42 @@ export default function HomePage() {
                                       )
                                       .slice(0, 3)
                                       .map((attribute: any, index: number) => (
-                                        <p
+                                        <div
                                           key={`${
                                             attribute.slug || attribute.name
                                           }-default-search`}
-                                          className={
-                                            index === 0
-                                              ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                              : "text-md font-semibold pl-4 capitalize truncate"
-                                          }
+                                          className="group relative"
                                         >
-                                          {`${attribute.value}`}
-                                        </p>
+                                          <p
+                                            className={
+                                              index === 0
+                                                ? "mt-4 text-lg font-bold pl-4 uppercase text-ellipsis overflow-hidden line-clamp-2"
+                                                : "text-md font-semibold pl-4 capitalize truncate"
+                                            }
+                                          >
+                                            {`${attribute.value}`}
+                                          </p>
+                                          <span
+                                            className="absolute bottom-full left-0 w-auto p-2 mb-2 text-md text-black bg-yellow-300 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                            style={{
+                                              transform: "translateX(-20px)",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            {`${attribute.value}`}
+                                          </span>
+                                        </div>
                                       ))}
 
-                                    <div className="pt-3 pb-2 text-center">
+                                    <div className="flex justify-center items-center space-x-4 pt-3 pb-2">
                                       <button
-                                        className="w-fit px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
                                         onClick={() => openEdit(item)}
                                       >
                                         <FaRegEdit />
                                       </button>
                                       <button
-                                        className="w-fit ml-4 px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
                                         onClick={() => handleDelete(item)}
                                       >
                                         <FaRegTrashCan />
