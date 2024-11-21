@@ -320,7 +320,7 @@ function NewCollectionForm() {
                 and search the items in this collection by. These will become
                 the columns in your CSV file when you upload items to your
                 collection. List them in order of relevence. We will
-                automatically add an "owned" column ("T" or "N") for if you own the
+                automatically add an "owned" column ("T" or "F") for if you own the
                 item or not.
               </p>
             </div>
