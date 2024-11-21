@@ -406,12 +406,19 @@ export default function HomePage() {
 
         if (response.ok) {
           console.log("Item deleted successfully");
-          window.location.reload();
+          localStorage.setItem("showSuccessAlert", "true");
+          localStorage.setItem("alertMessage", "Deleted collectible successfully");
         } else {
           console.error("Error deleting item:", response);
+          localStorage.setItem("showErrorAlert", "true");
+          localStorage.setItem("alertMessage", "Failed to delete collectible");
         }
+        window.location.reload();
       } catch (error) {
         console.error("Error deleting item:", error);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to delete collectible");
+        window.location.reload();
       }
     } else {
       return;
@@ -615,11 +622,17 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("Form submitted successfully");
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Added new collectible successfully");
       } else {
         console.error("Error submitting form:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to add new collectible");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to add new collectible");
     }
 
     closeModal();
@@ -1264,12 +1277,18 @@ export default function HomePage() {
         );
         await setMaskedAttributes(allAttributes);
         closeEditAttributes();
-        //window.location.reload();
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
+        window.location.reload();
       } else {
         console.error("Error editing favorite attributes:", response);
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
       }
     } catch (error) {
       console.error("Error editing favorite attributes:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
     }
   };
 
@@ -1539,7 +1558,7 @@ export default function HomePage() {
                               className="text-lg hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={openModal}
                             >
-                              New Collectable
+                              New Collectible
                             </a>
                           </li>
                           <li>
