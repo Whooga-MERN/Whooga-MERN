@@ -13,10 +13,10 @@ export default function Navbar() {
     <div>
       {" "}
       {/* navbar */}
-      <nav className="bg-primary dark:bg-primary">
+      <nav className="bg-primary h-[80px] dark:bg-primary flex-grow items-center justify-center pt-2">
         {/* <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8"> */}
-        <div className="px-8">
-          <div className="flex items-center h-16 justify-between">
+        <div className="px-8"> 
+          <div className="flex flex-row items-center h-16 justify-between">
             <div className="flex flex-box justify-center items-center">
               <div className="flex flex-row justify-center items-center">
                 <Link to="/" className="text-black font-bold text-4xl">
