@@ -1617,7 +1617,7 @@ const publishCollection = async () => {
     console.log("Request: ", request);
     try {
       const response = await fetch(
-        buildPath(`publish/publish-universe`),
+        buildPath('publish/publish-universe'),
         {
           method: "PUT",
           body: JSON.stringify(request),
@@ -1631,16 +1631,18 @@ const publishCollection = async () => {
         console.log("Collection published successfully");
         localStorage.setItem("showSuccessAlert", "true");
         localStorage.setItem("alertMessage", `Successfully ${isCollectionPublished ? "un" : ""}published collection`);
-        window.location.reload();
+        //window.location.reload();
       } else {
         console.error("Error publishing collection:", response);
         localStorage.setItem("showErrorAlert", "true");
         localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+        //window.location.reload();
       }
     } catch (error) {
       console.error("Error publishing collection:", error);
       localStorage.setItem("showErrorAlert", "true");
       localStorage.setItem("alertMessage", `Failed to ${isCollectionPublished ? "un" : ""}publish collection`);
+      //window.location.reload();
     }
   }
   };
@@ -1650,12 +1652,12 @@ const publishCollection = async () => {
       <div className="h-screen flex flex-col overflow-y-hidden">
         <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
-          <div className="flex justify-end items-center">
+          <div className="toast toast-top toast-center">
             <div
               role="alert"
               className={`alert ${
                 showErrorAlert ? "alert-error" : "alert-success"
-              } w-1/5 sm:w-1/2 mt-1 mr-10 ${
+              }  ${
                 showSuccessAlert || showErrorAlert ? "" : "invisible"
               }`}
             >
@@ -1684,7 +1686,7 @@ const publishCollection = async () => {
               {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
               <div className="">
                 {/* collection option */}
-                <div className="flex items-center gap-4 dark:bg-gray-800">
+                <div className="flex items-center gap-4 dark:bg-gray-800 mt-4">
                   <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3 ">
                     {universeCollectionName}
                   </p>
