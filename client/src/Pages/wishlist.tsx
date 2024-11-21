@@ -340,7 +340,7 @@ export default function Collections() {
         </div>
       </div>
 
-      <footer className="w-full absolute bottom-0 z-50  dark:text-white">
+      <footer className="w-full absolute bottom-0 z-50 dark:text-white bg-white dark:bg-transparent">
         <div className="container p-5 mx-auto">
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold">WHOOGA!</span>
