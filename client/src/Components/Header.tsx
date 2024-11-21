@@ -75,7 +75,7 @@ function Header() {
               to="/collections"
               className="pl-3 text-black font-bold text-2xl"
             >
-              Whooga!
+              WHOOGA!
             </Link>
           </div>
           <div className="flex-none gap-2">
