@@ -162,14 +162,28 @@ router.get('/masked-attributes/:collectionId', async (req, res) => {
       return res.status(200).json(combinedAttributes);
     }
 
-    if(customAttributes.length > 0 && hiddenAttributes.length > 0) {
-      combinedAttributes = [...defaultAttributes, ...customAttributes];
-      const maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
-      console.log("Combined Attributes: ", maskedAttributes);
-      return res.status(200).json(maskedAttributes);
+    if (customAttributes.length === 0 && hiddenAttributes.length === 0) {
+      console.log("Both customAttributes and hiddenAttributes are empty\n");
+      console.log("Combined Attributes: ", defaultAttributes);
+      return res.status(200).json(defaultAttributes);
     }
-  
-    return res.status(500).send("FAILED: NO IF STATEMENT WAS TRIGGERED");
+    
+    if (customAttributes.length === 0) {
+      combinedAttributes = defaultAttributes.filter(attr => !hiddenAttributes.includes(attr));
+      console.log("Combined Attributes: ", combinedAttributes);
+      return res.status(200).json(combinedAttributes);
+    }
+    
+    if (hiddenAttributes.length === 0) {
+      combinedAttributes = [...defaultAttributes, ...customAttributes];
+      console.log("Combined Attributes: ", combinedAttributes);
+      return res.status(200).json(combinedAttributes);
+    }
+    
+    combinedAttributes = [...defaultAttributes, ...customAttributes];
+    const maskedAttributes = combinedAttributes.filter(attr => !hiddenAttributes.includes(attr));
+    console.log("Combined Attributes: ", maskedAttributes);
+    return res.status(200).json(maskedAttributes);
   } catch (error) {
     console.log(error);
     return res.status(500).send("ERROR FAILED");
