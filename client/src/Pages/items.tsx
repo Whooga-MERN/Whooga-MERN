@@ -69,9 +69,7 @@ export default function HomePage() {
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [maskedAttributes, setMaskedAttributes] = useState<string[]>([]);
-  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<
-    string[]
-  >([]);
+  const [favoriteMaskedAttributes, setfavoriteMaskedAttributes] = useState<string[]>([]);
   const [customAttributes, setCustomAttributes] = useState<string[]>([]);
   const [favoriteAttributes, setFavoriteAttributes] = useState<string[]>([]);
   const [hiddenAttributes, setHiddenAttributes] = useState<string[]>([]);
@@ -83,6 +81,7 @@ export default function HomePage() {
   const [editedFavoriteAttributes, setEditedFavoriteAttributes] = useState<
     string[]
   >([]);
+  
 
   const [error, setError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -124,22 +123,23 @@ export default function HomePage() {
     console.log("collectionId: ", collectionIDInStorage)
   }, []);
 
-  useEffect(() => {
-    if (localStorage.getItem("showSuccessAlert") === "true") {
-      setShowSuccessAlert(true);
-      localStorage.removeItem("showSuccessAlert");
-    } else if (localStorage.getItem("showErrorAlert") === "true") {
-      setShowErrorAlert(true);
-      localStorage.removeItem("showErrorAlert");
-    }
+    useEffect(() => {
+      if (localStorage.getItem("showSuccessAlert") === "true") {
+        setShowSuccessAlert(true);
+        localStorage.removeItem("showSuccessAlert");
+      }
+      else if (localStorage.getItem("showErrorAlert") === "true") {
+        setShowErrorAlert(true);
+        localStorage.removeItem("showErrorAlert");
+      }
 
-    const message = localStorage.getItem("alertMessage") ?? "";
-    setAlertMessage(message);
+      const message = localStorage.getItem("alertMessage") ?? "";
+      setAlertMessage(message);
 
-    setTimeout(() => {
-      setShowErrorAlert(false);
-      setShowSuccessAlert(false);
-    }, 4000);
+      setTimeout(() => {
+        setShowErrorAlert(false);
+        setShowSuccessAlert(false);
+      }, 4000);
   }, []);
 
   useEffect(() => {
@@ -414,10 +414,7 @@ export default function HomePage() {
         if (response.ok) {
           console.log("Item deleted successfully");
           localStorage.setItem("showSuccessAlert", "true");
-          localStorage.setItem(
-            "alertMessage",
-            "Deleted collectible successfully"
-          );
+          localStorage.setItem("alertMessage", "Deleted collectible successfully");
         } else {
           console.error("Error deleting item:", response);
           localStorage.setItem("showErrorAlert", "true");
@@ -633,10 +630,7 @@ export default function HomePage() {
       if (response.ok) {
         console.log("Form submitted successfully");
         localStorage.setItem("showSuccessAlert", "true");
-        localStorage.setItem(
-          "alertMessage",
-          "Added new collectible successfully"
-        );
+        localStorage.setItem("alertMessage", "Added new collectible successfully");
       } else {
         console.error("Error submitting form:", response);
         localStorage.setItem("showErrorAlert", "true");
@@ -1292,26 +1286,17 @@ export default function HomePage() {
         await setMaskedAttributes(allAttributes);
         closeEditAttributes();
         localStorage.setItem("showSuccessAlert", "true");
-        localStorage.setItem(
-          "alertMessage",
-          "Favorite attributes edited successfully"
-        );
+        localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
         //window.location.reload();
       } else {
         console.error("Error editing favorite attributes:", response);
         localStorage.setItem("showErrorAlert", "true");
-        localStorage.setItem(
-          "alertMessage",
-          "Failed to edit favorite attributes"
-        );
+        localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
       }
     } catch (error) {
       console.error("Error editing favorite attributes:", error);
       localStorage.setItem("showErrorAlert", "true");
-      localStorage.setItem(
-        "alertMessage",
-        "Failed to edit favorite attributes"
-      );
+      localStorage.setItem("alertMessage", "Failed to edit favorite attributes");
     }
   };
 
@@ -1321,41 +1306,28 @@ export default function HomePage() {
         <div className="top-0 z-50 bg-white dark:bg-gray-800 w-full">
           <Header />
           <div className="flex justify-end items-center">
-            <div
-              role="alert"
-              className={`alert ${
-                showErrorAlert ? "alert-error" : "alert-success"
-              } w-1/5 mt-1 mr-10 ${
-                showSuccessAlert || showErrorAlert ? "" : "invisible"
-              }`}
-            >
+            <div role="alert" className={`alert ${showErrorAlert ? 'alert-error' : 'alert-success'} w-1/5 mt-1 mr-10 ${showSuccessAlert || showErrorAlert ? '' : 'invisible'}`}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 shrink-0 stroke-current"
                 fill="none"
-                viewBox="0 0 24 24"
-              >
+                viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d={`${
-                    showSuccessAlert
-                      ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  }`}
-                />
+                  d={`${showSuccessAlert ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" : "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"}`} />
               </svg>
               <span className="ml-2">{alertMessage}</span>
             </div>
           </div>
           <div className="w-full mx-auto">
-            <div className="mx-auto px-10 dark:bg-gray-800">
+            <div className="mx-auto px-10">
               {/* flex md:items-center gap-28 pb-4 max-md:px-4 w-fit */}
               <div className="">
                 {/* collection option */}
-                <div className="flex items-center gap-4 dark:bg-gray-800">
-                  <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3 ">
+                <div className="flex items-center gap-4">
+                  <p className="font-bold text-xl w-fit text-black bg-yellow-300 rounded-full px-4 py-3">
                     {universeCollectionName}
                   </p>
                   <OwnedToggle
