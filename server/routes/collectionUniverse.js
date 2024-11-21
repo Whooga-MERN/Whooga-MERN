@@ -186,7 +186,8 @@ router.post('/copy-universe', async (req, res) => {
       }
       console.log("newUniverseId: ", newUniverseId);
 
-      const customAttributes = []
+      const customAttributes = [];
+      const hiddenAttributes = [];
       const newCollection = await trx.insert(collections).values({
         name: collectionName,
         user_id: userId,
@@ -194,6 +195,7 @@ router.post('/copy-universe', async (req, res) => {
         collection_pic: universeCollectionPic,
         custom_attributes: customAttributes,
         favorite_attributes: defaultAttributes.slice(0, 4),
+        hidden_attribute: hiddenAttributes
       }).returning({ collection_id: collections.collection_id });
 
       console.log("finding creatorUniverseCollectables");

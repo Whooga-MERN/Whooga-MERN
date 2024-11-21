@@ -167,6 +167,10 @@ router.post('', cpUpload, async (req, res) => {
             console.log("parsedCsvJsonData: ", parsedCsvJsonData);
             let imageUrl = null
             for (const row of parsedCsvJsonData) {
+                console.log("row.image: ", row.image);
+                if(row.image)
+                    console.log("WE MADE IT");
+
                 const imageObject = urlCollectableImages.find(image => image.originalName === row.image);
                 imageUrl = null
                 if(imageObject)
@@ -424,7 +428,7 @@ try {
 
         if(ownedCollectable.length > 0)
             await trx.insert(collectables).values(ownedCollectable);
-        
+
         console.log("Finished Creating attributes");
         console.log("All data inserted succesfully");
         res.status(200).send({ message: 'Data inserted successfully' });
