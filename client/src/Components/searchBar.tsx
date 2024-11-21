@@ -85,6 +85,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const updatedTags = searchTags.filter((tag) => tag !== tagToDelete);
     setSearchTags(updatedTags);
     onSearch(updatedTags);
+    onJump(updatedTags);
   };
 
   // clear all tags
