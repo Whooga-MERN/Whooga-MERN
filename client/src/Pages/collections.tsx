@@ -161,6 +161,7 @@ export default function Collections() {
       );
       console.log("sending stored UCID: ", collection.collectionUniverseId);
       localStorage.setItem("collectionName", collection.name);
+      localStorage.setItem("collectionCover: ", collection.image_url);
       navigate(`/items/${collection.collectionUniverseId}`);
       console.log("clicked collection");
     } else {
