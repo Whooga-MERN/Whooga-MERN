@@ -342,7 +342,12 @@ router.put('/add-hidden-attribute', async (req, res) => {
         .execute();
 
       let combinedAttributes;
-      const hiddenAttributes = [...attributes, ...favoriteAttributesQuery[0].hiddenAttributes];
+      let hiddenAttributes;
+      let tempHiddenAttributes = favoriteAttributesQuery[0].hiddenAttributes;
+      if(tempHiddenAttributes)
+        hiddenAttributes = [...attributes, ...favoriteAttributesQuery[0].hiddenAttributes];
+      else
+        hiddenAttributes = attributes;
       try {
         console.log("favoriteAttributes: ", favoriteAttributesQuery[0].favoriteAttributes);
         combinedAttributes = favoriteAttributesQuery[0].favoriteAttributes.filter(attr => !hiddenAttributes.includes(attr));

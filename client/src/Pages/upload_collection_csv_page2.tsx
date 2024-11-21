@@ -182,12 +182,20 @@ function UploadCollection() {
       if (response.ok) {
         console.log("Form submitted successfully");
         setIsUploading(false);
+        localStorage.setItem("showSuccessAlert", "true");
+        localStorage.setItem("alertMessage", "Created collection successfully");
         navigate("/collections");
       } else {
         console.error("Form submission failed");
+        localStorage.setItem("showErrorAlert", "true");
+        localStorage.setItem("alertMessage", "Failed to create collection");
+        navigate("/collections");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      localStorage.setItem("showErrorAlert", "true");
+      localStorage.setItem("alertMessage", "Failed to create collection");
+      navigate("/collections");
     }
   };
 

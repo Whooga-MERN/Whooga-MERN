@@ -346,6 +346,22 @@ router.get('', async (req, res) => {
   }
 });
 
+router.get('/masked-collectable/:universeCollectableId', async (req, res) => {
+  const { universeCollectableId } = req.params;
+
+  if(!universeCollectableId || isNaN(universeCollectableId)) {
+      console.log("No or improper universeCollectableId");
+      return res.status(404).send("No or improper universeCollectableId");
+  }
+
+  const collectable = await db
+    .select()
+    .from()
+    .where()
+    .execute();
+
+});
+
 // READ (Single item)
 router.get('/single-collectable/:id', async (req, res) => {
   const { id } = req.params;
