@@ -1257,6 +1257,7 @@ export default function HomePage() {
     };
 
     try {
+      console.log("Request to change favs:  ", request);
       const response = await fetch(
         buildPath(`collectable-attributes/update-favorite-attributes`),
         {
@@ -1281,7 +1282,7 @@ export default function HomePage() {
         closeEditAttributes();
         localStorage.setItem("showSuccessAlert", "true");
         localStorage.setItem("alertMessage", "Favorite attributes edited successfully");
-        window.location.reload();
+        //window.location.reload();
       } else {
         console.error("Error editing favorite attributes:", response);
         localStorage.setItem("showErrorAlert", "true");
@@ -1547,7 +1548,7 @@ export default function HomePage() {
                         <div
                           tabIndex={0}
                           role="button"
-                          className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-40"
+                          className="btn text-lg text-black bg-yellow-300 hover:bg-yellow-200 rounded-full w-fit"
                         >
                           Edit Collection
                         </div>
