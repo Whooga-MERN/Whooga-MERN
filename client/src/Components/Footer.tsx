@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function Footer(): JSX.Element {
   return (
-    <footer className="w-full relative  text-white">
+    <footer className="w-full relative  dark:text-white">
       <div className="container p-5 mx-auto">
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold">WHOOGA!</span>
