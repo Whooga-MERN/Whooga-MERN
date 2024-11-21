@@ -240,7 +240,8 @@ router.post('', cpUpload, async (req, res) => {
             console.log("colletableAttributes: ", collectableAttributesData);
             await trx.insert(collectableAttributes).values(collectableAttributesData);
 
-            await trx.insert(collectables).values(ownedCollectable);
+            if(ownedCollectable.length > 0)
+                await trx.insert(collectables).values(ownedCollectable);
 
             console.log("All data inserted succesfully");
             res.status(200).send({ message: 'Data inserted successfully' });
@@ -421,7 +422,9 @@ try {
 
         await trx.insert(collectableAttributes).values(collectableAttributesData);
 
-        await trx.insert(collectables).values(ownedCollectable);
+        if(ownedCollectable.length > 0)
+            await trx.insert(collectables).values(ownedCollectable);
+        
         console.log("Finished Creating attributes");
         console.log("All data inserted succesfully");
         res.status(200).send({ message: 'Data inserted successfully' });
