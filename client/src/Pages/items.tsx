@@ -3018,7 +3018,7 @@ export default function HomePage() {
                             {editedAttributes.map((attribute, index) => (
                               <div
                                 key={index}
-                                className="flex items-center bg-black text-white-600 font-semibold text-lg rounded-md pl-4 pr-2 py-1 mr-3 mt-2"
+                                className="flex items-center bg-black dark:text-white-600 text-gray-200 font-semibold text-lg rounded-md pl-4 pr-2 py-1 mr-3 mt-2"
                               >
                                 {attribute}
                                 <button className="pl-4 text-red-500 " onClick={() => deleteAttribute(attribute)}>
