@@ -1625,6 +1625,8 @@ export default function HomePage() {
       };
       console.log("Request: ", request);
       try {
+        const url = buildPath("publish/publish-universe");
+        console.log("url: ", url);
         const response = await fetch(buildPath("publish/publish-universe"), {
           method: "PUT",
           body: JSON.stringify(request),
@@ -1642,7 +1644,7 @@ export default function HomePage() {
               isCollectionPublished ? "un" : ""
             }published collection`
           );
-          //window.location.reload();
+          window.location.reload();
         } else {
           console.error("Error publishing collection:", response);
           localStorage.setItem("showErrorAlert", "true");
@@ -1650,7 +1652,7 @@ export default function HomePage() {
             "alertMessage",
             `Failed to ${isCollectionPublished ? "un" : ""}publish collection`
           );
-          //window.location.reload();
+          window.location.reload();
         }
       } catch (error) {
         console.error("Error publishing collection:", error);
@@ -1659,7 +1661,7 @@ export default function HomePage() {
           "alertMessage",
           `Failed to ${isCollectionPublished ? "un" : ""}publish collection`
         );
-        //window.location.reload();
+        window.location.reload();
       }
     }
   };
