@@ -185,161 +185,185 @@ export default function Collections() {
 
   return (
     <>
-      <Header />
-      <div className="w-full">
-        <div className="flex items-center justify-between">
-          <h2 className="px-20 font-manrope font-bold text-4xl text-center flex justify-center items-center">
-            My Wishlist
-            {/* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EDC307" className="size-8 ml-2">
-              <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" />
-            </svg> */}
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="w-full">
+          <div className="flex items-center justify-between">
+            <h2 className="px-20 font-manrope font-bold text-4xl text-center flex justify-center items-center">
+              My Wishlist
+              {/* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EDC307" className="size-8 ml-2">
+                <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" />
+              </svg> */}
 
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EDC307" className="size-8  ml-2">
-              <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" clipRule="evenodd" />
-            </svg>
-
-
-          </h2>
-          <div className="flex flex-col md:flex-row md:items-center justify-right py-9">
-            <label className="input input-bordered flex items-center gap-2">
-              <input
-                type="search"
-                className="grow w-60"
-                placeholder='Search "My Collections"'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="h-4 w-4 opacity-70"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                  clipRule="evenodd"
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EDC307" className="size-8  ml-2">
+                <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" clipRule="evenodd" />
               </svg>
-            </label>
-            {/* New Button */}
-            <div className="pl-20 relative sm: w-[400px] border-none ml-auto">
-              <IconContext.Provider value={{ color: "#554141", size: "35px" }}>
-                <Link
-                  to="/new_collection_start"
-                  className="btn btn-primary text-2xl w-250 "
+
+
+            </h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-right py-9">
+              <label className="input input-bordered flex items-center gap-2">
+                <input
+                  type="search"
+                  className="grow w-60"
+                  placeholder='Search "My Collections"'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="h-4 w-4 opacity-70"
                 >
-                  New Collection
-                  <IoMdAddCircleOutline />
-                </Link>
-              </IconContext.Provider>
+                  <path
+                    fillRule="evenodd"
+                    d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </label>
+              {/* New Button */}
+              <div className="pl-20 relative sm: w-[400px] border-none ml-auto">
+                <IconContext.Provider value={{ color: "#554141", size: "35px" }}>
+                  <Link
+                    to="/new_collection_start"
+                    className="btn btn-primary text-2xl w-250 "
+                  >
+                    New Collection
+                    <IoMdAddCircleOutline />
+                  </Link>
+                </IconContext.Provider>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* collections */}
-      <div className="w-full px-32 ">
-        <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
-          {debouncedSearchTerm.length > 0 ? (
-            searchResults && searchResults.length > 0 ? (
-              searchResults.map((result: any) => {
-                const { collections: collection, collectionUniverses: collectionUniverse } = result;
+        {/* collections */}
+        <div className="w-full flex-grow  px-32 ">
+          <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
+            {debouncedSearchTerm.length > 0 ? (
+              searchResults && searchResults.length > 0 ? (
+                searchResults.map((result: any) => {
+                  const { collections: collection, collectionUniverses: collectionUniverse } = result;
 
-                return (
-                  <div key={collection.collection_id}>
-                    <div
-                      className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                      onClick={() => handleClick(collection.collection_universe_id)}
-                    >
+                  return (
+                    <div key={collection.collection_id}>
                       <div
-                        style={{
-                          right: "3%",
-                          bottom: "97%",
-                          position: "absolute",
-                        }}
+                        className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
+                        onClick={() => handleClick(collection.collection_universe_id)}
                       >
-                        {collection.newListing ? (
-                          <div className="badge h-8 text-lg font-bold badge-primary">
-                            WHOOGA!
-                          </div>
-                        ) : (
-                          ""
-                        )}
-                      </div>
-                      <figure style={{ aspectRatio: "1 / 1" }}>
-                        <img
-                          className="object-cover w-full h-full rounded-t-lg border-b-2"
+                        <div
                           style={{
-                            height: "95%",
-                            width: "95%",
-                            aspectRatio: "1 / 1",
+                            right: "3%",
+                            bottom: "97%",
+                            position: "absolute",
                           }}
-                          src={collectionUniverse.universe_collection_pic}
-                          // src={"/placeholder.jpg"}
-                          alt={collectionUniverse.name}
-                        />
-                      </figure>
-                      <div className="card-body">
-                        <h2 className="card-title">
-                          {collectionUniverse.name + " Wishlist"}
-                        </h2>
+                        >
+                          {collection.newListing ? (
+                            <div className="badge h-8 text-lg font-bold badge-primary">
+                              WHOOGA!
+                            </div>
+                          ) : (
+                            ""
+                          )}
+                        </div>
+                        <figure style={{ aspectRatio: "1 / 1" }}>
+                          <img
+                            className="object-cover w-full h-full rounded-t-lg border-b-2"
+                            style={{
+                              height: "95%",
+                              width: "95%",
+                              aspectRatio: "1 / 1",
+                            }}
+                            src={collectionUniverse.universe_collection_pic}
+                            // src={"/placeholder.jpg"}
+                            alt={collectionUniverse.name}
+                          />
+                        </figure>
+                        <div className="card-body">
+                          <h2 className="card-title">
+                            {collectionUniverse.name + " Wishlist"}
+                          </h2>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center">No collections found</div>
-            )
-          ) : collections.length > 0 ? (
-            collections.map((collection: any) => (
-              <div key={collection.id}>
-                <div
-                  className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                  onClick={() => handleClick(collection.collectionUniverseId)}
-                >
+                  );
+                })
+              ) : (
+                <div className="text-center">No collections found</div>
+              )
+            ) : collections.length > 0 ? (
+              collections.map((collection: any) => (
+                <div key={collection.id}>
                   <div
-                    style={{
-                      right: "3%",
-                      bottom: "97%",
-                      position: "absolute",
-                    }}
+                    className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
+                    onClick={() => handleClick(collection.collectionUniverseId)}
                   >
-                    {collection.newListing ? (
-                      <div className="badge h-8 text-lg font-bold badge-primary">
-                        WHOOGA!
-                      </div>
-                    ) : (
-                      ""
-                    )}
-                  </div>
-                  <figure style={{ aspectRatio: "1 / 1" }}>
-                    <img
-                      className="object-cover w-full h-full rounded-t-lg border-b-2"
+                    <div
                       style={{
-                        height: "95%",
-                        width: "95%",
-                        aspectRatio: "1 / 1",
+                        right: "3%",
+                        bottom: "97%",
+                        position: "absolute",
                       }}
-                      src={collection.image_url}
-                      alt={collection.name}
-                    />
-                  </figure>
-                  <div className="card-body">
-                    <h2 className="card-title">
-                      {collection.name + " Wishlist"}
-                    </h2>
+                    >
+                      {collection.newListing ? (
+                        <div className="badge h-8 text-lg font-bold badge-primary">
+                          WHOOGA!
+                        </div>
+                      ) : (
+                        ""
+                      )}
+                    </div>
+                    <figure style={{ aspectRatio: "1 / 1" }}>
+                      <img
+                        className="object-cover w-full h-full rounded-t-lg border-b-2"
+                        style={{
+                          height: "95%",
+                          width: "95%",
+                          aspectRatio: "1 / 1",
+                        }}
+                        src={collection.image_url}
+                        alt={collection.name}
+                      />
+                    </figure>
+                    <div className="card-body">
+                      <h2 className="card-title">
+                        {collection.name + " Wishlist"}
+                      </h2>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center">No collections found</div>
-          )}
+              ))
+            ) : (
+              <div className="text-center">No collections found</div>
+            )}
+          </div>
         </div>
+        {/* <Footer /> */}
+
+        <footer className="w-full  dark:text-white">
+          <div className="container p-5 mx-auto">
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-bold">WHOOGA!</span>
+              <div className="flex space-x-4 text-xl font-bold">
+                <Link to="/privacypolicy" className="hover:underline">
+                  Privacy Policy
+                </Link>
+                <Link to="/contactus" className="hover:underline">
+                  Contact Us
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Copyright section */}
+          <hr className="border-gray-700" />
+          <div className="p-3 text-center">
+            © 2024 WHOOGA! All rights reserved.
+          </div>
+        </footer>
       </div>
-      <Footer />
     </>
   );
 }

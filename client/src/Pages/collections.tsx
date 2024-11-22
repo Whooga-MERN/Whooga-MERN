@@ -418,254 +418,277 @@ export default function Collections() {
 
   return (
     <>
-      <Header />
-      <div className="w-full">
-        <div className="toast toast-top toast-center">
-          <div
-            className={`alert ${
-              showErrorAlert ? "alert-error" : "alert-success"
-            } ${showSuccessAlert || showErrorAlert ? "" : "invisible"}`}
-          >
-            <span>{alertMessage}</span>
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <h2 className="px-20 font-manrope font-bold text-4xl text-center flex justify-center items-center">
-            My Collections
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="#EDC307"
-              className="size-8  ml-2"
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="w-full">
+          <div className="toast toast-top toast-center">
+            <div
+              className={`alert ${
+                showErrorAlert ? "alert-error" : "alert-success"
+              } ${showSuccessAlert || showErrorAlert ? "" : "invisible"}`}
             >
-              <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
-            </svg>
-          </h2>
-          <div className="flex flex-col md:flex-row md:items-center justify-right py-9">
-            <label className="input input-bordered flex items-center gap-2">
-              <input
-                type="search"
-                className="grow w-60"
-                placeholder='Search "My Collections"'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <span>{alertMessage}</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <h2 className="px-20 font-manrope font-bold text-4xl text-center flex justify-center items-center">
+              My Collections
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="h-4 w-4 opacity-70"
+                viewBox="0 0 24 24"
+                fill="#EDC307"
+                className="size-8  ml-2"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                  clipRule="evenodd"
-                />
+                <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
               </svg>
-            </label>
-            {/* New Button */}
-            <div className="pl-10 relative sm: w-[400px] border-none ml-auto">
-              <IconContext.Provider value={{ color: "#554141", size: "35px" }}>
-                <Link
-                  to="/new_collection_start"
-                  className="btn btn-primary text-2xl w-250 "
+            </h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-right py-9">
+              <label className="input input-bordered flex items-center gap-2">
+                <input
+                  type="search"
+                  className="grow w-60"
+                  placeholder='Search "My Collections"'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="h-4 w-4 opacity-70"
                 >
-                  Add New Collection
-                  <IoMdAddCircleOutline />
-                </Link>
-              </IconContext.Provider>
+                  <path
+                    fillRule="evenodd"
+                    d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </label>
+              {/* New Button */}
+              <div className="pl-10 relative sm: w-[400px] border-none ml-auto">
+                <IconContext.Provider value={{ color: "#554141", size: "35px" }}>
+                  <Link
+                    to="/new_collection_start"
+                    className="btn btn-primary text-2xl w-250 "
+                  >
+                    Add New Collection
+                    <IoMdAddCircleOutline />
+                  </Link>
+                </IconContext.Provider>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* collections */}
-      <div className="w-full px-32">
-        <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
-          {debouncedSearchTerm.length > 0 ? (
-            searchResults && searchResults.length > 0 ? (
-              searchResults.map((result: any) => {
-                const {
-                  collections: collection,
-                  collectionUniverses: collectionUniverse,
-                } = result;
+        {/* collections */}
+        <div className="w-full flex-grow px-32 ">
+          <div className="mt-8 grid lg:grid-cols-5 gap-10 md:grid-cols-4 sm:grid-cols-2">
+            {debouncedSearchTerm.length > 0 ? (
+              searchResults && searchResults.length > 0 ? (
+                searchResults.map((result: any) => {
+                  const {
+                    collections: collection,
+                    collectionUniverses: collectionUniverse,
+                  } = result;
 
-                return (
-                  <div key={collection.collection_id}>
-                    <div
-                      className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300 bg-black"
-                      onClick={() =>
-                        handleClick(collection.collection_universe_id)
-                      }
-                    >
+                  return (
+                    <div key={collection.collection_id}>
                       <div
-                        style={{
-                          right: "3%",
-                          bottom: "97%",
-                          position: "absolute",
-                        }}
+                        className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300 bg-black"
+                        onClick={() =>
+                          handleClick(collection.collection_universe_id)
+                        }
                       >
-                        {collection.newListing ? (
-                          <div className="badge h-8 text-lg font-bold badge-primary">
-                            WHOOGA!
-                          </div>
-                        ) : (
-                          ""
-                        )}
-                      </div>
-                      <figure style={{ aspectRatio: "1 / 1" }}>
-                        <img
-                          className="object-cover w-full h-full rounded-t-lg border-b-2"
+                        <div
                           style={{
-                            height: "95%",
-                            width: "95%",
-                            aspectRatio: "1 / 1",
+                            right: "3%",
+                            bottom: "97%",
+                            position: "absolute",
                           }}
-                          src={collection.collection_pic}
-                          alt={collection.collection_id}
-                        />
-                      </figure>
-                      <div className="card-body">
-                        <h2 className="card-title">
-                          {collectionUniverse.name}
-                        </h2>
+                        >
+                          {collection.newListing ? (
+                            <div className="badge h-8 text-lg font-bold badge-primary">
+                              WHOOGA!
+                            </div>
+                          ) : (
+                            ""
+                          )}
+                        </div>
+                        <figure style={{ aspectRatio: "1 / 1" }}>
+                          <img
+                            className="object-cover w-full h-full rounded-t-lg border-b-2"
+                            style={{
+                              height: "95%",
+                              width: "95%",
+                              aspectRatio: "1 / 1",
+                            }}
+                            src={collection.collection_pic}
+                            alt={collection.collection_id}
+                          />
+                        </figure>
+                        <div className="card-body">
+                          <h2 className="card-title">
+                            {collectionUniverse.name}
+                          </h2>
+                        </div>
                       </div>
                     </div>
+                  );
+                })
+              ) : (
+                <div className="text-center">No collections found</div>
+              )
+            ) : collections.length > 0 ? (
+              collections.map((collection: any) => (
+                <div key={collection.id}>
+                  <div
+                    className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
+                    onClick={() => handleClick(collection.collectionUniverseId)}
+                  >
+                    <div
+                      style={{
+                        right: "3%",
+                        bottom: "97%",
+                        position: "absolute",
+                      }}
+                    >
+                      {collection.newListing ? (
+                        <div className="badge h-8 text-lg font-bold badge-primary">
+                          WHOOGA!
+                        </div>
+                      ) : (
+                        ""
+                      )}
+                    </div>
+                    <figure style={{ aspectRatio: "1 / 1" }}>
+                      <img
+                        className="object-cover w-full h-full rounded-t-lg border-b-2"
+                        style={{
+                          height: "95%",
+                          width: "95%",
+                          aspectRatio: "1 / 1",
+                        }}
+                        src={collection.image_url}
+                        alt={collection.name}
+                      />
+                    </figure>
+                    <div className="card-body flex flex-row justify-center items-center">
+                      <h2 className="card-title">{collection.name}</h2>
+                      <button
+                        className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                          openEditCollection(collection.collectionUniverseId);
+                        }}
+                      >
+                        <FaRegEdit />
+                      </button>
+                    </div>
                   </div>
-                );
-              })
+                </div>
+              ))
             ) : (
               <div className="text-center">No collections found</div>
-            )
-          ) : collections.length > 0 ? (
-            collections.map((collection: any) => (
-              <div key={collection.id}>
-                <div
-                  className="card card-compact card-bordered bg-base-200 hover:shadow-2xl cursor-pointer dark:bg-base-300"
-                  onClick={() => handleClick(collection.collectionUniverseId)}
+            )}
+          </div>
+
+
+          {openCollectionEditModal && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" 
+              // onClick={closeEditCollection}
+            >
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
+                <label className="block text-gray-700 dark:text-gray-300 text-lg font-bold mb-2">
+                  {/* {attribute.charAt(0).toUpperCase() + attribute.slice(1)} */}
+                  Change Collection Name
+                  {/* {currentCollectionEdit && currentCollectionEdit.name} */}
+                </label>
+                <p className="block text-gray-500 dark:text-gray-300 text-sm mb-2"><span className="font-bold text-gray-600">Reminder:</span> A collection's name is used for notifications </p>
+                {nameError && (<p className="block text-red-500 dark:text-red-300 text-sm mb-2">A collection name must be greater than 3 characters </p>)}
+                <input
+                  type="text"
+                  name={"collectionName"}
+                  value={formName || ""}
+                  placeholder={`${currentCollectionEdit.name}`}
+                  onChange={handleChange}
+                  className="border rounded w-full py-2 px-3 text-gray-700"
+                />
+                <label
+                  htmlFor="cover-photo"
+                  className="block text-gray-700 dark:text-gray-300 text-lg font-bold mb-2 mt-4"
                 >
-                  <div
-                    style={{
-                      right: "3%",
-                      bottom: "97%",
-                      position: "absolute",
-                    }}
-                  >
-                    {collection.newListing ? (
-                      <div className="badge h-8 text-lg font-bold badge-primary">
-                        WHOOGA!
-                      </div>
-                    ) : (
-                      ""
-                    )}
-                  </div>
-                  <figure style={{ aspectRatio: "1 / 1" }}>
-                    <img
-                      className="object-cover w-full h-full rounded-t-lg border-b-2"
-                      style={{
-                        height: "95%",
-                        width: "95%",
-                        aspectRatio: "1 / 1",
-                      }}
-                      src={collection.image_url}
-                      alt={collection.name}
+                  Upload New Collection Photo
+                </label>
+                <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
+                  <div className="text-center">
+                    <PhotoIcon
+                      aria-hidden="true"
+                      className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
                     />
-                  </figure>
-                  <div className="card-body flex flex-row justify-center items-center">
-                    <h2 className="card-title">{collection.name}</h2>
-                    <button
-                      className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent event from bubbling to the parent <div>
-                        openEditCollection(collection.collectionUniverseId);
-                      }}
-                    >
-                      <FaRegEdit />
-                    </button>
+                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                      <label
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                      >
+                        <span>Upload a photo</span>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          className="sr-only"
+                          onChange={handleFileChange}
+                        />
+                      </label>
+                      <p>or drag and drop</p>
+                    </div>
+                    <p className="text-xs leading-5 text-gray-600">
+                      PNG, JPG
+                    </p>
                   </div>
                 </div>
+                <div className="flex justify-end space-x-4 mt-8">
+                  <button
+                    type="button"
+                    onClick={closeEditCollection}
+                    className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditCollectionSubmit}
+                    className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center">No collections found</div>
+            </div>
           )}
         </div>
+        {/* <Footer /> */}
 
-
-        {openCollectionEditModal && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" 
-            // onClick={closeEditCollection}
-          >
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-8 sm:w-3/4 lg:w-[480px] max-h-screen overflow-y-auto mt-20">
-              <label className="block text-gray-700 dark:text-gray-300 text-lg font-bold mb-2">
-                {/* {attribute.charAt(0).toUpperCase() + attribute.slice(1)} */}
-                Change Collection Name
-                {/* {currentCollectionEdit && currentCollectionEdit.name} */}
-              </label>
-              <p className="block text-gray-500 dark:text-gray-300 text-sm mb-2"><span className="font-bold text-gray-600">Reminder:</span> A collection's name is used for notifications </p>
-              {nameError && (<p className="block text-red-500 dark:text-red-300 text-sm mb-2">A collection name must be greater than 3 characters </p>)}
-              <input
-                type="text"
-                name={"collectionName"}
-                value={formName || ""}
-                placeholder={`${currentCollectionEdit.name}`}
-                onChange={handleChange}
-                className="border rounded w-full py-2 px-3 text-gray-700"
-              />
-              <label
-                htmlFor="cover-photo"
-                className="block text-gray-700 dark:text-gray-300 text-lg font-bold mb-2 mt-4"
-              >
-                Upload New Collection Photo
-              </label>
-              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:bg-slate-300 px-6 py-10">
-                <div className="text-center">
-                  <PhotoIcon
-                    aria-hidden="true"
-                    className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-400"
-                  />
-                  <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer rounded-md px-2 bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                    >
-                      <span>Upload a photo</span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        className="sr-only"
-                        onChange={handleFileChange}
-                      />
-                    </label>
-                    <p>or drag and drop</p>
-                  </div>
-                  <p className="text-xs leading-5 text-gray-600">
-                    PNG, JPG
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end space-x-4 mt-8">
-                <button
-                  type="button"
-                  onClick={closeEditCollection}
-                  className="bg-gray-300 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditCollectionSubmit}
-                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-4 rounded-xl"
-                >
-                  Save Changes
-                </button>
+        <footer className="w-full  dark:text-white">
+          <div className="container p-5 mx-auto">
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-bold">WHOOGA!</span>
+              <div className="flex space-x-4 text-xl font-bold">
+                <Link to="/privacypolicy" className="hover:underline">
+                  Privacy Policy
+                </Link>
+                <Link to="/contactus" className="hover:underline">
+                  Contact Us
+                </Link>
               </div>
             </div>
           </div>
-        )}
-      </div>
-      <Footer />
 
+          {/* Copyright section */}
+          <hr className="border-gray-700" />
+          <div className="p-3 text-center">
+            © 2024 WHOOGA! All rights reserved.
+          </div>
+        </footer>
+      </div>
     </>
   );
 }
