@@ -32,6 +32,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   >([]);
   const [sortOrder, setSortOrder] = useState("asc");
   const [sortBy, setSortBy] = useState<string>(attributes[0]);
+  const [currentMode, setCurrentMode] = useState<"search" | "jump">("search");
 
   useEffect(() => {
     if (attributes && attributes.length > 0) {
@@ -84,14 +85,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }) => {
     const updatedTags = searchTags.filter((tag) => tag !== tagToDelete);
     setSearchTags(updatedTags);
-    onSearch(updatedTags);
-    onJump(updatedTags);
+    if (currentMode === "search") {
+      onSearch(updatedTags);
+    } else if (currentMode === "jump") {
+      onJump(updatedTags);
+    }
   };
 
   // clear all tags
   const handleResetTags = () => {
     setSearchTags([]);
     onResetSearch();
+    setCurrentMode("search");
   };
 
   const handleSearch = () => {
@@ -99,6 +104,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       alert("Please add at least one search tag.");
       return;
     }
+    setCurrentMode("search");
     onSearch(searchTags);
   };
 
@@ -107,6 +113,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       alert("Please add at least one search tag.");
       return;
     }
+    setCurrentMode("jump");
     onJump(searchTags);
   };
 
