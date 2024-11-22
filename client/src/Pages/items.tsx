@@ -2310,7 +2310,10 @@ export default function HomePage() {
                                       </button>
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => handleDelete(item)}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          handleDelete(item)
+                                        }}
                                       >
                                         <FaRegTrashCan />
                                       </button>
@@ -2426,7 +2429,10 @@ export default function HomePage() {
                                       </button>
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => handleDelete(item)}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          handleDelete(item)
+                                        }}
                                       >
                                         <FaRegTrashCan />
                                       </button>
@@ -2537,7 +2543,10 @@ export default function HomePage() {
                                       </button>
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => handleDelete(item)}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          handleDelete(item)
+                                        }}
                                       >
                                         <FaRegTrashCan />
                                       </button>
@@ -2653,7 +2662,10 @@ export default function HomePage() {
                                       </button>
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => handleDelete(item)}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          handleDelete(item)
+                                        }}
                                       >
                                         <FaRegTrashCan />
                                       </button>
@@ -2769,7 +2781,10 @@ export default function HomePage() {
                                       </button>
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full"
-                                        onClick={() => handleDelete(item)}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          handleDelete(item)
+                                        }}
                                       >
                                         <FaRegTrashCan />
                                       </button>
@@ -2890,7 +2905,10 @@ export default function HomePage() {
                                       </button>
                                       <button
                                         className="px-3 py-1 bg-orange-300 text-[#7b4106] hover:text-white rounded-full flex items-center justify-center"
-                                        onClick={() => handleDelete(item)}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); // Prevent event from bubbling to the parent <div>
+                                          handleDelete(item)
+                                        }}
                                       >
                                         <FaRegTrashCan />
                                       </button>
