@@ -242,7 +242,7 @@ router.post('/copy-universe', async (req, res) => {
 
       let newUniverseCollectableIds;
       try {
-        newUniverseCollectableIds = newUniverseCollectablesQuery.map(item => item.newCollectable);
+        newUniverseCollectableIds = await newUniverseCollectablesQuery.map(item => item.newCollectable);
         console.log("newUniverseCollectablesIds: ", newUniverseCollectableIds);
       } catch (error) {
         console.log("Failed to create new universe collectables");
@@ -250,6 +250,8 @@ router.post('/copy-universe', async (req, res) => {
       }
       console.log("Finished Creating new universe collectables\n");
 
+      console.log("newUniverseCollectableIds.length: ", newUniverseCollectableIds.length);
+      console.log('\n\n');
       // last step is to grab non_custom attributes and then copy them
       // let creatorCollectableIds;
       // let numCollectables;
@@ -274,19 +276,25 @@ router.post('/copy-universe', async (req, res) => {
 
       console.log("Num of attributes collectableAttributes rows to copy: ", creatorAttributes.length);
       const newCollectableAttributes = [];
+
+      console.log("creatorAttributes.length: ", creatorAttributes.length);
       for (let i = 0; i < creatorAttributes.length; i++) {
         const newCollectableId = newUniverseCollectableIds[Math.floor(i / (1 + attributesLength))];
+        console.log("creatorAttributes[i].attributeName ", creatorAttributes[i].attributeName)
+        console.log("creatorAttributes[i].value: ", creatorAttributes[i].value);
+        console.log(`Mapping creatorAttribute ${i} to newCollectableId ${newCollectableId}`);
         newCollectableAttributes.push({
           collection_universe_id: newUniverseId,
           universe_collectable_id: newCollectableId,
           name: creatorAttributes[i].attributeName,
           slug: creatorAttributes[i].slug,
-          value: creatorAttributes[i].value,
+          value: creatorAttributes[i].value || '',
           is_custom: false
         });
       }
 
-      console.log("Inserting: ", newCollectableAttributes);
+      console.log("Length of newCollectableAttributes: ", newCollectableAttributes.length);
+      //console.log("Inserting: ", newCollectableAttributes);
       await trx
         .insert(collectableAttributes)
         .values(newCollectableAttributes)
@@ -612,6 +620,14 @@ router.put('/update-universe-pic', upload.single('coverImage'), async (req, res)
       .set({ universe_collection_pic: imageUrl })
       .where(
         eq(collectionUniverses.collection_universe_id, collectionUniverseId)
+      )
+      .execute();
+
+    await db
+      .update(collections)
+      .set({ collection_pic: imageUrl })
+      .where(
+        eq(collections.collection_universe_id, collectionUniverseId)
       )
       .execute();
 
