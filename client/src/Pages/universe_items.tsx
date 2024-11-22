@@ -84,6 +84,8 @@ export default function HomePage() {
   const [ownedHighlightedItemId, setOwnedHighlightedItemId] = useState<
     number | null
   >(null);
+
+  const [collectionCoverImage, setCollectionCoverImage] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -98,10 +100,13 @@ export default function HomePage() {
       const collectionName = localStorage.getItem("collectionName") ?? "";
       const storedCollectionIds = localStorage.getItem("collectionIds") ?? "";
       const savedWishlist = localStorage.getItem("wishlistIds");
+      const collectionCover =
+        localStorage.getItem("collectionCover") ?? "/noImage.jpg";
 
       // Setting the collection name and collection ids
       setUniverseCollectionName(collectionName);
       setCollectionIds(JSON.parse(storedCollectionIds));
+      setCollectionCoverImage(collectionCover);
 
       // Checking if the collection is owned
       // If the collection is owned, set the state to true
@@ -173,18 +178,6 @@ export default function HomePage() {
     getAttributes();
 
     const getFavoriteAttributes = async () => {
-      // const favReponse = await fetch(
-      //   buildPath(
-      //     `collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`
-      //   ),
-      //   {
-      //     method: "GET",
-      //     headers: {
-      //       Authorization: `Bearer ${JWT}`,
-      //     },
-      //   }
-      // );
-
       const url = buildPath(
         `collectable-attributes/get-favorite-attributes?collectionId=${collectionId}`
       );
@@ -839,26 +832,22 @@ export default function HomePage() {
                               {_default_collectables.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-default-search`}
-                                  // className="w-full md:w-1/2 px-4 mb-6 bg-green-500"
-                                  className="w-full md:w-1/2 px-4 mb-6"
+                                  className="w-full md:w-1/2 px-4 mb-6 cursor-pointer"
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                    <div className="h-24 w-24">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
+                                    <div className="h-24 w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={100}
-                                        height={100}
-                                        className="rounded-md shadow-sm object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        className="max-h-full max-w-full object-cover"
                                       />
                                     </div>
 
@@ -898,56 +887,68 @@ export default function HomePage() {
                                 return (
                                   <div
                                     key={`${item.universeCollectableId}-default-search`}
+                                    className="relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl h-auto"
                                   >
-                                    {/* <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl bg-green-500"> */}
-                                    <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                      <div className="h-22 w-30">
+                                    <div className="h-22 w-30 relative">
+                                      {/* Image */}
+                                      <div className="h-64 w-full relative bg-gray-100 rounded-md pt-3 flex items-center justify-center overflow-hidden">
                                         <img
                                           src={
                                             item.attributes?.find(
                                               (attr: any) =>
                                                 attr.name === "image"
-                                            )?.value || "/noImage.jpg"
+                                            )?.value || collectionCoverImage
                                           }
                                           alt={
                                             item.attributes?.find(
                                               (attr: any) =>
                                                 attr.name === "Name"
-                                            )?.value
+                                            )?.value || "No Name"
                                           }
-                                          width={400}
-                                          height={400}
-                                          className="rounded-md shadow-sm object-cover pt-3"
-                                          onClick={() => handleOpenModal(item)}
+                                          className="max-h-full max-w-full object-cover"
                                         />
                                       </div>
+                                    </div>
 
-                                      <div className="space-y-1 p-4">
-                                        {item.attributes
-                                          .filter(
-                                            (attribute: any) =>
-                                              attribute.name !== "image" &&
-                                              attribute.name !== "owned"
-                                          )
-                                          .slice(0, 3)
-                                          .map(
-                                            (attribute: any, index: number) => (
+                                    {/* Attributes Section */}
+                                    <div className="space-y-1 p-5 overflow-visible">
+                                      {item.attributes
+                                        .filter(
+                                          (attribute: any) =>
+                                            attribute.name !== "image" &&
+                                            attribute.name !== "owned"
+                                        )
+                                        .slice(0, 3)
+                                        .map(
+                                          (attribute: any, index: number) => (
+                                            <div
+                                              key={`${
+                                                attribute.slug || attribute.name
+                                              }-default-search`}
+                                              className="group relative"
+                                            >
                                               <p
-                                                key={`${
-                                                  attribute.slug ||
-                                                  attribute.name
-                                                }-default-search`}
                                                 className={
                                                   index === 0
-                                                    ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
+                                                    ? "mt-4 text-lg font-bold pl-4 uppercase text-ellipsis overflow-hidden line-clamp-2"
                                                     : "text-md font-semibold pl-4 capitalize truncate"
                                                 }
                                               >
                                                 {`${attribute.value}`}
                                               </p>
-                                            )
-                                          )}
-                                      </div>
+                                              <span
+                                                className="absolute bottom-full left-0 w-auto p-2 mb-2 text-md text-black bg-yellow-300 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                                style={{
+                                                  transform:
+                                                    "translateX(-20px)",
+                                                  whiteSpace: "nowrap",
+                                                }}
+                                              >
+                                                {`${attribute.value}`}
+                                              </span>
+                                            </div>
+                                          )
+                                        )}
                                     </div>
                                   </div>
                                 );
@@ -966,25 +967,22 @@ export default function HomePage() {
                               {_searchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-search`}
-                                  className="w-full md:w-1/2 px-4 mb-6"
+                                  className="w-full md:w-1/2 px-4 mb-6 cursor-pointer"
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                    <div className="h-24 w-24">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
+                                    <div className="h-24 w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={100}
-                                        height={100}
-                                        className="rounded-md shadow-sm object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        className="max-h-full max-w-full object-cover"
                                       />
                                     </div>
 
@@ -1001,7 +999,7 @@ export default function HomePage() {
                                             <p
                                               key={`${
                                                 attribute.slug || attribute.name
-                                              }-search`}
+                                              }-default-search`}
                                               className={
                                                 index === 0
                                                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1020,59 +1018,66 @@ export default function HomePage() {
                           ) : (
                             // GRID VIEW
                             <div className="mt-8 grid lg:grid-cols-6 gap-10 md:grid-cols-4 sm:grid-cols-4">
-                              {_searchResults.map((item, index) => (
+                              {_searchResults.map((item) => (
                                 <div
-                                  key={
-                                    `${item.universeCollectableId}-search` ||
-                                    item.collectionId ||
-                                    `item-${index}`
-                                  }
+                                  key={`${item.universeCollectableId}-search`}
+                                  className="relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl h-auto"
                                 >
-                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                    <div className="h-22 w-30">
+                                  <div className="h-22 w-30 relative">
+                                    {/* Image */}
+                                    <div className="h-64 w-full relative bg-gray-100 rounded-md pt-3 flex items-center justify-center overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={400}
-                                        height={400}
-                                        className="rounded-md shadow-sm object-cover pt-3"
-                                        onClick={() => handleOpenModal(item)}
+                                        className="max-h-full max-w-full object-cover"
                                       />
                                     </div>
+                                  </div>
 
-                                    <div className="space-y-1 p-4">
-                                      {item.attributes
-                                        .filter(
-                                          (attribute: any) =>
-                                            attribute.name !== "image" &&
-                                            attribute.name !== "owned"
-                                        )
-                                        .slice(0, 3)
-                                        .map(
-                                          (attribute: any, index: number) => (
-                                            <p
-                                              key={`${
-                                                attribute.slug || attribute.name
-                                              }-search`}
-                                              className={
-                                                index === 0
-                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                                  : "text-md font-semibold pl-4 capitalize truncate"
-                                              }
-                                            >
-                                              {`${attribute.value}`}
-                                            </p>
-                                          )
-                                        )}
-                                    </div>
+                                  {/* Attributes Section */}
+                                  <div className="space-y-1 p-5 overflow-visible">
+                                    {item.attributes
+                                      .filter(
+                                        (attribute: any) =>
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
+                                      )
+                                      .slice(0, 3)
+                                      .map((attribute: any, index: number) => (
+                                        <div
+                                          key={`${
+                                            attribute.slug || attribute.name
+                                          }-default-search`}
+                                          className="group relative"
+                                        >
+                                          <p
+                                            className={
+                                              index === 0
+                                                ? "mt-4 text-lg font-bold pl-4 uppercase text-ellipsis overflow-hidden line-clamp-2"
+                                                : "text-md font-semibold pl-4 capitalize truncate"
+                                            }
+                                          >
+                                            {`${attribute.value}`}
+                                          </p>
+                                          <span
+                                            className="absolute bottom-full left-0 w-auto p-2 mb-2 text-md text-black bg-yellow-300 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                            style={{
+                                              transform: "translateX(-20px)",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            {`${attribute.value}`}
+                                          </span>
+                                        </div>
+                                      ))}
                                   </div>
                                 </div>
                               ))}
@@ -1090,32 +1095,27 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className={` ${
+                                  className={`w-full md:w-1/2 px-4 mb-6 cursor-pointer ${
                                     item.universeCollectableId ===
-                                      highlightedItemId ||
-                                    item.collectableId ===
-                                      ownedHighlightedItemId
+                                    highlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}
                                 >
-                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                    <div className="h-24 w-24">
+                                  <div className="flex items-center space-x-4 p-4 hover:shadow-xl dark:bg-base-300 rounded-xl cursor-pointer bg-gray-50 border-2 border-gray-200">
+                                    <div className="h-24 w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={100}
-                                        height={100}
-                                        className="rounded-md shadow-sm object-cover"
-                                        onClick={() => handleOpenModal(item)}
+                                        className="max-h-full max-w-full object-cover"
                                       />
                                     </div>
 
@@ -1132,7 +1132,7 @@ export default function HomePage() {
                                             <p
                                               key={`${
                                                 attribute.slug || attribute.name
-                                              }-jump`}
+                                              }-default-search`}
                                               className={
                                                 index === 0
                                                   ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
@@ -1154,60 +1154,68 @@ export default function HomePage() {
                               {jumpSearchResults.map((item) => (
                                 <div
                                   key={`${item.universeCollectableId}-jump`}
-                                  className={` ${
+                                  className={`relative cursor-pointer bg-gray-50 border-2 border-gray-200 hover:shadow-xl dark:bg-base-300 rounded-xl h-auto ${
                                     item.universeCollectableId ===
-                                      highlightedItemId ||
-                                    item.collectableId ===
-                                      ownedHighlightedItemId
+                                    highlightedItemId
                                       ? "border-4 border-yellow-500"
                                       : ""
                                   }`}
                                 >
-                                  <div className="relative hover:shadow-xl dark:bg-base-300 rounded-xl">
-                                    <div className="h-22 w-30">
+                                  <div className="h-22 w-30 relative">
+                                    {/* Image */}
+                                    <div className="h-64 w-full relative bg-gray-100 rounded-md pt-3 flex items-center justify-center overflow-hidden">
                                       <img
                                         src={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "image"
-                                          )?.value || "/noImage.jpg"
+                                          )?.value || collectionCoverImage
                                         }
                                         alt={
                                           item.attributes?.find(
                                             (attr: any) => attr.name === "Name"
                                           )?.value || "No Name"
                                         }
-                                        width={400}
-                                        height={400}
-                                        className="rounded-md shadow-sm object-cover pt-3"
-                                        onClick={() => handleOpenModal(item)}
+                                        className="max-h-full max-w-full object-cover"
                                       />
                                     </div>
+                                  </div>
 
-                                    <div className="space-y-1 p-4">
-                                      {item.attributes
-                                        .filter(
-                                          (attribute: any) =>
-                                            attribute.name !== "image" &&
-                                            attribute.name !== "owned"
-                                        )
-                                        .slice(0, 3)
-                                        .map(
-                                          (attribute: any, index: number) => (
-                                            <p
-                                              key={`${
-                                                attribute.slug || attribute.name
-                                              }-jump`}
-                                              className={
-                                                index === 0
-                                                  ? "mt-4 text-lg font-bold pl-4 uppercase truncate"
-                                                  : "text-md font-semibold pl-4 capitalize truncate"
-                                              }
-                                            >
-                                              {`${attribute.value}`}
-                                            </p>
-                                          )
-                                        )}
-                                    </div>
+                                  {/* Attributes Section */}
+                                  <div className="space-y-1 p-5 overflow-visible">
+                                    {item.attributes
+                                      .filter(
+                                        (attribute: any) =>
+                                          attribute.name !== "image" &&
+                                          attribute.name !== "owned"
+                                      )
+                                      .slice(0, 3)
+                                      .map((attribute: any, index: number) => (
+                                        <div
+                                          key={`${
+                                            attribute.slug || attribute.name
+                                          }-default-search`}
+                                          className="group relative"
+                                        >
+                                          <p
+                                            className={
+                                              index === 0
+                                                ? "mt-4 text-lg font-bold pl-4 uppercase text-ellipsis overflow-hidden line-clamp-2"
+                                                : "text-md font-semibold pl-4 capitalize truncate"
+                                            }
+                                          >
+                                            {`${attribute.value}`}
+                                          </p>
+                                          <span
+                                            className="absolute bottom-full left-0 w-auto p-2 mb-2 text-md text-black bg-yellow-300 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                            style={{
+                                              transform: "translateX(-20px)",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            {`${attribute.value}`}
+                                          </span>
+                                        </div>
+                                      ))}
                                   </div>
                                 </div>
                               ))}
